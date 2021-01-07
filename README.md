@@ -45,7 +45,7 @@ optional arguments:
 Adding torrents from autodl-irssi to qBittorrent (autodl.cfg example):
 ```
 upload-command = ~/qbit-tools/add.py
-upload-args = -i $(TorrentPathName) -c music
+upload-args = -i $(TorrentPathName) -p 12345 -c music
 upload-type = exec
 ```
 
