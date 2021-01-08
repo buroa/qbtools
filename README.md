@@ -68,3 +68,9 @@ $ ./reannounce.py -p 12345
 07:41:35 PM --------------------------
 07:41:35 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is active, progress: 11.1%
 ```
+
+Update passkey in all matching torrents (all tracker urls that match `--old` parameter):
+```bash
+$ ./update_passkey.py --old 12345 --new v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc -p 10369
+2021-01-08 21:38:45,301 INFO:Replaced [https://trackerurl.net/12345/announce] to [https://trackerurl.net/v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc/announce] in 10 torrents
+```
