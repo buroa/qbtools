@@ -43,8 +43,11 @@ def main():
             if expired and (not working or t.num_seeds == 0) and t.progress == 0:
                 logger.info(f"[{t.name}] is inactive for too long, not reannouncing...")
             elif not working:
-                logger.info(f"[{t.name}] is not working, active for {t.time_active}s, reannouncing...")
-                t.reannounce()
+                if t.time_active < 60:
+                    logger.info(f"[{t.name}] is not working, active for {t.time_active}s, reannouncing...")
+                    t.reannounce()
+                else:
+                    logger.info(f"[{t.name}] is not working, active for {t.time_active}s, deleted from tracker")
             elif t.num_seeds == 0 and t.progress == 0:
                 if t.time_active < 120 or (t.time_active >= 120 and iterations % 2 == 0):
                     logger.info(f"[{t.name}] has no seeds, active for {t.time_active}s, reannouncing...")
