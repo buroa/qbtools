@@ -2,11 +2,12 @@
 
 Clone the repository
 ```
-git clone https://gitlab.com/AlexKM/qbit-tools.git ~/
+git clone https://gitlab.com/AlexKM/qbit-tools.git ~/qbit-tools
 ```
 
 Install dependencies (isolated to the current user)
 ```
+cd ~/qbit-tools
 pip3 install --user -r requirements.txt
 ```
 
