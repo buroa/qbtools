@@ -7,7 +7,6 @@ before_script:
   - source venv/bin/activate
 
 run:
-  stage: build
   script:
     - make all
     - pip3 install gitlab-release
