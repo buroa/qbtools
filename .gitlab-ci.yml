@@ -1,9 +1,18 @@
+stages:
+  - build
+  - deploy
+
+build:
+  state: build
+  image: python3
+  script:
+    - make all
+
 release:
-  stage: release
+  stage: deploy
   image: python3
   script:
     - pip3 install gitlab-release
-    - make all
     - gitlab-release dist/qbitools
   only:
     - tags
