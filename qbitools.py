@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse, logging, sys, pkgutil, collections
+import argparse, logging, sys, pkgutil, collections, os
 import qbittorrentapi
-from commands import *
+import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging
 
 def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s', datefmt='%I:%M:%S %p')
@@ -15,8 +15,10 @@ def main():
     parser.add_argument('-P', '--password', metavar='password', required=False)
     subparsers = parser.add_subparsers(dest='command')
 
-    for _, cmd, _ in pkgutil.iter_modules(['commands']):
-        getattr(globals()[cmd], 'add_arguments')(subparsers)
+    pkgpath = os.path.dirname(commands.__file__)
+    for f, cmd, d in pkgutil.iter_modules([pkgpath]):
+        mod = getattr(globals()['commands'], cmd)
+        getattr(mod, 'add_arguments')(subparsers)
 
     args = parser.parse_args()
 
@@ -31,6 +33,8 @@ def main():
     except qbittorrentapi.LoginFailed as e:
         logger.error(e)
 
-    cmd = getattr(globals()[args.command], '__init__')(args, logger, client)
+    mod = getattr(globals()['commands'], args.command)
+    cmd = getattr(mod, '__init__')(args, logger, client)
+
 if __name__ == "__main__":
     main()

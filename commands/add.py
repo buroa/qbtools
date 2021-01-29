@@ -3,7 +3,7 @@
 def __init__(args, logger, client):
     if not args.output and not args.category:
         logger.error('Either category or output folder should be chosen!')
-        exit(1)
+        return
 
     if args.category:
        logger.info(client.torrents_add(

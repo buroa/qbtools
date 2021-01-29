@@ -14,9 +14,9 @@ release:
   script:
     - make build
     - pip3 install gitlab-release
-    - gitlab-release --link-artifact dist/qbitools
+    - gitlab-release --link-artifact qbitools
   artifacts:
     paths:
-      - dist/qbitools
+      - qbitools
   only:
     - tags
