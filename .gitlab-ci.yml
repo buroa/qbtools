@@ -1,4 +1,6 @@
 image: python:3
+stages: 
+  - run
 
 before_script:
   - python -V
@@ -7,6 +9,7 @@ before_script:
   - source venv/bin/activate
 
 run:
+  stage: run
   script:
     - make all
     - pip3 install gitlab-release
