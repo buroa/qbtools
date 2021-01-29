@@ -1,17 +1,15 @@
-stages:
-  - build
-  - deploy
+image: python:3
 
-build:
+before_script:
+  - python -V
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+
+run:
   stage: build
-  image: python:3
   script:
     - make all
-
-release:
-  stage: deploy
-  image: python:3
-  script:
     - pip3 install gitlab-release
     - gitlab-release dist/qbitools
   only:
