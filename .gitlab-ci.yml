@@ -3,7 +3,7 @@ stages:
   - deploy
 
 build:
-  state: build
+  stage: build
   image: python3
   script:
     - make all
