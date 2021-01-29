@@ -1,6 +1,6 @@
-image: python:3
+image: python:latest
 stages: 
-  - deploy
+  - build
 
 before_script:
   - python -V
@@ -10,7 +10,7 @@ before_script:
   - make deps
 
 release:
-  stage: deploy
+  stage: build
   script:
     - make build
     - pip3 install gitlab-release
