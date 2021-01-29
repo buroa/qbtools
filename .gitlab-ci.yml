@@ -1,0 +1,9 @@
+release:
+  stage: release
+  image: python3
+  script:
+    - pip3 install gitlab-release
+    - make all
+    - gitlab-release dist/qbitools
+  only:
+    - tags

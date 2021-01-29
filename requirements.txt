@@ -2,3 +2,4 @@ qbittorrent-api
 tldextract
 tqdm
 requests>=2.25.1
+pyinstaller

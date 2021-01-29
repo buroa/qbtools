@@ -1,31 +1,8 @@
 #!/usr/bin/env python3
 
-# need pip3 install qbittorrent-api
-
-import argparse
-import qbittorrentapi
 import time
-import logging
-import sys
 
-def main():
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(message)s', datefmt='%I:%M:%S %p')
-    logger = logging.getLogger(__name__)
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-p', metavar='12345', help='port', required=True)
-    parser.add_argument('-s', metavar='127.0.0.1', default='127.0.0.1', help='host', required=False)
-    parser.add_argument('-U', metavar='username', required=False)
-    parser.add_argument('-P', metavar='password', required=False)
-    args = parser.parse_args()
-
-    client = qbittorrentapi.Client(host=f"{args.s}:{args.p}", username=args.U, password=args.P)
-
-    try:
-        client.auth_log_in()
-    except qbittorrentapi.LoginFailed as e:
-        logger.error(e)
-
+def __init__(args, logger, client):
     iterations = 0
     timeout = 5
 
@@ -38,7 +15,7 @@ def main():
 
         for t in torrents:
             working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
-            expired = t.time_active > 60 * 5
+            expired = t.time_active > 60 * 60
 
             if expired and (not working or t.num_seeds == 0) and t.progress == 0:
                 logger.info(f"[{t.name}] is inactive for too long, not reannouncing...")
@@ -64,5 +41,5 @@ def main():
                 logger.info(f"[{t.name}] is active, progress: {round(t.progress * 100, 1)}%")
         time.sleep(timeout)
 
-if __name__ == "__main__":
-        main()
+def add_arguments(subparser):
+    subparser.add_parser('reannounce')

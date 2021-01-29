@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-import argparse, collections
+import collections
 from datetime import datetime
-import qbittorrentapi, tldextract
+import tldextract
 from tqdm import tqdm
 
 def format_bytes(size):
@@ -15,21 +15,7 @@ def format_bytes(size):
     formatted = round(size, 2)
     return f"{formatted} {power_labels[n]}"
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--move-unregistered', action='store_true', help='Move unregistered torrents to Unregistered category')
-    parser.add_argument('-p', '--port', metavar='12345', help='port', required=True)
-    parser.add_argument('-s', '--server', metavar='127.0.0.1', default='127.0.0.1', help='host', required=False)
-    parser.add_argument('-U', '--username', metavar='username', required=False)
-    parser.add_argument('-P', '--password', metavar='password', required=False)
-    args = parser.parse_args()
-
-    client = qbittorrentapi.Client(host=f"{args.server}:{args.port}", username=args.username, password=args.password)
-    try:
-        client.auth_log_in()
-    except qbittorrentapi.LoginFailed as e:
-        print(e)
-
+def __init__(args, logger, client):
     today = datetime.today()
     default_tags = ['Not Working', 'added:', 'Unregistered', 't:']
 
@@ -46,7 +32,7 @@ def main():
         except qbittorrentapi.exceptions.Conflict409Error as e:
             pass
 
-    print('Collecting tags...')
+    logger.info('Collecting tags...')
     for t in tqdm(client.torrents.info()):
         tags_to_add = []
 
@@ -87,10 +73,11 @@ def main():
             tag_hashes[tag].append(t.hash)
             tag_sizes[tag] += t.size
 
-    print('Adding tags...')
+    logger.info('Adding tags...')
     for tag in tqdm(tag_hashes):
         size = format_bytes(tag_sizes[tag])
         client.torrents_add_tags(tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag])
 
-if __name__ == "__main__":
-    main()
+def add_arguments(subparser):
+    parser = subparser.add_parser('tagging')
+    parser.add_argument('--move-unregistered', action='store_true', help='Move unregistered torrents to Unregistered category')
