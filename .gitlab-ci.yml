@@ -15,5 +15,3 @@ release:
     - make build
     - pip3 install gitlab-release
     - gitlab-release dist/qbitools
-  only:
-    - tags
