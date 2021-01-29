@@ -4,13 +4,13 @@ stages:
 
 build:
   stage: build
-  image: python3
+  image: python:3
   script:
     - make all
 
 release:
   stage: deploy
-  image: python3
+  image: python:3
   script:
     - pip3 install gitlab-release
     - gitlab-release dist/qbitools
