@@ -100,7 +100,7 @@ Adding torrents from autodl-irssi to qBittorrent using ruTorrent:
 ```
 Action = Run Program
 Command = /usr/local/bin/qbitools
-Arguments = -p 12345 add -i $(TorrentPathName) -c music
+Arguments = -p 12345 add $(TorrentPathName) -c music
 ```
 
 ### Tagging command
