@@ -13,6 +13,7 @@ release:
   stage: build
   script:
     - make build
+    - make package
     - pip3 install gitlab-release
     - gitlab-release --link-artifact qbitools
   artifacts:
