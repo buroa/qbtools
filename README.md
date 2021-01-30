@@ -8,7 +8,7 @@ curl -L https://gitlab.com/api/v4/projects/23524151/jobs/996560191/artifacts/qbi
 chmod +x /usr/local/bin/qbitools
 ```
 
-Done!
+If you don't have root permissions, just download it to a home directory and use it from there.
 
 ### Building manually (optional)
 ```bash
