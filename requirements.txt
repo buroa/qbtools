@@ -3,3 +3,4 @@ tldextract
 tqdm
 requests>=2.25.1
 nuitka
+bencoder.pyx
