@@ -12,7 +12,7 @@ package:
 	cp ./resources/* qbittools.dist/
 	./appimagetool/AppRun qbittools.dist/ --comp xz -n qbittools
 build: clean
-	nuitka3 --follow-imports --standalone --assume-yes-for-downloads --verbose qbittools.py
+	nuitka3 --follow-imports --standalone --assume-yes-for-downloads qbittools.py
 install:
 	cp ./qbittools /usr/local/bin/qbittools
 clean:
