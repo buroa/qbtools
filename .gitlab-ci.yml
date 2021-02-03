@@ -15,9 +15,9 @@ release:
     - make build
     - make package
     - pip3 install gitlab-release
-    - gitlab-release --link-artifact qbitools
+    - gitlab-release --link-artifact qbittools
   artifacts:
     paths:
-      - qbitools
+      - qbittools
   only:
     - tags

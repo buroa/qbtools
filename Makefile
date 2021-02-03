@@ -9,11 +9,11 @@ deps:
 	rm appimagetool
 	mv squashfs-root appimagetool
 package:
-	cp ./resources/* qbitools.dist/
-	./appimagetool/AppRun qbitools.dist/ --comp xz -n qbitools
+	cp ./resources/* qbittools.dist/
+	./appimagetool/AppRun qbittools.dist/ --comp xz -n qbittools
 build: clean
-	nuitka3 --follow-imports --standalone --assume-yes-for-downloads --verbose qbitools.py
+	nuitka3 --follow-imports --standalone --assume-yes-for-downloads --verbose qbittools.py
 install:
-	cp ./qbitools /usr/local/bin/qbitools
+	cp ./qbittools /usr/local/bin/qbittools
 clean:
-	rm -rf ./dist ./build ./qbitools.build ./qbitools.dist
+	rm -rf ./dist ./build ./qbittools.build ./qbittools.dist

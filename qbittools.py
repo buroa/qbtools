@@ -6,7 +6,7 @@ import commands.add, commands.export, commands.reannounce, commands.update_passk
 
 def main():
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s', datefmt='%I:%M:%S %p')
-    logger = logging.getLogger('qbitools')
+    logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-p', '--port', metavar='12345', help='port', required=True)

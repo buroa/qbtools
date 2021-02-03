@@ -1,11 +1,11 @@
 ## Installation
 
-Download the latest release from [the releases page](https://gitlab.com/AlexKM/qbitools/-/releases) (Other -> `qbitools`)
+Download the latest release from [the releases page](https://gitlab.com/AlexKM/qbittools/-/releases) (Other -> `qbittools`)
 ```bash
 # use sudo if not under root (example url)
-curl -L https://gitlab.com/api/v4/projects/23524151/jobs/996560191/artifacts/qbitools -o /usr/local/bin/qbitools
+curl -L https://gitlab.com/api/v4/projects/23524151/jobs/996560191/artifacts/qbittools -o /usr/local/bin/qbittools
 # give executable permissions
-chmod +x /usr/local/bin/qbitools
+chmod +x /usr/local/bin/qbittools
 ```
 
 If you don't have root permissions, just download it to a home directory and use it from there.
@@ -13,10 +13,10 @@ If you don't have root permissions, just download it to a home directory and use
 ### Building manually (optional)
 ```bash
 # clone the repository
-git clone https://gitlab.com/AlexKM/qbitools.git && cd qbitools
-# install dependencies and build the resulting binary to qbitools
+git clone https://gitlab.com/AlexKM/qbittools.git && cd qbittools
+# install dependencies and build the resulting binary to qbittools
 make all
-# install the binary to /usr/local/bin/qbitools
+# install the binary to /usr/local/bin/qbittools
 make install
 ```
 
@@ -24,10 +24,10 @@ make install
 
 ```bash
 # clone the repository
-git clone https://gitlab.com/AlexKM/qbitools.git && cd qbitools
+git clone https://gitlab.com/AlexKM/qbittools.git && cd qbittools
 # install dependencies
 make deps
-# use qbitools.py instead of a binary
+# use qbittools.py instead of a binary
 ```
 
 ## Configuration
@@ -35,8 +35,8 @@ make deps
 ### Help
 All commands have extensive help with all available options:
 ```bash
-$ qbitools -h
-usage: qbitools [-h] -p 12345 [-s 127.0.0.1] [-U username] [-P password]
+$ qbittools -h
+usage: qbittools [-h] -p 12345 [-s 127.0.0.1] [-U username] [-P password]
                 {add,export,reannounce,tagging,update_passkey} ...
 
 positional arguments:
@@ -55,8 +55,8 @@ optional arguments:
 ### Subcommands
 Use a subcommand help to get further options:
 ```bash
-$ qbitools add -h
-usage: qbitools add [-h] [-o /home/user/downloads] [-c mycategory]
+$ qbittools add -h
+usage: qbittools add [-h] [-o /home/user/downloads] [-c mycategory]
                     [-t [mytag [mytag ...]]] [--skip-checking] [--add-paused]
                     [--dl-limit DL_LIMIT] [--up-limit UP_LIMIT]
                     my.torrent [my.torrent ...]
@@ -79,8 +79,8 @@ optional arguments:
 ```
 
 ```bash
-$ qbitools export -h
-usage: qbitools export [-h] [-i ~/.local/share/qBittorrent/BT_backup] -o
+$ qbittools export -h
+usage: qbittools export [-h] [-i ~/.local/share/qBittorrent/BT_backup] -o
                        ~/export [-c mycategory] [-t [mytag [mytag ...]]]
 
 optional arguments:
@@ -99,20 +99,20 @@ optional arguments:
 Adding torrents from autodl-irssi to qBittorrent using ruTorrent:
 ```
 Action = Run Program
-Command = /usr/local/bin/qbitools
+Command = /usr/local/bin/qbittools
 Arguments = -p 12345 add $(TorrentPathName) -c music
 ```
 
 ### Tagging command
 Automatic tagging with crontab:
 ```
-*/10 * * * * /usr/local/bin/qbitools -p 12345 tagging
+*/10 * * * * /usr/local/bin/qbittools -p 12345 tagging
 ```
 
 ### Reannounce command
 Automatic reannounce on problematic trackers (run in screen/tmux to prevent it from closing when you end a ssh session):
 ```bash
-$ qbitools -p 12345 reannounce
+$ qbittools -p 12345 reannounce
 07:40:40 PM --------------------------
 07:40:40 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is not working, active for 1s, reannouncing...
 07:41:20 PM --------------------------
@@ -128,14 +128,14 @@ $ qbitools -p 12345 reannounce
 ### Update passkey command
 Update passkey in all matching torrents (all tracker urls that match `--old` parameter):
 ```bash
-$ qbitools -p 12345 update_passkey --old 12345 --new v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc
+$ qbittools -p 12345 update_passkey --old 12345 --new v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc
 2021-01-08 21:38:45,301 INFO:Replaced [https://trackerurl.net/12345/announce] to [https://trackerurl.net/v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc/announce] in 10 torrents
 ```
 
 ### Export command
 Export all matching .torrent files by category or tags:
 ```bash
-$ qbitools -p 12345 export -o ./export --category movies --tags tracker.org mytag
+$ qbittools -p 12345 export -o ./export --category movies --tags tracker.org mytag
 01:23:43 PM INFO:Matched 47 torrents
 01:23:43 PM INFO:Exported [movies] Fatman.2020.BluRay.1080p.TrueHD.5.1.AVC.REMUX-FraMeSToR [fbef10dc89bf8dff21a401d9304f62b074ffd6af].torrent
 01:23:43 PM INFO:Exported [movies] La.Haine.1995.UHD.BluRay.2160p.DTS-HD.MA.5.1.DV.HEVC.REMUX-FraMeSToR [ee5ff82613c7fcd2672e2b60fc64375486f976ba].torrent
