@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import collections
+
 def __init__(args, logger, client):
     trackers = collections.defaultdict(int)
 
