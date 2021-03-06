@@ -4,4 +4,5 @@ __all__ = [
 	'reannounce',
 	'tagging',
 	'update_passkey',
+	'upgrade',
 	]

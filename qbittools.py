@@ -2,9 +2,10 @@
 
 import argparse, logging, sys, pkgutil, collections, os
 import qbittorrentapi
-import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging
+import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade
 
 def main():
+    logging.getLogger("filelock").setLevel(logging.ERROR) # supress lock messages
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s', datefmt='%I:%M:%S %p')
     logger = logging.getLogger(__name__)
 
