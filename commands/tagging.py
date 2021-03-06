@@ -17,7 +17,7 @@ def format_bytes(size):
 
 def __init__(args, logger, client):
     today = datetime.today()
-    default_tags = ['Not Working', 'added:', 'Unregistered', 't:']
+    default_tags = ['Not Working', 'added:', 'Unregistered', 't:', 'Duplicates']
 
     tags_to_delete = list(filter(lambda tag: any(x in tag for x in default_tags), client.torrents_tags()))
     client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes='all')
@@ -25,6 +25,7 @@ def __init__(args, logger, client):
 
     tag_hashes = collections.defaultdict(list)
     tag_sizes = collections.defaultdict(int)
+    content_paths = []
 
     if args.move_unregistered:
         try:
@@ -68,6 +69,14 @@ def __init__(args, logger, client):
             if any(x in tracker.msg.lower() for x in matches):
                 tags_to_add.append('Unregistered')
                 if args.move_unregistered and t.time_active > 60 and not t.category == 'Unregistered': t.set_category(category='Unregistered')
+
+        match = [(infohash, path, size) for infohash, path, size in content_paths if path == t.content_path and not t.content_path == t.save_path]
+        if match:
+            tags_to_add.append("Duplicates")
+            tag_hashes["Duplicates"].append(match[0][0])
+            tag_sizes["Duplicates"] += match[0][2]
+
+        content_paths.append((t.hash, t.content_path, t.size))
 
         for tag in tags_to_add:
             tag_hashes[tag].append(t.hash)
