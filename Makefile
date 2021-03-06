@@ -1,4 +1,4 @@
-all: deps build package
+all: clean deps build package
 
 deps:
 	pip3 install -r requirements.txt
@@ -16,4 +16,4 @@ build: clean
 install:
 	cp ./qbittools /usr/local/bin/qbittools
 clean:
-	rm -rf ./dist ./build ./qbittools.build ./qbittools.dist
+	rm -rf ./dist ./build ./qbittools.build ./qbittools.dist ./appimagetool

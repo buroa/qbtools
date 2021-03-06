@@ -1,14 +1,19 @@
 ## Installation
 
-Download the latest release from [the releases page](https://gitlab.com/AlexKM/qbittools/-/releases) (Other -> `qbittools`)
+Download the latest binary release from the build artifacts:
 ```bash
-# use sudo if not under root (example url)
-curl -L https://gitlab.com/api/v4/projects/23524151/jobs/996560191/artifacts/qbittools -o /usr/local/bin/qbittools
-# give executable permissions
-chmod +x /usr/local/bin/qbittools
+temp_dir=$(mktemp -d)
+tag=$(git ls-remote --exit-code --tags --refs --sort=-v:refname https://gitlab.com/AlexKM/qbittools.git | awk '{sub("refs/tags/", ""); print $2 }' | head -n1)
+
+curl -L https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/$tag/download?job=release -o $temp_dir/qbittools.zip
+unzip $temp_dir/qbittools.zip -d $temp_dir
+sudo mv $temp_dir/qbittools /usr/local/bin/
+sudo chmod +x /usr/local/bin/qbittools
+rm -rf $temp_dir
 ```
 
-If you don't have root permissions, just download it to a home directory and use it from there.
+It creates a temporary directory, retrieves the latest git tag and download it's build artifacts that contains the resulting qbittools binary.
+If you don't have root permissions, just `mv` the binary to a home directory and use it from there.
 
 ### Building manually (optional)
 ```bash
