@@ -65,10 +65,10 @@ def __init__(args, logger, client):
         return
 
     url = "https://gitlab.com/AlexKM/qbittools.git"
-    raw = git.cmd.Git().ls_remote("--tags", "--sort=-v:refname", url).split('\n')
+    raw = git.cmd.Git().ls_remote("--tags", "--refs", url).split('\n')
 
     remote_refs = list(map(lambda x: tuple(x.split('\t')), raw))
-    remote_refs = list(map(lambda ref: (ref[0], ref[1].replace("refs/tags/", "")), remote_refs))
+    remote_refs = sorted(list(map(lambda ref: (ref[0], ref[1].replace("refs/tags/", "")), remote_refs)), key=lambda x: Version(x[1]), reverse=True)
 
     cur_ver = Version(__version__)
     latest_ver = Version(remote_refs[0][1])
