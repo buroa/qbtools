@@ -92,7 +92,7 @@ def __init__(args, logger, client):
         logger.info(f"Replacing {old_bin} with {new_bin}")
 
         shutil.copymode(old_bin, new_bin)
-        subprocess.Popen(["mv", "-f", "new_bin", "old_bin"])
+        subprocess.Popen(["mv", "-f", new_bin, old_bin])
         
         sys.exit()
 
