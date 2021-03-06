@@ -1,31 +1,40 @@
 #!/usr/bin/env python3
 
-import os.path, shutil
+import os, shutil, tldextract
 from pathlib import Path
 
 def __init__(args, logger, client):
     if args.tags:
         matches = list(filter(lambda x: any(y in x.tags for y in args.tags), client.torrents.info(category=args.category)))
-        hashes = list(map(lambda x: (x.hash, x.name), matches))
+        torrents = list(map(lambda x: (x.hash, x.name, x.trackers), matches))
     else:
-        hashes = list(map(lambda x: (x.hash, x.name), client.torrents.info(category=args.category)))
+        torrents = list(map(lambda x: (x.hash, x.name, x.trackers), client.torrents.info(category=args.category)))
         
-    logger.info(f"Matched {len(hashes)} torrents")
-    Path(args.output).expanduser().mkdir(parents=True, exist_ok=True)
+    logger.info(f"Matched {len(torrents)} torrents")
+    Path(os.fsdecode(args.output)).expanduser().mkdir(parents=True, exist_ok=True)
 
-    for h, name in hashes:
-        from_f = Path(args.input, f"{h}.torrent").expanduser()
-
-        pattern = f"{name} [{h}].torrent"
-        if args.category: pattern = f"[{args.category}] {pattern}"
-        to_f = Path(args.output, pattern).expanduser()
-
-        if not from_f.exists():
-            logger.error(f"{from_f} doesn't exist!")
+    for h, name, trackers in torrents:
+        from_path = Path(os.fsdecode(args.input), f"{h}.torrent").expanduser()
+        if not from_path.exists():
+            logger.error(f"{from_path} doesn't exist!")
             continue
 
-        shutil.copy2(from_f, to_f)
-        logger.info(f"Exported {pattern}")
+        pattern = ""
+
+        tracker_matches = list(filter(lambda x: len(tldextract.extract(x.url).registered_domain) > 0, trackers))
+
+        if len(tracker_matches) > 0:
+            domain = tldextract.extract(tracker_matches[0].url).registered_domain
+            pattern += f"[{domain}]"
+
+        if args.category:
+            pattern += f" [{args.category}]"
+
+        pattern += f" {name} [{h}].torrent"
+        to_path = Path(os.fsdecode(args.output), pattern.strip()).expanduser()
+
+        shutil.copy2(from_path, to_path)
+        logger.info(f"Exported {repr(to_path)}")
     logger.info('Done')
 
 def add_arguments(subparser):
