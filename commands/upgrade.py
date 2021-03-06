@@ -76,7 +76,7 @@ def __init__(args, logger, client):
     logger.info(f"Latest version: {latest_ver}")
 
     if cur_ver == latest_ver:
-        logger.info("You use the latest {cur_ver} version, no update needed")
+        logger.info(f"You use the latest {cur_ver} version, no update needed")
     elif cur_ver < latest_ver:
         logger.info(f"Update available, this will replace {old_bin} with a new version.")
         if not confirm():
@@ -90,10 +90,9 @@ def __init__(args, logger, client):
         new_bin = extract_archive(archive, temp_dir)
         logger.info(f"Extracted binary to {new_bin}")
         logger.info(f"Replacing {old_bin} with {new_bin}")
+
         shutil.copymode(old_bin, new_bin)
-        #subprocess.Popen(["mv", "-f", new_bin, old_bin])
-        #os.execlp("mv", "-f", new_bin, old_bin)
-        subprocess.Popen(f"mv -f {new_bin} {old_bin} && echo Done", shell=True)
+        subprocess.Popen(["mv", "-f", "new_bin", "old_bin"])
         
         sys.exit()
 
