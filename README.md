@@ -1,26 +1,23 @@
 ## Installation
 
-Download the latest binary release from the build artifacts:
+Install the latest version with the install script to /usr/local/bin/qbittools (root privileges needed)
 ```bash
-temp_dir=$(mktemp -d)
-tag=$(git ls-remote --exit-code --tags --refs --sort=-v:refname https://gitlab.com/AlexKM/qbittools.git | awk '{sub("refs/tags/", ""); print $2 }' | head -n1)
-
-curl -L https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/$tag/download?job=release -o $temp_dir/qbittools.zip
-unzip $temp_dir/qbittools.zip -d $temp_dir
-sudo mv $temp_dir/qbittools /usr/local/bin/
-sudo chmod +x /usr/local/bin/qbittools
-rm -rf $temp_dir
+curl -Ls https://gitlab.com/AlexKM/qbittools/-/raw/master/install.sh | sudo bash
 ```
 
-It creates a temporary directory, retrieves the latest git tag and download it's build artifacts that contains the resulting qbittools binary.
-If you don't have root permissions, just `mv` the binary to a home directory and use it from there.
+Or at any path you want without any extra privileges, don't forget to add this path to `$PATH`:
+```bash
+curl -Ls https://gitlab.com/AlexKM/qbittools/-/raw/master/install.sh | bash -s -- -o ~/bin/qbittools
+```
+
+The script creates a temporary directory, retrieves the latest git tag and download it's build artifacts that contains the resulting qbittools binary.
 
 ### Building manually (optional)
 ```bash
 # clone the repository
 git clone https://gitlab.com/AlexKM/qbittools.git && cd qbittools
 # install dependencies and build the resulting binary to qbittools
-make all
+make
 # install the binary to /usr/local/bin/qbittools
 make install
 ```
@@ -33,6 +30,21 @@ git clone https://gitlab.com/AlexKM/qbittools.git && cd qbittools
 # install dependencies
 make deps
 # use qbittools.py instead of a binary
+```
+
+### Self-upgrade
+
+Upgrading to the latest version is available with the `upgrade` command (use sudo if it's in a system path):
+```bash
+# qbittools -p 12345 upgrade
+07:24:14 PM INFO:Current version: 0.0.0
+07:24:14 PM INFO:Latest version: 0.0.1
+07:24:14 PM INFO:Update available, this will replace /usr/local/bin/qbittools with a new version.
+OK to proceed [Y/N]? y
+07:24:16 PM INFO:Downloading https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/0.0.1/download?job=release to /tmp/tmpapfpoqud/qbittools.zip
+100%|████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 23.3M/23.3M [00:00<00:00, 107MiB/s]
+07:24:17 PM INFO:Extracted binary to /tmp/tmpapfpoqud/qbittools
+07:24:17 PM INFO:Replacing /usr/local/bin/qbittools with /tmp/tmpapfpoqud/qbittools
 ```
 
 ## Configuration
