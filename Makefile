@@ -1,7 +1,7 @@
 all: clean deps build package
 
 deps:
-	pip3 install -r requirements.txt
+	pip3 install -U -r requirements.txt
 	curl -L https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool
 	chmod +x appimagetool
 	sed -i 's|AI\x02|\x00\x00\x00|' appimagetool
@@ -11,8 +11,8 @@ deps:
 package:
 	cp ./resources/* qbittools.dist/
 	./appimagetool/AppRun qbittools.dist/ --comp xz -n qbittools
-build: clean
-	nuitka3 --follow-imports --standalone --assume-yes-for-downloads qbittools.py
+build:
+	nuitka3 --follow-imports --standalone --assume-yes-for-downloads --python-flag=no_site --lto qbittools.py
 install:
 	cp ./qbittools /usr/local/bin/qbittools
 clean:
