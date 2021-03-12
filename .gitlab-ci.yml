@@ -3,6 +3,7 @@ image: python:3.7-stretch
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   CCACHE_DIR: "$CI_PROJECT_DIR/.cache/ccache"
+  CCACHE_COMPILERCHECK: content
 
 cache:
   paths:
