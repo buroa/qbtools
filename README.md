@@ -112,14 +112,14 @@ Only useful if you pause torrents automatically with `--pause-active` parameters
 ##### Examples
 Resume all torrents with `temp_paused` tag if there are no active downloads while ignoring slow downloads under 10 MiB/s
 ```bash
-$ qbittools -p 10369 unpause -d 10240
+$ qbittools -p 12345 unpause -d 10240
 ```
 
 ##### Automatic unpause in qBittorrent
 
 Check `Run external program on torrent completion` in the settings and use tool with an absolute path:
 ```
-/usr/local/bin/qbittools -p 10369 unpause -d 10240
+/usr/local/bin/qbittools -p 12345 unpause -d 10240
 ```
 
 #### Tagging
