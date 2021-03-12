@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pathlib, hashlib
+import pathlib, hashlib, os
 from bencoder import bencode, bdecode, bdecode2
 
 def __init__(args, logger, client):
@@ -8,14 +8,14 @@ def __init__(args, logger, client):
     hashes = []
 
     for t in args.torrents:
-        p = pathlib.Path(t)
+        p = pathlib.Path(os.fsdecode(t))
 
         if p.is_dir():
             contents = list(p.glob('*.torrent'))
-            to_add += list(map(lambda x: str(x), contents))
+            to_add += list(map(lambda x: os.fsdecode(x)), contents)
             hashes += list(map(lambda x: torrent_hash(x), contents))
         elif p.is_file():
-            to_add.append(str(p))
+            to_add.append(os.fsdecode(p))
             infohash = torrent_hash(p)
             hashes.append(infohash)
 
