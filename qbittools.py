@@ -2,7 +2,7 @@
 
 import argparse, logging, sys, pkgutil, collections, os
 import qbittorrentapi
-import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade
+import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade, commands.unpause
 
 def main():
     logging.getLogger("filelock").setLevel(logging.ERROR) # supress lock messages

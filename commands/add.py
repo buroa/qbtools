@@ -7,7 +7,7 @@ def __init__(args, logger, client):
     active = len(list(filter(lambda x: x.dlspeed > args.max_downloads_speed_ignore_limit * 1024 and x.state == 'downloading', client.torrents.info(status_filter="downloading"))))
 
     if args.max_downloads != 0 and active >= args.max_downloads:
-        logger.info(f"Reached max downloads: {active} {active_with_limit}")
+        logger.info(f"Reached max downloads: {active}")
         return
 
     to_add = []
@@ -24,6 +24,22 @@ def __init__(args, logger, client):
             to_add.append(os.fsdecode(p))
             infohash = torrent_hash(p)
             hashes.append(infohash)
+
+    if args.pause_active:
+        for t in client.torrents.info(status_filter="active"):
+            if t.state != 'uploading' and t.state != 'downloading':
+                continue
+
+            if t.upspeed > args.pause_active_upspeed_ignore_limit * 1024:
+                t.add_tags(['temp_paused'])
+                t.pause()
+                logger.info(f"Paused {t.name} in {t.state} state, upspeed: {t.upspeed / 1024} KiB/s")
+                continue
+
+            if t.dlspeed > args.pause_active_dlspeed_ignore_limit * 1024:
+                t.add_tags(['temp_paused'])
+                t.pause()
+                logger.info(f"Paused {t.name} in {t.state} state, dlspeed: {t.dlspeed / 1024} KiB/s")
 
     resp = client.torrents_add(
         torrent_files=to_add,
@@ -45,7 +61,6 @@ def __init__(args, logger, client):
     logger.info(f"Adding torrents: {resp}")
 
     if resp == 'Ok.':
-        logger.info('Setting share limits')
         client.torrents_set_share_limits(ratio_limit=args.ratio_limit, seeding_time_limit=args.seeding_time_limit, torrent_hashes=hashes)
 
 def torrent_hash(filepath):
@@ -76,4 +91,7 @@ def add_arguments(subparser):
     parser.add_argument('--seeding-time-limit', type=int, help='seeding time limit in minutes', default=-2, required=False)
     parser.add_argument('--max-downloads', type=int, help='Max downloads limit', default=0, required=False)
     parser.add_argument('--max-downloads-speed-ignore-limit', type=int, help='Doesn\'t count downloads with download speed under specified KiB/s for max limit', default=0, required=False)
+    parser.add_argument('--pause-active', action='store_true', help='Pause active torrents temporarily')
+    parser.add_argument('--pause-active-upspeed-ignore-limit', type=int, help='Doesn\'t count active torrents with upload speed under specified KiB/s for pausing', default=0, required=False)
+    parser.add_argument('--pause-active-dlspeed-ignore-limit', type=int, help='Doesn\'t count active torrents with download speed under specified KiB/s for pausing', default=0, required=False)
     parser.set_defaults(tmm=None, root_folder=None)
