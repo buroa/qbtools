@@ -12,7 +12,7 @@ def __init__(args, logger, client):
 
         if p.is_dir():
             contents = list(p.glob('*.torrent'))
-            to_add += list(map(lambda x: os.fsdecode(x)), contents)
+            to_add += list(map(lambda x: os.fsdecode(x), contents))
             hashes += list(map(lambda x: torrent_hash(x), contents))
         elif p.is_file():
             to_add.append(os.fsdecode(p))
