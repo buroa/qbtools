@@ -4,6 +4,12 @@ import pathlib, hashlib, os
 from bencoder import bencode, bdecode, bdecode2
 
 def __init__(args, logger, client):
+    active = len(list(filter(lambda x: x.dlspeed > args.max_downloads_speed_ignore_limit * 1024 and x.state == 'downloading', client.torrents.info(status_filter="downloading"))))
+
+    if args.max_downloads != 0 and active >= args.max_downloads:
+        logger.info(f"Reached max downloads: {active} {active_with_limit}")
+        return
+
     to_add = []
     hashes = []
 
@@ -68,4 +74,6 @@ def add_arguments(subparser):
     parser.add_argument('--first-last-piece-prio', action='store_true', help='Prioritize download first last piece')
     parser.add_argument('--ratio-limit', type=float, help='max ratio limit', default=-2, required=False)
     parser.add_argument('--seeding-time-limit', type=int, help='seeding time limit in minutes', default=-2, required=False)
+    parser.add_argument('--max-downloads', type=int, help='Max downloads limit', default=0, required=False)
+    parser.add_argument('--max-downloads-speed-ignore-limit', type=int, help='Doesn\'t count downloads with download speed under specified KiB/s for max limit', default=0, required=False)
     parser.set_defaults(tmm=None, root_folder=None)
