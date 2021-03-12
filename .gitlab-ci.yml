@@ -2,14 +2,13 @@ image: python:3.7-stretch
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  CCACHE_BASEDIR: "$PWD"
-  CCACHE_DIR: "$PWD/ccache"
+  CCACHE_DIR: "$CI_PROJECT_DIR/.cache/ccache"
 
 cache:
   paths:
     - .cache/pip
     - venv/
-    - ccache
+    - .cache/ccache
 
 stages: 
   - build
