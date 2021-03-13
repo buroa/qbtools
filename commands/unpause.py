@@ -11,7 +11,7 @@ def __init__(args, logger, client):
         return
 
     for t in client.torrents.info():
-        if 'temp_paused' in t.tags and t.state == 'pausedUP' or t.state == 'pausedDL':
+        if 'temp_paused' in t.tags and (t.state == 'pausedUP' or t.state == 'pausedDL'):
             t.resume()
             t.remove_tags(['temp_paused'])
             logger.info(f"Resumed {t.name}")
@@ -21,4 +21,3 @@ def __init__(args, logger, client):
 def add_arguments(subparser):
     parser = subparser.add_parser('unpause')
     parser.add_argument('-d', '--dl-ignore-limit', type=int, help='Doesn\'t count active torrents with download speed under specified KiB/s for unpausing', default=0, required=False)
-    parser.set_defaults(tmm=None, root_folder=None)
