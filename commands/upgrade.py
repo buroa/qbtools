@@ -47,19 +47,14 @@ def confirm():
         answer = input("OK to proceed [Y/N]? ").lower()
     return answer == "y"
 
-def __init__(args, logger, client):
+def __init__(args, logger):
     this.logger = logger
     
-    if not "__compiled__" in globals():
+    if not getattr(sys, 'oxidized', False):
         logger.error("Not a binary version, use git pull to upgrade")
         return
 
-    appimage = os.environ.get("APPIMAGE")
-    if not appimage:
-        logger.error("Non-AppImage environment?")
-        return
-
-    old_bin = Path(appimage)
+    old_bin = Path(sys.argv[0])
     if not old_bin.exists():
         logger.error("Current executable doesn't exist")
         return

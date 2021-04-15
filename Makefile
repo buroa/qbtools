@@ -2,18 +2,11 @@ all: clean deps build package
 
 deps:
 	pip3 install -U -r requirements.txt
-	curl -L https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -o appimagetool
-	chmod +x appimagetool
-	sed -i 's|AI\x02|\x00\x00\x00|' appimagetool
-	./appimagetool --appimage-extract
-	rm appimagetool
-	mv squashfs-root appimagetool
-package:
-	cp ./resources/* qbittools.dist/
-	./appimagetool/AppRun qbittools.dist/ --comp xz -n qbittools
 build:
-	nuitka3 --follow-imports --standalone --assume-yes-for-downloads --python-flag=no_site qbittools.py
+	pyoxidizer build --release
+	strip ./build/x86_64-unknown-linux-gnu/release/install/qbittools
+	upx --best --lzma ./build/x86_64-unknown-linux-gnu/release/install/qbittools
 install:
-	cp ./qbittools /usr/local/bin/qbittools
+	cp ./build/x86_64-unknown-linux-gnu/release/install/qbittools /usr/local/bin/qbittools
 clean:
-	rm -rf ./dist ./build ./qbittools.build ./qbittools.dist ./appimagetool
+	rm -rf ./dist ./build

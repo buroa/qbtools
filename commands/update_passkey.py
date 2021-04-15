@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import collections
+import qbittools
 
-def __init__(args, logger, client):
+def __init__(args, logger):
+    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+
     trackers = collections.defaultdict(int)
 
     for t in client.torrents.info():
@@ -28,3 +31,4 @@ def add_arguments(subparser):
     parser.add_argument('--old', metavar='oldpasskey', help='Old passkey', required=True)
     parser.add_argument('--new', metavar='newpasskey', help='New passkey', required=True)
     parser.add_argument('-d', '--dry-run', action='store_true')
+    qbittools.add_default_args(parser)

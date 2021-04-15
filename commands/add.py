@@ -2,8 +2,10 @@
 
 import pathlib, hashlib, os
 from bencoder import bencode, bdecode, bdecode2
+import qbittools
 
-def __init__(args, logger, client):
+def __init__(args, logger):
+    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
     active = len(list(filter(lambda x: x.dlspeed > args.max_downloads_speed_ignore_limit * 1024 and x.state == 'downloading', client.torrents.info(status_filter="downloading"))))
 
     if args.max_downloads != 0 and active >= args.max_downloads:
@@ -71,6 +73,7 @@ def torrent_hash(filepath):
 
 def add_arguments(subparser):
     parser = subparser.add_parser('add')
+    qbittools.add_default_args(parser)
     parser.add_argument('torrents', nargs='+', metavar='my.torrent', help='torrents path')
     parser.add_argument('-o', '--save-path', metavar='/home/user/downloads', help='Download folder', required=False)
     parser.add_argument('--cookie', help='Cookie sent to download the .torrent file', required=False)

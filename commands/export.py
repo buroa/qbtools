@@ -2,8 +2,11 @@
 
 import os, shutil, tldextract
 from pathlib import Path
+import qbittools
 
-def __init__(args, logger, client):
+def __init__(args, logger):
+    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+
     if args.tags:
         matches = list(filter(lambda x: any(y in x.tags for y in args.tags), client.torrents.info(category=args.category)))
         torrents = list(map(lambda x: (x.hash, x.name, x.trackers), matches))
@@ -39,6 +42,7 @@ def __init__(args, logger, client):
 
 def add_arguments(subparser):
     parser = subparser.add_parser('export')
+    qbittools.add_default_args(parser)
     parser.add_argument('-i', '--input', metavar='~/.local/share/qBittorrent/BT_backup', default='~/.local/share/qBittorrent/BT_backup', help='Path to qBittorrent .torrent files', required=False)
     parser.add_argument('-o', '--output', metavar='~/export', help='Path to where to save exported torrents', required=True)
     parser.add_argument('-c', '--category', metavar='mycategory', help='Filter by category', required=False)

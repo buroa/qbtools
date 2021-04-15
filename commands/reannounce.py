@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import time
+import qbittools
 
-def __init__(args, logger, client):
+def __init__(args, logger):
+    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+
     iterations = 0
     timeout = 5
 
@@ -42,4 +45,5 @@ def __init__(args, logger, client):
         time.sleep(timeout)
 
 def add_arguments(subparser):
-    subparser.add_parser('reannounce')
+    parser = subparser.add_parser('reannounce')
+    qbittools.add_default_args(parser)

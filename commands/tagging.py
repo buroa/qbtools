@@ -4,6 +4,7 @@ import collections
 from datetime import datetime
 import tldextract
 from tqdm import tqdm
+import qbittools
 
 def format_bytes(size):
     power = 2**10
@@ -15,7 +16,9 @@ def format_bytes(size):
     formatted = round(size, 2)
     return f"{formatted} {power_labels[n]}"
 
-def __init__(args, logger, client):
+def __init__(args, logger):
+    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+
     today = datetime.today()
     default_tags = ['Not Working', 'added:', 'Unregistered', 't:', 'Duplicates']
 
@@ -90,3 +93,4 @@ def __init__(args, logger, client):
 def add_arguments(subparser):
     parser = subparser.add_parser('tagging')
     parser.add_argument('--move-unregistered', action='store_true', help='Move unregistered torrents to Unregistered category')
+    qbittools.add_default_args(parser)

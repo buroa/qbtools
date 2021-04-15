@@ -1,40 +1,27 @@
-image: python:3.7-stretch
+image: rust:latest
 
 variables:
-  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
-  CCACHE_DIR: "$CI_PROJECT_DIR/.cache/ccache"
-  CCACHE_COMPILERCHECK: content
+  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
 
 cache:
   paths:
-    - .cache/pip
-    - venv/
-    - .cache/ccache
+    - .cargo
 
 stages: 
   - build
 
 before_script:
-  - apt-get update -qq && apt-get install -yqq ccache
-  - ccache --zero-stats || true
-  - ccache --show-stats || true
-  - python -V
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-  - make deps
-
-after_script:
-  - ccache --show-stats
+  - rustc --version && cargo --version
+  - apt-get update -qq && apt-get install -yqq clang
+  - cargo install pyoxidizer
 
 release:
   stage: build
   script:
     - echo __version__ = \"$CI_COMMIT_TAG\" > _version.py
     - make build
-    - make package
     - pip3 install -U gitlab-release
-    - gitlab-release --link-artifact qbittools
+    - gitlab-release --link-artifact ./build/x86_64-unknown-linux-gnu/release/install/qbittools
   artifacts:
     paths:
       - qbittools

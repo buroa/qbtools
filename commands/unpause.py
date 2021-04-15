@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import pathlib, hashlib, os
+import qbittools
 
-def __init__(args, logger, client):
+def __init__(args, logger):
+    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+
     torrents = client.torrents.info(status_filter="downloading")
     active = len(list(filter(lambda x: x.state == 'downloading' and x.dlspeed > args.dl_ignore_limit * 1024, torrents)))
 
@@ -21,3 +24,4 @@ def __init__(args, logger, client):
 def add_arguments(subparser):
     parser = subparser.add_parser('unpause')
     parser.add_argument('-d', '--dl-ignore-limit', type=int, help='Doesn\'t count active torrents with download speed under specified KiB/s for unpausing', default=0, required=False)
+    qbittools.add_default_args(parser)

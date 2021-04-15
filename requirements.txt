@@ -2,7 +2,6 @@ qbittorrent-api
 tldextract
 tqdm
 requests
-nuitka
 bencoder.pyx
 gitpython
 packaging
