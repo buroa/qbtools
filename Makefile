@@ -1,3 +1,5 @@
+.PHONY: build
+
 all: clean deps build package
 
 deps:
