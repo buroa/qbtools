@@ -22,10 +22,11 @@ release:
   script:
     - echo __version__ = \"$CI_COMMIT_TAG\" > _version.py
     - make build
+    - cp ./build/x86_64-unknown-linux-gnu/release/install/qbittools ./qbittools
     - pip3 install -U gitlab-release
-    - gitlab-release --link-artifact ./build/x86_64-unknown-linux-gnu/release/install/qbittools
+    - gitlab-release --link-artifact qbittools
   artifacts:
     paths:
-      - ./build/x86_64-unknown-linux-gnu/release/install/qbittools
+      - qbittools
   only:
     - tags
