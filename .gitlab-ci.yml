@@ -6,6 +6,7 @@ variables:
 cache:
   paths:
     - .cargo
+    - build
 
 stages: 
   - build
@@ -14,6 +15,7 @@ before_script:
   - rustc --version && cargo --version
   - apt-get update -qq && apt-get install -yqq clang
   - cargo install pyoxidizer
+  - export PATH="$CI_PROJECT_DIR/.cargo/bin:$PATH"
 
 release:
   stage: build
