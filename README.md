@@ -43,7 +43,7 @@ git clone https://gitlab.com/AlexKM/qbittools.git && cd qbittools
 # build the image
 docker build -t qbittools:latest --pull .
 # run a container with the resulting binary and access to host network
-docker run -it --rm --network host qbittools
+docker run -it --rm --network host qbittools reannounce -p 12345
 ```
 
 ### Run as a script (optional)

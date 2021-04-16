@@ -13,4 +13,4 @@ FROM debian:buster-slim
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt update && apt install -y git ca-certificates --no-install-recommends && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /usr/src/myapp/build/x86_64-unknown-linux-gnu/release/install/qbittools /qbittools
-CMD ["/qbittools"]
+ENTRYPOINT ["/qbittools"]
