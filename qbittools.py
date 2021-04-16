@@ -20,13 +20,15 @@ def qbit_client(server, port, username, password):
     try:
         client.auth_log_in()
     except qbittorrentapi.LoginFailed as e:
-        logger.error(e)
+        logger().error(e)
     return client
+
+def logger():
+    return logging.getLogger(__name__)
 
 def main():
     logging.getLogger("filelock").setLevel(logging.ERROR) # supress lock messages
     logging.basicConfig(stream=sys.stdout, level=logging.INFO, format='%(asctime)s %(levelname)s:%(message)s', datefmt='%I:%M:%S %p')
-    logger = logging.getLogger(__name__)
 
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='command')
@@ -42,7 +44,7 @@ def main():
         sys.exit()
 
     mod = getattr(globals()['commands'], args.command)
-    cmd = getattr(mod, '__init__')(args, logger)
+    cmd = getattr(mod, '__init__')(args, logger())
 
 if __name__ == "__main__":
     main()
