@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse, logging, sys, pkgutil, collections, os
+
+if getattr(sys, 'oxidized', False):
+    os.environ['PYOXIDIZER'] = '1'
+
 import qbittorrentapi
 import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade, commands.unpause
 
@@ -27,8 +31,7 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='command')
 
-    pkgpath = os.path.dirname(commands.__file__)
-    for f, cmd, d in pkgutil.iter_modules([pkgpath]):
+    for cmd in ['add', 'export', 'reannounce', 'update_passkey', 'tagging', 'upgrade', 'unpause']:
         mod = getattr(globals()['commands'], cmd)
         getattr(mod, 'add_arguments')(subparsers)
 
