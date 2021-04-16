@@ -1,26 +1,8 @@
 ## Requirements
 
-git
+`git`, `gcc` (>= 4.2.0), `glibc` (>= 2.25)
 
-gcc
------
-Minimum Version: 4.2.0
-Minimum Distro Versions:
-  Debian 7
-  Fedora 16
-  OpenSUSE 11.4
-  RHEL 6
-  Ubuntu 12.04
-
-glibc
------
-Minimum Version: 2.25
-Minimum Distro Versions:
-  Debian 10
-  Fedora 26
-  OpenSUSE 15.0
-  RHEL 8
-  Ubuntu 18.04
+Minimum Linux Distro Versions: Debian 10, Fedora 26, OpenSUSE 15.0, RHEL 8, Ubuntu 18.04
 
 ## Installation
 
