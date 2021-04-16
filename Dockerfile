@@ -5,6 +5,7 @@ RUN apt update && apt install -y clang upx binutils --no-install-recommends && r
 RUN cargo install --version 0.13.0 pyoxidizer
 COPY . .
 RUN pyoxidizer build --release
+RUN pyoxidizer analyze build/x86_64-unknown-linux-gnu/release/install/qbittools
 RUN strip build/x86_64-unknown-linux-gnu/release/install/qbittools
 RUN upx --best --lzma build/x86_64-unknown-linux-gnu/release/install/qbittools
 
