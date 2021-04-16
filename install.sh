@@ -22,5 +22,5 @@ tag=$(git ls-remote --exit-code --tags --refs https://gitlab.com/AlexKM/qbittool
 curl -L https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/$tag/download?job=release -o $temp_dir/qbittools.zip
 unzip $temp_dir/qbittools.zip -d $temp_dir
 mv $temp_dir/qbittools $destination
-chmod +x $destination
+chmod +rx $destination
 rm -rf $temp_dir
