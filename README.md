@@ -45,7 +45,7 @@ make deps
 
 Upgrading to the latest version is available with the `upgrade` command (use sudo if it's in a system path):
 ```bash
-# qbittools upgrade
+$ qbittools upgrade
 07:24:14 PM INFO:Current version: 0.0.0
 07:24:14 PM INFO:Latest version: 0.0.1
 07:24:14 PM INFO:Update available, this will replace /usr/local/bin/qbittools with a new version.
