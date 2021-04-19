@@ -53,8 +53,8 @@ def __init__(args, logger):
     if not getattr(sys, 'oxidized', False):
         logger.error("Not a binary version, use git pull to upgrade")
         return
-
-    old_bin = Path(sys.argv[0])
+    
+    old_bin = Path(sys.executable)
     if not old_bin.exists():
         logger.error("Current executable doesn't exist")
         return
