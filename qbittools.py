@@ -7,7 +7,7 @@ if getattr(sys, 'oxidized', False):
     os.environ['PYOXIDIZER'] = '1'
 
 import qbittorrentapi
-import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade, commands.unpause
+import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade, commands.unpause, commands.mover
 
 def add_default_args(parser):
     parser.add_argument('-C', '--config', metavar='~/.config/qBittorrent/qBittorrent.conf', default='~/.config/qBittorrent/qBittorrent.conf', required=False)
@@ -63,7 +63,7 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest='command')
 
-    for cmd in ['add', 'export', 'reannounce', 'update_passkey', 'tagging', 'upgrade', 'unpause']:
+    for cmd in ['add', 'export', 'reannounce', 'update_passkey', 'tagging', 'upgrade', 'unpause', 'mover']:
         mod = getattr(globals()['commands'], cmd)
         getattr(mod, 'add_arguments')(subparsers)
 

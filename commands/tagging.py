@@ -5,6 +5,7 @@ from datetime import datetime
 import tldextract
 from tqdm import tqdm
 import qbittools
+import qbittorrentapi
 
 def format_bytes(size):
     power = 2**10
