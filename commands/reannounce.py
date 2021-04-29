@@ -8,6 +8,7 @@ def __init__(args, logger):
 
     iterations = 0
     timeout = 5
+    logger.info('Started reannounce process')
 
     while True:
         iterations += 1
@@ -34,14 +35,6 @@ def __init__(args, logger):
                     t.reannounce()
                 else:
                     logger.info(f"[{t.name}] has no seeds, active for {t.time_active}s, waiting {(2 - iterations % 2) * timeout}s...")
-            elif t.num_seeds == 0 and t.progress > 0:
-                if iterations % 10 == 0:
-                    logger.info(f"[{t.name}] is active, but has no seeds, active for {t.time_active}s, progress: {round(t.progress * 100, 1)}%, reannouncing...")
-                    t.reannounce()
-                else:
-                    logger.info(f"[{t.name}] is active, but has no seeds, active for {t.time_active}s, progress: {round(t.progress * 100, 1)}%, waiting {(10 - iterations % 10) * timeout}s...")
-            else:
-                logger.info(f"[{t.name}] is active, progress: {round(t.progress * 100, 1)}%")
         time.sleep(timeout)
 
 def add_arguments(subparser):
