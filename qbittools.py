@@ -12,7 +12,7 @@ import commands.add, commands.export, commands.reannounce, commands.update_passk
 def add_default_args(parser):
     parser.add_argument('-C', '--config', metavar='~/.config/qBittorrent/qBittorrent.conf', default='~/.config/qBittorrent/qBittorrent.conf', required=False)
     parser.add_argument('-p', '--port', metavar='12345', help='port', required=False)
-    parser.add_argument('-s', '--server', metavar='127.0.0.1', default='127.0.0.1', help='host', required=False)
+    parser.add_argument('-s', '--server', metavar='127.0.0.1', help='host', required=False)
     parser.add_argument('-U', '--username', metavar='username', required=False)
     parser.add_argument('-P', '--password', metavar='password', required=False)
 
