@@ -88,27 +88,27 @@ optional arguments:
 ##### Examples
 Add a single torrent with custom category
 ```bash
-$ qbittools add -p 12345 /path/to/my.torrent -c mycategory
+$ qbittools add /path/to/my.torrent -c mycategory
 ```
 
 Add a folder of torrents and assign multiple tags
 ```bash
-$ qbittools add -p 12345 /path/to/folder -t mytag1 mytag2
+$ qbittools add /path/to/folder -t mytag1 mytag2
 ```
 
 Add a torrent in paused state and skip hash checking
 ```bash
-$ qbittools add -p 12345 /path/to/my.torrent --add-paused --skip-checking
+$ qbittools add /path/to/my.torrent --add-paused --skip-checking
 ```
 
 Don't add more torrents if there are more than 3 downloads active while ignoring downloads with speed under 1 MiB/s
 ```bash
-$ qbittools add -p 12345 /path/to/my.torrent --max-downloads 3 --max-downloads-speed-ignore-limit 1024
+$ qbittools add /path/to/my.torrent --max-downloads 3 --max-downloads-speed-ignore-limit 1024
 ```
 
 Pause all active torrents temporarily and mark them with `temp_paused` tag while ignoring active downloads with speed under 1 MiB/s and active uploads with speed under 10 MiB/s (**You have** to configure unpause command in qBittorrent if you want these torrents to be unpaused automatically)
 ```bash
-$ qbittools add -p 12345 /path/to/my.torrent --pause-active --pause-active-dlspeed-ignore-limit 1024 --pause-active-upspeed-ignore-limit 10240
+$ qbittools add /path/to/my.torrent --pause-active --pause-active-dlspeed-ignore-limit 1024 --pause-active-upspeed-ignore-limit 10240
 ```
 
 ##### ruTorrent / AutoDL
@@ -116,7 +116,7 @@ Adding torrents from autodl-irssi to qBittorrent using ruTorrent:
 ```
 Action = Run Program
 Command = /usr/local/bin/qbittools
-Arguments = add -p 12345 $(TorrentPathName) -c music
+Arguments = add $(TorrentPathName) -c music
 ```
 
 #### Unpause
@@ -125,33 +125,33 @@ Only useful if you pause torrents automatically with `--pause-active` parameters
 ##### Examples
 Resume all torrents with `temp_paused` tag if there are no active downloads while ignoring slow downloads under 10 MiB/s
 ```bash
-$ qbittools unpause -p 12345 -d 10240
+$ qbittools unpause -d 10240
 ```
 
 ##### Automatic unpause in qBittorrent
 
 Check `Run external program on torrent completion` in the settings and use tool with an absolute path:
 ```
-/usr/local/bin/qbittools unpause -p 12345 -d 10240
+/usr/local/bin/qbittools unpause -d 10240
 ```
 
 #### Tagging
 ##### Examples
 Create useful tags to group torrents by tracker domains, not working trackers, unregistered torrents and duplicates
 ```bash
-$ qbittools tagging -p 12345
+$ qbittools tagging
 ```
 
 ##### Automatic tagging with Cron
 Execute every 10 minutes (`crontab -e` and add this entry)
 ```
-*/10 * * * * /usr/local/bin/qbittools tagging -p 12345
+*/10 * * * * /usr/local/bin/qbittools tagging
 ```
 
 #### Reannounce
 Automatic reannounce on problematic trackers (run in screen/tmux to prevent it from closing when you end a ssh session):
 ```bash
-$ qbittools reannounce -p 12345
+$ qbittools reannounce
 07:40:40 PM --------------------------
 07:40:40 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is not working, active for 1s, reannouncing...
 07:41:20 PM --------------------------
@@ -167,17 +167,36 @@ $ qbittools reannounce -p 12345
 #### Update passkey
 Update passkey in all matching torrents (all tracker urls that match `--old` parameter):
 ```bash
-$ qbittools update_passkey -p 12345 --old 12345 --new v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc
+$ qbittools update_passkey --old 12345 --new v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc
 2021-01-08 21:38:45,301 INFO:Replaced [https://trackerurl.net/12345/announce] to [https://trackerurl.net/v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc/announce] in 10 torrents
 ```
 
 #### Export
 Export all matching .torrent files by category or tags:
 ```bash
-$ qbittools export -p 12345 -o ./export --category movies --tags tracker.org mytag
+$ qbittools export -o ./export --category movies --tags tracker.org mytag
 01:23:43 PM INFO:Matched 47 torrents
 01:23:43 PM INFO:Exported [movies] Fatman.2020.BluRay.1080p.TrueHD.5.1.AVC.REMUX-FraMeSToR [fbef10dc89bf8dff21a401d9304f62b074ffd6af].torrent
 01:23:43 PM INFO:Exported [movies] La.Haine.1995.UHD.BluRay.2160p.DTS-HD.MA.5.1.DV.HEVC.REMUX-FraMeSToR [ee5ff82613c7fcd2672e2b60fc64375486f976ba].torrent
 01:23:43 PM INFO:Exported [movies] Ip.Man.3.2015.UHD.BluRay.2160p.TrueHD.Atmos.7.1.DV.HEVC.REMUX-FraMeSToR [07da008f9c64fe4927ee18ac5c94292f61098a69].torrent
 01:23:43 PM INFO:Exported [movies] Brazil.1985.Director's.Cut.BluRay.1080p.FLAC.2.0.AVC.REMUX-FraMeSToR [988e8749a9d3f07e5d216001efc938b732579c16].torrent
+```
+
+#### Mover
+Useful for those who want to move torrents to different categories over time
+
+Move torrents inactive for more than 60 seconds and completed more than 60 minutes ago from categories `tracker1` and `tracker2` to category `lts` 
+```bash
+$ qbittools mover tracker1 tracker2 -d lts
+```
+
+Move torrents inactive for more than 600 seconds and completed more than 30 minutes ago from category `racing` to category `lts` 
+```bash
+$ qbittools mover racing -d lts --completion-threshold 30 --active-threshold 600
+```
+
+##### Automatic moving with Cron
+Execute every 10 minutes (`crontab -e` and add this entry)
+```
+*/10 * * * * /usr/local/bin/qbittools mover racing -d lts
 ```
