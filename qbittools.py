@@ -2,6 +2,7 @@
 
 import argparse, logging, sys, pkgutil, collections, os, configparser
 from pathlib import Path
+import ipaddress
 
 if getattr(sys, 'oxidized', False):
     os.environ['PYOXIDIZER'] = '1'
@@ -51,6 +52,13 @@ def config_values(path):
 
     preferences = config['Preferences']
     host = preferences.get('webui\\address')
+
+    if not host is None:
+        try:
+            host = ipaddress.ip_address(host)
+        except ValueError as e:
+            host = '127.0.0.1'
+
     port = preferences.get('webui\\port')
     user = preferences.get('webui\\username')
 
