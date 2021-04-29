@@ -40,7 +40,6 @@ def __init__(args, logger):
 
 def add_arguments(subparser):
     parser = subparser.add_parser('mover')
-    parser.add_argument('--move-active', action='store_true', help='Move active torrents too (only inactive by default)')
     parser.add_argument('source', nargs='+', metavar='category1 category2', help='A list of categories to move to another category')
     parser.add_argument('-d', '--destination', metavar='mycategory', help='A category in which all torrents will be moved', required=True)
     parser.add_argument('--active-threshold', type=int, help='Move only torrents with last activity more than N seconds ago', default=60, required=False)
