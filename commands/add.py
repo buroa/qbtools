@@ -5,7 +5,7 @@ from bencoder import bencode, bdecode, bdecode2
 import qbittools
 
 def __init__(args, logger):
-    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+    client = qbittools.qbit_client(args)
     active = len(list(filter(lambda x: x.dlspeed > args.max_downloads_speed_ignore_limit * 1024 and x.state == 'downloading', client.torrents.info(status_filter="downloading"))))
 
     if args.max_downloads != 0 and active >= args.max_downloads:
@@ -16,7 +16,7 @@ def __init__(args, logger):
     hashes = []
 
     for t in args.torrents:
-        p = pathlib.Path(os.fsdecode(t))
+        p = pathlib.Path(os.fsdecode(t)).expanduser()
 
         if p.is_dir():
             contents = list(p.glob('*.torrent'))

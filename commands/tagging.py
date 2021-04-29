@@ -17,7 +17,7 @@ def format_bytes(size):
     return f"{formatted} {power_labels[n]}"
 
 def __init__(args, logger):
-    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+    client = qbittools.qbit_client(args)
 
     today = datetime.today()
     default_tags = ['Not Working', 'added:', 'Unregistered', 't:', 'Duplicates']

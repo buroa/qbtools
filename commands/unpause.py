@@ -4,7 +4,7 @@ import pathlib, hashlib, os
 import qbittools
 
 def __init__(args, logger):
-    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+    client = qbittools.qbit_client(args)
 
     torrents = client.torrents.info(status_filter="downloading")
     active = len(list(filter(lambda x: x.state == 'downloading' and x.dlspeed > args.dl_ignore_limit * 1024, torrents)))

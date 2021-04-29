@@ -4,7 +4,7 @@ import collections
 import qbittools
 
 def __init__(args, logger):
-    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+    client = qbittools.qbit_client(args)
 
     trackers = collections.defaultdict(int)
 

@@ -6,19 +6,17 @@ import git, requests
 import os, tempfile, sys, zipfile, shutil, subprocess
 from pathlib import Path
 from tqdm import tqdm
-
-this = sys.modules[__name__]
-this.logger = None
+import qbittools
 
 def download_version(ver):
     url = f"https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/{ver}/download?job=release"
     temp_dir = tempfile.mkdtemp()
     download_file = Path(temp_dir, "qbittools.zip")
-    this.logger.info(f"Downloading {url} to {download_file}")
+    qbittools.logger.info(f"Downloading {url} to {download_file}")
 
     r = requests.get(url, stream=True)
     if r.status_code != requests.codes.ok:
-        this.logger.error(f"Invalid status code: {r.status_code}")
+        qbittools.logger.error(f"Invalid status code: {r.status_code}")
         return
 
     total_size_in_bytes = int(r.headers.get('content-length', 0))
@@ -31,7 +29,7 @@ def download_version(ver):
 
     progress_bar.close()
     if total_size_in_bytes != 0 and progress_bar.n != total_size_in_bytes:
-        this.logger.error("ERROR, something went wrong")
+        qbittools.logger.error("ERROR, something went wrong")
         return
 
     return download_file, temp_dir
@@ -48,8 +46,6 @@ def confirm():
     return answer == "y"
 
 def __init__(args, logger):
-    this.logger = logger
-    
     if not getattr(sys, 'oxidized', False):
         logger.error("Not a binary version, use git pull to upgrade")
         return

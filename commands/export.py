@@ -5,7 +5,7 @@ from pathlib import Path
 import qbittools
 
 def __init__(args, logger):
-    client = qbittools.qbit_client(args.server, args.port, args.username, args.password)
+    client = qbittools.qbit_client(args)
 
     if args.tags:
         matches = list(filter(lambda x: any(y in x.tags for y in args.tags), client.torrents.info(category=args.category)))
