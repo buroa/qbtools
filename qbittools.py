@@ -38,7 +38,7 @@ def qbit_client(args):
     try:
         client.auth_log_in()
     except qbittorrentapi.LoginFailed as e:
-        logger().error(e)
+        logger.error(e)
     return client
 
 logger = logging.getLogger(__name__)
