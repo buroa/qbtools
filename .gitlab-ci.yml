@@ -3,13 +3,12 @@ image: python:3
 variables:
   CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PYOXIDIZER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pyoxidizer"
 
 cache:
   paths:
     - .cache
     - .cargo
-    - build
-    - /root/.cache
     - venv
 
 stages: 
