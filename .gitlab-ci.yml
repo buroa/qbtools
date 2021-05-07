@@ -10,6 +10,7 @@ cache:
     - .cargo
     - build
     - /root/.cache
+    - venv
 
 stages: 
   - build
@@ -20,8 +21,11 @@ before_script:
   - export PATH="$CI_PROJECT_DIR/.cargo/bin:$PATH"
   - rustc --version && cargo --version
   - rustup target add x86_64-unknown-linux-musl
-  - python3 -m pip install pyoxidizer==0.15.0
-
+  - pip install virtualenv
+  - virtualenv venv
+  - source venv/bin/activate
+  - pip install pyoxidizer==0.15.0
+ 
 release:
   stage: build
   script:
@@ -30,7 +34,7 @@ release:
     - strip build/x86_64-unknown-linux-musl/release/install/qbittools
     - upx --best --lzma build/x86_64-unknown-linux-musl/release/install/qbittools
     - cp ./build/x86_64-unknown-linux-musl/release/install/qbittools ./qbittools
-    - pip3 install -U gitlab-release
+    - pip install -U gitlab-release
     - gitlab-release --link-artifact qbittools
   artifacts:
     paths:
