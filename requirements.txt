@@ -2,6 +2,5 @@ qbittorrent-api
 tldextract
 tqdm
 requests
-bencoder.pyx
 gitpython
 packaging

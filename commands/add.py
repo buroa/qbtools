@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import pathlib, hashlib, os
-from bencoder import bencode, bdecode, bdecode2
+import pathlib, os
 import qbittools
 
 def __init__(args, logger):
@@ -13,7 +12,6 @@ def __init__(args, logger):
         return
 
     to_add = []
-    hashes = []
 
     for t in args.torrents:
         p = pathlib.Path(os.fsdecode(t)).expanduser()
@@ -21,11 +19,8 @@ def __init__(args, logger):
         if p.is_dir():
             contents = list(p.glob('*.torrent'))
             to_add += list(map(lambda x: os.fsdecode(x), contents))
-            hashes += list(map(lambda x: torrent_hash(x), contents))
         elif p.is_file():
             to_add.append(os.fsdecode(p))
-            infohash = torrent_hash(p)
-            hashes.append(infohash)
 
     if args.pause_active:
         for t in client.torrents.info(status_filter="active"):
@@ -58,18 +53,11 @@ def __init__(args, logger):
         is_sequential_download=args.sequential,
         is_first_last_piece_priority=args.first_last_piece_prio,
         tags=','.join(args.tags),
+        ratio_limit=args.ratio_limit,
+        seeding_time_limit=args.seeding_time_limit
     )
 
     logger.info(f"Adding torrents: {resp}")
-
-    if resp == 'Ok.':
-        client.torrents_set_share_limits(ratio_limit=args.ratio_limit, seeding_time_limit=args.seeding_time_limit, torrent_hashes=hashes)
-
-def torrent_hash(filepath):
-    with filepath.open('rb') as f:
-        torrent = bdecode(f.read())
-        info = torrent[b'info']
-        return hashlib.sha1(bencode(info)).hexdigest()
 
 def add_arguments(subparser):
     parser = subparser.add_parser('add')
@@ -90,8 +78,8 @@ def add_arguments(subparser):
     parser.add_argument('--no-tmm', action='store_false', dest='tmm', help='Disable Automatic Torrent Management')
     parser.add_argument('--sequential', action='store_true', help='Enable sequential download')
     parser.add_argument('--first-last-piece-prio', action='store_true', help='Prioritize download first last piece')
-    parser.add_argument('--ratio-limit', type=float, help='max ratio limit', default=-2, required=False)
-    parser.add_argument('--seeding-time-limit', type=int, help='seeding time limit in minutes', default=-2, required=False)
+    parser.add_argument('--ratio-limit', type=float, help='max ratio limit, qBit 4.3.4+', default=-2, required=False)
+    parser.add_argument('--seeding-time-limit', type=int, help='seeding time limit in minutes, qBit 4.3.4+', default=-2, required=False)
     parser.add_argument('--max-downloads', type=int, help='Max downloads limit', default=0, required=False)
     parser.add_argument('--max-downloads-speed-ignore-limit', type=int, help='Doesn\'t count downloads with download speed under specified KiB/s for max limit', default=0, required=False)
     parser.add_argument('--pause-active', action='store_true', help='Pause active torrents temporarily')
