@@ -1,10 +1,11 @@
-image: rust:latest
+image: python:3
 
 variables:
   CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
 
 cache:
   paths:
+    - .cache
     - .cargo
     - build
 
@@ -12,17 +13,21 @@ stages:
   - build
 
 before_script:
-  - rustc --version && cargo --version
-  - apt-get update -qq && apt-get install -yqq clang upx python3-pip --no-install-recommends
-  - cargo install --version 0.13.2 pyoxidizer
+  - apt-get update -qq && apt-get install -yqq clang upx binutils musl-tools --no-install-recommends
+  - curl https://sh.rustup.rs -sSf | bash -s -- -y
   - export PATH="$CI_PROJECT_DIR/.cargo/bin:$PATH"
+  - rustc --version && cargo --version
+  - rustup target add x86_64-unknown-linux-musl
+  - python3 -m pip install pyoxidizer==0.15.0
 
 release:
   stage: build
   script:
     - echo __version__ = \"$CI_COMMIT_TAG\" > _version.py
-    - make build
-    - cp ./build/x86_64-unknown-linux-gnu/release/install/qbittools ./qbittools
+    - pyoxidizer build --release --target-triple x86_64-unknown-linux-musl
+    - strip build/x86_64-unknown-linux-musl/release/install/qbittools
+    - upx --best --lzma build/x86_64-unknown-linux-musl/release/install/qbittools
+    - cp ./build/x86_64-unknown-linux-musl/release/install/qbittools ./qbittools
     - pip3 install -U gitlab-release
     - gitlab-release --link-artifact qbittools
   artifacts:
