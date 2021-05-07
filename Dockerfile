@@ -1,16 +1,17 @@
-FROM rust:latest as builder
+FROM python:3 as builder
 ENV DEBIAN_FRONTEND noninteractive
+RUN apt update && apt install -y clang upx binutils musl-tools --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
+ENV PATH="/root/.cargo/bin:${PATH}"
+RUN rustup target add x86_64-unknown-linux-musl
+RUN python3 -m pip install pyoxidizer==0.15.0
 WORKDIR /usr/src/myapp
-RUN apt update && apt install -y clang upx binutils --no-install-recommends && rm -rf /var/lib/apt/lists/*
-RUN cargo install --version 0.13.0 pyoxidizer
 COPY . .
-RUN pyoxidizer build --release
-RUN pyoxidizer analyze build/x86_64-unknown-linux-gnu/release/install/qbittools
-RUN strip build/x86_64-unknown-linux-gnu/release/install/qbittools
-RUN upx --best --lzma build/x86_64-unknown-linux-gnu/release/install/qbittools
+RUN pyoxidizer build --release --target-triple x86_64-unknown-linux-musl
+RUN strip build/x86_64-unknown-linux-musl/release/install/qbittools
+RUN upx --best --lzma build/x86_64-unknown-linux-musl/release/install/qbittools
 
-FROM debian:buster-slim
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt update && apt install -y git ca-certificates --no-install-recommends && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /usr/src/myapp/build/x86_64-unknown-linux-gnu/release/install/qbittools /qbittools
-ENTRYPOINT ["/qbittools"]
+FROM alpine:latest
+RUN apk add --no-cache git ca-certificates
+COPY --from=builder /usr/src/myapp/build/x86_64-unknown-linux-musl/release/install/qbittools /usr/local/bin/qbittools
+ENTRYPOINT ["qbittools"]

@@ -1,6 +1,7 @@
 # This file defines how PyOxidizer application building and packaging is
-# performed. See the pyoxidizer crate's documentation for extensive
-# documentation on this file format.
+# performed. See PyOxidizer's documentation at
+# https://pyoxidizer.readthedocs.io/en/stable/ for details of this
+# configuration file format.
 
 # Obtain the default PythonDistribution for our build target. We link
 # this distribution into our produced executable and extract the Python
@@ -48,8 +49,8 @@ def make_exe(dist):
     # policy.extension_module_filter = "no-libraries"
 
     # Package Python extensions in the distribution not having a dependency on
-    # GPL licensed software.
-    # policy.extension_module_filter = "no-gpl"
+    # copyleft licensed software like GPL.
+    # policy.extension_module_filter = "no-copyleft"
 
     # Controls whether the file scanner attempts to classify files and emit
     # resource-specific values.
@@ -126,7 +127,7 @@ def make_exe(dist):
 
     # Set initial value for `sys.path`. If the string `$ORIGIN` exists in
     # a value, it will be expanded to the directory of the built executable.
-    # python_config.module_search_paths = ["$ORIGIN/commands"]
+    # python_config.module_search_paths = ["$ORIGIN/lib"]
 
     # Use jemalloc as Python's memory allocator.
     # python_config.allocator_backend = "jemalloc"
@@ -179,10 +180,10 @@ def make_exe(dist):
     python_config.run_command = "import qbittools; qbittools.main()"
 
     # Run a Python module as __main__ when the interpreter starts.
-    #python_config.run_module = "qbittools"
+    # python_config.run_module = "<module>"
 
     # Run a Python file when the interpreter starts.
-    # python_config.run_filename = "qbittools"
+    # python_config.run_filename = "/path/to/file"
 
     # Produce a PythonExecutable from a Python distribution, embedded
     # resources, and other options. The returned object represents the
@@ -274,11 +275,63 @@ def make_install(exe):
 
     return files
 
+def make_msi(exe):
+    # See the full docs for more. But this will convert your Python executable
+    # into a `WiXMSIBuilder` Starlark type, which will be converted to a Windows
+    # .msi installer when it is built.
+    return exe.to_wix_msi_builder(
+        # Simple identifier of your app.
+        "myapp",
+        # The name of your application.
+        "My Application",
+        # The version of your application.
+        "1.0",
+        # The author/manufacturer of your application.
+        "Alice Jones"
+    )
+
+
+# Dynamically enable automatic code signing.
+def register_code_signers():
+    # You will need to run with `pyoxidizer build --var ENABLE_CODE_SIGNING 1` for
+    # this if block to be evaluated.
+    if not VARS.get("ENABLE_CODE_SIGNING"):
+        return
+
+    # Use a code signing certificate in a .pfx/.p12 file, prompting the
+    # user for its path and password to open.
+    # pfx_path = prompt_input("path to code signing certificate file")
+    # pfx_password = prompt_password(
+    #     "password for code signing certificate file",
+    #     confirm = True
+    # )
+    # signer = code_signer_from_pfx_file(pfx_path, pfx_password)
+
+    # Use a code signing certificate in the Windows certificate store, specified
+    # by its SHA-1 thumbprint. (This allows you to use YubiKeys and other
+    # hardware tokens if they speak to the Windows certificate APIs.)
+    # sha1_thumbprint = prompt_input(
+    #     "SHA-1 thumbprint of code signing certificate in Windows store"
+    # )
+    # signer = code_signer_from_windows_store_sha1_thumbprint(sha1_thumbprint)
+
+    # Choose a code signing certificate automatically from the Windows
+    # certificate store.
+    # signer = code_signer_from_windows_store_auto()
+
+    # Activate your signer so it gets called automatically.
+    # signer.activate()
+
+
+# Call our function to set up automatic code signers.
+register_code_signers()
+
 # Tell PyOxidizer about the build targets defined above.
 register_target("dist", make_dist)
 register_target("exe", make_exe, depends=["dist"])
 register_target("resources", make_embedded_resources, depends=["exe"], default_build_script=True)
 register_target("install", make_install, depends=["exe"], default=True)
+register_target("msi_installer", make_msi, depends=["exe"])
 
 # Resolve whatever targets the invoker of this configuration file is requesting
 # be resolved.
@@ -289,5 +342,5 @@ resolve_targets()
 # Everything below this is typically managed by PyOxidizer and doesn't need
 # to be updated by people.
 
-PYOXIDIZER_VERSION = "0.13.0"
+PYOXIDIZER_VERSION = "0.14.1"
 PYOXIDIZER_COMMIT = "UNKNOWN"
