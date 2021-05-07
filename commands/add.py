@@ -24,7 +24,7 @@ def __init__(args, logger):
 
     if args.pause_active:
         for t in client.torrents.info(status_filter="active"):
-            if t.state != 'uploading' and t.state != 'downloading':
+            if t.state != 'uploading':
                 continue
 
             if t.upspeed > args.pause_active_upspeed_ignore_limit * 1024:
@@ -32,11 +32,6 @@ def __init__(args, logger):
                 t.pause()
                 logger.info(f"Paused {t.name} in {t.state} state, upspeed: {t.upspeed / 1024} KiB/s")
                 continue
-
-            if t.dlspeed > args.pause_active_dlspeed_ignore_limit * 1024:
-                t.add_tags(['temp_paused'])
-                t.pause()
-                logger.info(f"Paused {t.name} in {t.state} state, dlspeed: {t.dlspeed / 1024} KiB/s")
 
     resp = client.torrents_add(
         torrent_files=to_add,
@@ -84,5 +79,4 @@ def add_arguments(subparser):
     parser.add_argument('--max-downloads-speed-ignore-limit', type=int, help='Doesn\'t count downloads with download speed under specified KiB/s for max limit', default=0, required=False)
     parser.add_argument('--pause-active', action='store_true', help='Pause active torrents temporarily')
     parser.add_argument('--pause-active-upspeed-ignore-limit', type=int, help='Doesn\'t count active torrents with upload speed under specified KiB/s for pausing', default=0, required=False)
-    parser.add_argument('--pause-active-dlspeed-ignore-limit', type=int, help='Doesn\'t count active torrents with download speed under specified KiB/s for pausing', default=0, required=False)
     parser.set_defaults(tmm=None, root_folder=None)
