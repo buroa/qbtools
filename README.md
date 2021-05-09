@@ -12,9 +12,9 @@ Thanks!
 
 ## Requirements
 
-`git`, `gcc` (>= 4.2.0), `glibc` (>= 2.25)
-
-Minimum Linux Distro Versions: Debian 10, Fedora 26, OpenSUSE 15.0, RHEL 8, Ubuntu 18.04
+* Any usable Linux distribution since binary builds are built with musl and fully static starting from 0.4.0
+* git
+* ca-certificates
 
 ## Installation
 
@@ -25,6 +25,7 @@ curl -Ls https://gitlab.com/AlexKM/qbittools/-/raw/master/install.sh | sudo bash
 
 Or at any path you want without any extra privileges, don't forget to add this path to `$PATH` for convenience:
 ```bash
+mkdir -p ~/bin
 curl -Ls https://gitlab.com/AlexKM/qbittools/-/raw/master/install.sh | bash -s -- -o ~/bin/qbittools
 ```
 
