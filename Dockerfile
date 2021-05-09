@@ -1,10 +1,7 @@
 FROM python:3 as builder
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt update && apt install -y clang upx binutils musl-tools --no-install-recommends && rm -rf /var/lib/apt/lists/*
-RUN curl https://sh.rustup.rs -sSf | bash -s -- -y
-ENV PATH="/root/.cargo/bin:${PATH}"
-RUN rustup target add x86_64-unknown-linux-musl
-RUN python3 -m pip install pyoxidizer==0.15.0
+RUN apt update && apt install -y upx binutils musl-tools --no-install-recommends && rm -rf /var/lib/apt/lists/*
+RUN python3 -m pip install pyoxidizer==0.16.2
 WORKDIR /usr/src/myapp
 COPY . .
 RUN pyoxidizer build --release --target-triple x86_64-unknown-linux-musl

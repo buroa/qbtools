@@ -4,35 +4,43 @@ variables:
   CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYOXIDIZER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pyoxidizer"
+  TARGET: "x86_64-unknown-linux-musl"
+  SCCACHE_IDLE_TIMEOUT: "0"
+  SCCACHE_DIR: "$CI_PROJECT_DIR/.cache/sccache"
 
 cache:
   paths:
     - .cache
     - .cargo
     - venv
+    - build
 
 stages: 
   - build
 
 before_script:
-  - apt-get update -qq && apt-get install -yqq clang upx binutils musl-tools --no-install-recommends
-  - curl https://sh.rustup.rs -sSf | bash -s -- -y
-  - export PATH="$CI_PROJECT_DIR/.cargo/bin:$PATH"
-  - rustc --version && cargo --version
-  - rustup target add x86_64-unknown-linux-musl
+  - apt-get update -qq && apt-get install -yqq upx binutils musl-tools --no-install-recommends
   - pip install virtualenv
   - virtualenv venv
   - source venv/bin/activate
-  - pip install pyoxidizer==0.15.0
+  - pip install pyoxidizer==0.16.2
+  - wget -O sccache.tar.gz --progress dot:mega https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz
+  - tar -xvzf sccache.tar.gz
+  - mv sccache-*/sccache $CARGO_HOME/bin/sccache
+  - chmod +x $CARGO_HOME/bin/sccache
+  - sccache --start-server
+  - sccache --show-stats
  
 release:
   stage: build
   script:
     - echo __version__ = \"$CI_COMMIT_TAG\" > _version.py
-    - pyoxidizer build --release --target-triple x86_64-unknown-linux-musl
-    - strip build/x86_64-unknown-linux-musl/release/install/qbittools
-    - upx --best --lzma build/x86_64-unknown-linux-musl/release/install/qbittools
-    - cp ./build/x86_64-unknown-linux-musl/release/install/qbittools ./qbittools
+    - pyoxidizer build --release --target-triple $TARGET
+    - sccache --show-stats
+    - sccache --stop-server
+    - strip build/$TARGET/release/install/qbittools
+    - upx --best --lzma build/$TARGET/release/install/qbittools
+    - cp ./build/$TARGET/release/install/qbittools ./qbittools
     - pip install -U gitlab-release
     - gitlab-release --link-artifact qbittools
   artifacts:
