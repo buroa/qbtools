@@ -15,7 +15,6 @@ def __init__(args, logger):
         if iterations == 11: iterations = 1
 
         torrents = client.torrents.info(status_filter="downloading")
-        if len(torrents) > 0: logger.info('--------------------------')
 
         for t in torrents:
             working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
