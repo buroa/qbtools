@@ -6,6 +6,7 @@ variables:
   TARGET: "x86_64-unknown-linux-musl"
   SCCACHE_IDLE_TIMEOUT: "0"
   SCCACHE_DIR: "$CI_PROJECT_DIR/.cache/sccache"
+  RUSTC_WRAPPER: "$CI_PROJECT_DIR/sccache"
 
 cache:
   paths:
@@ -24,18 +25,18 @@ before_script:
   - pip install pyoxidizer==0.16.2
   - wget -O sccache.tar.gz --progress dot:mega https://github.com/mozilla/sccache/releases/download/v0.2.15/sccache-v0.2.15-x86_64-unknown-linux-musl.tar.gz
   - tar -xvzf sccache.tar.gz
-  - mv sccache-*/sccache $CI_PROJECT_DIR/sccache
-  - chmod +x $CI_PROJECT_DIR/sccache
-  - $CI_PROJECT_DIR/sccache --start-server
-  - $CI_PROJECT_DIR/sccache --show-stats
+  - mv sccache-*/sccache $RUSTC_WRAPPER
+  - chmod +x $RUSTC_WRAPPER
+  - $RUSTC_WRAPPER --start-server
+  - $RUSTC_WRAPPER --show-stats
  
 release:
   stage: build
   script:
     - echo __version__ = \"$CI_COMMIT_TAG\" > _version.py
     - pyoxidizer build --release --target-triple $TARGET
-    - $CI_PROJECT_DIR/sccache --show-stats
-    - $CI_PROJECT_DIR/sccache --stop-server
+    - $RUSTC_WRAPPER --show-stats
+    - $RUSTC_WRAPPER --stop-server
     - strip build/$TARGET/release/install/qbittools
     - upx --best --lzma build/$TARGET/release/install/qbittools
     - cp ./build/$TARGET/release/install/qbittools ./qbittools
