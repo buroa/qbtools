@@ -1,6 +1,7 @@
 image: python:3
 
 variables:
+  CARGO_HOME: "$CI_PROJECT_DIR/.cargo"
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   PYOXIDIZER_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pyoxidizer"
   TARGET: "x86_64-unknown-linux-musl"
@@ -13,6 +14,7 @@ cache:
     - .cache
     - venv
     - build
+    - .cargo
 
 stages: 
   - build
