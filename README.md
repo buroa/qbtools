@@ -124,6 +124,13 @@ Pause all active torrents temporarily and mark them with `temp_paused` tag while
 $ qbittools add /path/to/my.torrent --pause-active --pause-active-dlspeed-ignore-limit 1024 --pause-active-upspeed-ignore-limit 10240
 ```
 
+##### Operating system limits
+
+If you encounter `too many open files` or `no file descriptors available` errors while adding a lot of torrents, you can try to bypass it with simple shell commands:
+```bash
+IFS=$'\n' find /path/to/your/torrents/ -maxdepth 1 -type f -name "*.torrent" -exec qbittools add {} --skip-checking \;
+```
+
 ##### ruTorrent / AutoDL
 Adding torrents from autodl-irssi to qBittorrent using ruTorrent:
 ```
