@@ -24,8 +24,9 @@ def __init__(args, logger):
     default_tags = ['Not Working', 'added:', 'Unregistered', 't:', 'Duplicates']
 
     tags_to_delete = list(filter(lambda tag: any(x in tag for x in default_tags), client.torrents_tags()))
-    client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes='all')
-    client.torrents_delete_tags(tags=tags_to_delete)
+    if tags_to_delete:
+        client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes='all')
+        client.torrents_delete_tags(tags=tags_to_delete)
 
     tag_hashes = collections.defaultdict(list)
     tag_sizes = collections.defaultdict(int)
