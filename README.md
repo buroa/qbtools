@@ -159,13 +159,13 @@ Check `Run external program on torrent completion` in the settings and use tool 
 ##### Examples
 Create useful tags to group torrents by tracker domains, not working trackers, unregistered torrents and duplicates
 ```bash
-$ qbittools tagging
+$ qbittools tagging --duplicates --unregistered --not-working --added-on --trackers
 ```
 
 ##### Automatic tagging with Cron
 Execute every 10 minutes (`crontab -e` and add this entry)
 ```
-*/10 * * * * /usr/local/bin/qbittools tagging
+*/10 * * * * /usr/local/bin/qbittools tagging --duplicates --unregistered --not-working --added-on --trackers
 ```
 
 #### Reannounce
