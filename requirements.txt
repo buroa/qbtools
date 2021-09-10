@@ -4,3 +4,4 @@ tqdm
 requests
 gitpython
 packaging
+pathlib3x
