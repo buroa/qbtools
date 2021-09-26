@@ -13,8 +13,8 @@ Thanks!
 ## Requirements
 
 * Any usable Linux distribution since binary builds are built with musl and fully static starting from 0.4.0
-* git
-* ca-certificates
+* git (for self-upgrading)
+* ca-certificates (for self-upgrading and connecting to https)
 
 ## Installation
 
@@ -54,20 +54,13 @@ make deps
 # use qbittools.py instead of the binary
 ```
 
-### Self-upgrade
+## Configuration
 
-Upgrading to the latest version is available with the `upgrade` command (use sudo if it's in a system path):
-```bash
-$ qbittools upgrade
-07:24:14 PM INFO:Current version: 0.0.0
-07:24:14 PM INFO:Latest version: 0.0.1
-07:24:14 PM INFO:Update available, this will replace /usr/local/bin/qbittools with a new version.
-OK to proceed [Y/N]? y
-07:24:16 PM INFO:Downloading https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/0.0.1/download?job=release to /tmp/tmpapfpoqud/qbittools.zip
-100%|██████████████████████████| 23.3M/23.3M [00:00<00:00, 107MiB/s]
-07:24:17 PM INFO:Extracted binary to /tmp/tmpapfpoqud/qbittools
-07:24:17 PM INFO:Replacing /usr/local/bin/qbittools with /tmp/tmpapfpoqud/qbittools
-```
+qBittools doesn't have any configuration files currently. It parses host, port and username from the qBittorrent configuration file located by default at `~/.config/qBittorrent/qBittorrent.conf`, you can specify a different qBittorrent config with `-c` flag. 
+
+You also have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qBittools to retrieve it in plaintext.
+
+You also can specify host, port and username manually without a configuration file with `-s`, `-p` and `-U` flags accordingly.
 
 ## Usage
 
@@ -95,6 +88,21 @@ optional arguments:
                         Filter by tags
 ```
 
+### Self-upgrade
+
+Upgrading to the latest version is available with the `upgrade` command (use sudo if it's in a system path):
+```bash
+$ qbittools upgrade
+07:24:14 PM INFO:Current version: 0.0.0
+07:24:14 PM INFO:Latest version: 0.0.1
+07:24:14 PM INFO:Update available, this will replace /usr/local/bin/qbittools with a new version.
+OK to proceed [Y/N]? y
+07:24:16 PM INFO:Downloading https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/0.0.1/download?job=release to /tmp/tmpapfpoqud/qbittools.zip
+100%|██████████████████████████| 23.3M/23.3M [00:00<00:00, 107MiB/s]
+07:24:17 PM INFO:Extracted binary to /tmp/tmpapfpoqud/qbittools
+07:24:17 PM INFO:Replacing /usr/local/bin/qbittools with /tmp/tmpapfpoqud/qbittools
+```
+
 ### Subcommands
 #### Add
 
@@ -119,14 +127,14 @@ Don't add more torrents if there are more than 3 downloads active while ignoring
 $ qbittools add /path/to/my.torrent --max-downloads 3 --max-downloads-speed-ignore-limit 1024
 ```
 
-Pause all active torrents temporarily and mark them with `temp_paused` tag while ignoring active downloads with speed under 1 MiB/s and active uploads with speed under 10 MiB/s (**You have** to configure unpause command in qBittorrent if you want these torrents to be unpaused automatically)
+Pause all active torrents temporarily and mark them with `temp_paused` tag while ignoring active uploads with speed under 10 MiB/s (**You have** to configure unpause command in qBittorrent if you want these torrents to be unpaused automatically)
 ```bash
-$ qbittools add /path/to/my.torrent --pause-active --pause-active-dlspeed-ignore-limit 1024 --pause-active-upspeed-ignore-limit 10240
+$ qbittools add /path/to/my.torrent --pause-active --pause-active-upspeed-ignore-limit 10240
 ```
 
 ##### Operating system limits
 
-If you encounter `too many open files` or `no file descriptors available` errors while adding a lot of torrents, you can try to bypass it with simple shell commands:
+If you encounter `too many open files` or `no file descriptors available` errors while adding a lot of torrents, you can try to bypass it with simple shell commands, this will add torrents one by one:
 ```bash
 IFS=$'\n' find /path/to/your/torrents/ -maxdepth 1 -type f -name "*.torrent" -exec qbittools add {} --skip-checking \;
 ```
@@ -219,4 +227,12 @@ $ qbittools mover racing -d lts --completion-threshold 30 --active-threshold 600
 Execute every 10 minutes (`crontab -e` and add this entry)
 ```
 */10 * * * * /usr/local/bin/qbittools mover racing -d lts
+```
+
+#### Orphaned
+
+Find files no longer associated with any torrent, but still present in download folders (default download folder and folders from all categories). This command will remove orphaned files if you confirm it and also clean up all empty folders. _Be careful while removing a lot of files if you use these folders from other torrent client._
+
+```bash
+$ qbittools orphaned
 ```
