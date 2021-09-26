@@ -267,7 +267,7 @@ $ qbittools export -o ./export --category movies --tags tracker.org mytag
 </details>
 
 #### Mover
-Useful for those who want to move torrents to different categories over time
+Useful for those who want to move torrents to different categories over time. Combined with enabled Automatic Torrent Management this will move files from one folder to another.
 
 Move torrents inactive for more than 60 seconds and completed more than 60 minutes ago from categories `tracker1` and `tracker2` to category `lts` 
 ```bash
