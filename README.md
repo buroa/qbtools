@@ -10,6 +10,31 @@ If you're feeling generous, you can support this project and me here:
 
 Thanks!
 
+## Table of contents
+
+- [Requirements](#requirements)
+- [Installation](#installation)
+  - [Building binary manually with Docker (optional)](#building-binary-manually-with-docker-optional)
+  - [Run as a script (optional)](#run-as-a-script-optional)
+- [Configuration](#configuration)
+- [Usage](#usage)
+  - [Help](#help)
+  - [Self-upgrade](#self-upgrade)
+  - [Subcommands](#subcommands)
+    - [Add](#add)
+	  - [Operating system limits](#operating-system-limits)
+	  - [ruTorrent / AutoDL](#rutorrent-autodl)
+    - [Unpause](#unpause)
+	  - [Automatic unpause in qBittorrent](#automatic-unpause-in-qbittorrent)
+    - [Tagging](#tagging)
+	  - [Automatic tagging with Cron](#automatic-tagging-with-cron)
+    - [Reannounce](#reannounce)
+    - [Update passkey](#update-passkey)
+    - [Export](#export)
+    - [Mover](#mover)
+	  - [Automatic moving with Cron](#automatic-moving-with-cron)
+    - [Orphaned](#orphaned)
+
 ## Requirements
 
 * Any usable Linux distribution since binary builds are built with musl and fully static starting from 0.4.0
@@ -32,6 +57,8 @@ curl -Ls https://gitlab.com/AlexKM/qbittools/-/raw/master/install.sh | bash -s -
 The script creates a temporary directory, retrieves the latest git tag and downloads it's build artifacts that contains the resulting qbittools binary.
 
 ### Building binary manually with Docker (optional)
+<details><summary>Click to expand</summary>
+
 ```bash
 # clone the repository
 git clone https://gitlab.com/AlexKM/qbittools.git && cd qbittools
@@ -41,7 +68,10 @@ docker build -t qbittools:latest --pull .
 docker run -it --rm --network host qbittools reannounce -p 12345
 ```
 
+</details>
+
 ### Run as a script (optional)
+<details><summary>Click to expand</summary>
 
 ```bash
 # clone the repository
@@ -53,6 +83,8 @@ source venv/bin/activate
 make deps
 # use qbittools.py instead of the binary
 ```
+
+</details>
 
 ## Configuration
 
@@ -66,6 +98,9 @@ You also can specify host, port and username manually without a configuration fi
 
 ### Help
 All commands have extensive help with all available options:
+
+<details><summary>Click to expand</summary>
+
 ```bash
 $ qbittools export -h
 usage: qbittools export [-h] -p 12345 [-s 127.0.0.1] [-U username] [-P password] [-i ~/.local/share/qBittorrent/BT_backup] -o ~/export [-c mycategory] [-t [mytag ...]]
@@ -88,9 +123,14 @@ optional arguments:
                         Filter by tags
 ```
 
+</details>
+
 ### Self-upgrade
 
 Upgrading to the latest version is available with the `upgrade` command (use sudo if it's in a system path):
+
+<details><summary>Click to expand</summary>
+
 ```bash
 $ qbittools upgrade
 07:24:14 PM INFO:Current version: 0.0.0
@@ -103,10 +143,14 @@ OK to proceed [Y/N]? y
 07:24:17 PM INFO:Replacing /usr/local/bin/qbittools with /tmp/tmpapfpoqud/qbittools
 ```
 
+</details>
+
 ### Subcommands
 #### Add
 
-##### Examples
+<details><summary>Click to expand</summary>
+
+
 Add a single torrent with custom category
 ```bash
 $ qbittools add /path/to/my.torrent -c mycategory
@@ -132,6 +176,8 @@ Pause all active torrents temporarily and mark them with `temp_paused` tag while
 $ qbittools add /path/to/my.torrent --pause-active --pause-active-upspeed-ignore-limit 10240
 ```
 
+</details>
+
 ##### Operating system limits
 
 If you encounter `too many open files` or `no file descriptors available` errors while adding a lot of torrents, you can try to bypass it with simple shell commands, this will add torrents one by one:
@@ -150,7 +196,6 @@ Arguments = add $(TorrentPathName) -c music
 #### Unpause
 Only useful if you pause torrents automatically with `--pause-active` parameters from add command.
 
-##### Examples
 Resume all torrents with `temp_paused` tag if there are no active downloads while ignoring slow downloads under 10 MiB/s
 ```bash
 $ qbittools unpause -d 10240
@@ -164,7 +209,6 @@ Check `Run external program on torrent completion` in the settings and use tool 
 ```
 
 #### Tagging
-##### Examples
 Create useful tags to group torrents by tracker domains, not working trackers, unregistered torrents and duplicates
 ```bash
 $ qbittools tagging --duplicates --unregistered --not-working --added-on --trackers
@@ -178,6 +222,10 @@ Execute every 10 minutes (`crontab -e` and add this entry)
 
 #### Reannounce
 Automatic reannounce on problematic trackers (run in screen/tmux to prevent it from closing when you end a ssh session):
+
+<details><summary>Click to expand</summary>
+
+
 ```bash
 $ qbittools reannounce
 07:40:40 PM --------------------------
@@ -192,6 +240,8 @@ $ qbittools reannounce
 07:41:35 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is active, progress: 11.1%
 ```
 
+</details>
+
 #### Update passkey
 Update passkey in all matching torrents (all tracker urls that match `--old` parameter):
 ```bash
@@ -201,6 +251,10 @@ $ qbittools update_passkey --old 12345 --new v3rrjmnfxwq3gfrgs9m37dvnfkvdbqnqc
 
 #### Export
 Export all matching .torrent files by category or tags:
+
+<details><summary>Click to expand</summary>
+
+
 ```bash
 $ qbittools export -o ./export --category movies --tags tracker.org mytag
 01:23:43 PM INFO:Matched 47 torrents
@@ -209,6 +263,8 @@ $ qbittools export -o ./export --category movies --tags tracker.org mytag
 01:23:43 PM INFO:Exported [movies] Ip.Man.3.2015.UHD.BluRay.2160p.TrueHD.Atmos.7.1.DV.HEVC.REMUX-FraMeSToR [07da008f9c64fe4927ee18ac5c94292f61098a69].torrent
 01:23:43 PM INFO:Exported [movies] Brazil.1985.Director's.Cut.BluRay.1080p.FLAC.2.0.AVC.REMUX-FraMeSToR [988e8749a9d3f07e5d216001efc938b732579c16].torrent
 ```
+
+</details>
 
 #### Mover
 Useful for those who want to move torrents to different categories over time
