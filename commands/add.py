@@ -2,16 +2,48 @@
 
 import pathlib, os
 import qbittools
+import psutil, humanfriendly
+from humanfriendly import format_size, parse_size
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
     active = len(list(filter(lambda x: x.dlspeed > args.max_downloads_speed_ignore_limit * 1024 and x.state == 'downloading', client.torrents.info(status_filter="downloading"))))
 
     if args.max_downloads != 0 and active >= args.max_downloads:
-        logger.info(f"Reached max downloads: {active}")
+        logger.info(f"Reached max active downloads: {active}")
         return
 
     to_add = []
+
+    if args.max_iowait:
+        current_iowait = psutil.cpu_times_percent(interval=2, percpu=False).iowait
+
+        if current_iowait > args.max_iowait:
+            logger.info(f"Max iowait reached: {current_iowait}, stopping")
+            return
+
+    if args.min_free_space:
+        parsed_size = parse_size(args.min_free_space, binary=True)
+
+        free_space = 0
+
+        if args.category and client.application.preferences.auto_tmm_enabled and args.tmm != False:
+            category = client.torrent_categories.categories.get(args.category)
+            
+            if category and category.savePath != '':
+                logger.info(f"Checking free space in {category.savePath}")
+                free_space = psutil.disk_usage(category.savePath).free
+            else:
+                free_space = psutil.disk_usage(qbittools.config.save_path).free
+        elif args.save_path:
+            logger.info(f"Checking free space in {args.save_path}")
+            free_space = psutil.disk_usage(args.save_path).free
+        else:
+            free_space = psutil.disk_usage(qbittools.config.save_path).free
+
+        if free_space < parsed_size:
+            logger.info(f"Minimum free space reached: {format_size(free_space, binary=True)}, stopping")
+            return
 
     for t in args.torrents:
         p = pathlib.Path(os.fsdecode(t)).expanduser()
@@ -79,4 +111,6 @@ def add_arguments(subparser):
     parser.add_argument('--max-downloads-speed-ignore-limit', type=int, help='Doesn\'t count downloads with download speed under specified KiB/s for max limit', default=0, required=False)
     parser.add_argument('--pause-active', action='store_true', help='Pause active torrents temporarily')
     parser.add_argument('--pause-active-upspeed-ignore-limit', type=int, help='Doesn\'t count active torrents with upload speed under specified KiB/s for pausing', default=0, required=False)
+    parser.add_argument('--max-iowait', type=int, help='Don\t add a torrent if iowait is higher than specified', required=False)
+    parser.add_argument('--min-free-space', help='Don\'t add a torrent if save path has less than specified free space', required=False)
     parser.set_defaults(tmm=None, root_folder=None)

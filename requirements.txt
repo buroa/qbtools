@@ -5,3 +5,5 @@ requests
 gitpython
 packaging
 pathlib3x
+psutil
+humanfriendly
