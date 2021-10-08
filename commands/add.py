@@ -2,7 +2,7 @@
 
 import pathlib, os
 import qbittools
-import psutil, humanfriendly
+import commands.utils as utils
 from humanfriendly import format_size, parse_size
 
 def __init__(args, logger):
@@ -16,7 +16,7 @@ def __init__(args, logger):
     to_add = []
 
     if args.max_iowait:
-        current_iowait = psutil.cpu_times_percent(interval=2, percpu=False).iowait
+        current_iowait = utils.iowait(interval=1)
 
         if current_iowait > args.max_iowait:
             logger.info(f"Max iowait reached: {current_iowait}, stopping")
@@ -25,24 +25,24 @@ def __init__(args, logger):
     if args.min_free_space:
         parsed_size = parse_size(args.min_free_space, binary=True)
 
-        free_space = 0
+        free = 0
 
         if args.category and client.application.preferences.auto_tmm_enabled and args.tmm != False:
             category = client.torrent_categories.categories.get(args.category)
             
             if category and category.savePath != '':
                 logger.info(f"Checking free space in {category.savePath}")
-                free_space = psutil.disk_usage(category.savePath).free
+                free = utils.free_space(category.savePath)
             else:
-                free_space = psutil.disk_usage(qbittools.config.save_path).free
+                free = utils.free_space(qbittools.config.save_path)
         elif args.save_path:
             logger.info(f"Checking free space in {args.save_path}")
-            free_space = psutil.disk_usage(args.save_path).free
+            free = utils.free_space(args.save_path)
         else:
-            free_space = psutil.disk_usage(qbittools.config.save_path).free
+            free = utils.free_space(qbittools.config.save_path)
 
-        if free_space < parsed_size:
-            logger.info(f"Minimum free space reached: {format_size(free_space, binary=True)}, stopping")
+        if free < parsed_size:
+            logger.info(f"Minimum free space reached: {format_size(free, binary=True)}, stopping")
             return
 
     for t in args.torrents:
