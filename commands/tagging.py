@@ -21,7 +21,25 @@ def __init__(args, logger):
     client = qbittools.qbit_client(args)
 
     today = datetime.today()
-    default_tags = ['Not Working', 'added:', 'Unregistered', 't:', 'Duplicates']
+    default_tags = []
+
+    if args.not_working:
+        default_tags.append('Not Working')
+
+    if args.added_on:
+        default_tags.append('added:')
+
+    if args.unregistered:
+        default_tags.append('Unregistered')
+
+    if args.trackers:
+        default_tags.append('t:')
+
+    if args.duplicates:
+        default_tags.append('Duplicates')
+
+    if args.last_activity:
+        default_tags.append('activity:')
 
     tags_to_delete = list(filter(lambda tag: any(x in tag for x in default_tags), client.torrents_tags()))
     if tags_to_delete:
@@ -53,12 +71,29 @@ def __init__(args, logger):
 
             if diff.days == 0:
                 tags_to_add.append('added:24h')
-
-            if diff.days <= 7:
+            elif diff.days <= 7:
                 tags_to_add.append('added:7d')
-
-            if diff.days <= 30:
+            elif diff.days <= 30:
                 tags_to_add.append('added:30d')
+            elif diff.days > 30:
+                tags_to_add.append('added:>30d')
+
+        if args.last_activity:
+            last_activity = datetime.fromtimestamp(t.last_activity)
+            diff = datetime.today() - last_activity
+
+            if t.last_activity == -1:
+                tags_to_add.append('activity:never')
+            elif diff.days == 0:
+                tags_to_add.append('activity:24h')
+            elif diff.days <= 7:
+                tags_to_add.append('activity:7d')
+            elif diff.days <= 30:
+                tags_to_add.append('activity:30d')
+            elif diff.days <= 180:
+                tags_to_add.append('activity:180d')
+            elif diff.days > 180:
+                tags_to_add.append('activity:>180d')
 
         for tracker in t.trackers:
             if args.trackers:
@@ -102,5 +137,6 @@ def add_arguments(subparser):
     parser.add_argument('--unregistered', action='store_true', help='Tag torrents with unregistered tracker status message')
     parser.add_argument('--duplicates', action='store_true', help='Tag torrents with the same content path')
     parser.add_argument('--added-on', action='store_true', help='Tag torrents with added date (last 24h, 7 days, 30 days, etc)')
+    parser.add_argument('--last-activity', action='store_true', help='Tag torrents with last activity date (last 24h, 7 days, 30 days, etc)')
     parser.add_argument('--trackers', action='store_true', help='Tag torrents with tracker domains')
     qbittools.add_default_args(parser)
