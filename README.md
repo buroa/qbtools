@@ -26,18 +26,20 @@ Many thanks!
   - [Self-upgrade](#self-upgrade)
   - [Subcommands](#subcommands)
     - [Add](#add)
-	  - [Operating system limits](#operating-system-limits)
-	  - [ruTorrent / AutoDL](#rutorrent-autodl)
+      - [Operating system limits](#operating-system-limits)
+      - [ruTorrent / AutoDL](#rutorrent-autodl)
     - [Unpause](#unpause)
-	  - [Automatic unpause in qBittorrent](#automatic-unpause-in-qbittorrent)
+      - [Automatic unpause in qBittorrent](#automatic-unpause-in-qbittorrent)
     - [Tagging](#tagging)
-	  - [Automatic tagging with Cron](#automatic-tagging-with-cron)
+      - [Automatic tagging with Cron](#automatic-tagging-with-cron)
     - [Reannounce](#reannounce)
+      - [Reannounce with systemd](#reannounce-with-systemd)
     - [Update passkey](#update-passkey)
     - [Export](#export)
     - [Mover](#mover)
-	  - [Automatic moving with Cron](#automatic-moving-with-cron)
+      - [Automatic moving with Cron](#automatic-moving-with-cron)
     - [Orphaned](#orphaned)
+  - [FlexGet](#flexget)
 
 ## Requirements
 
@@ -246,6 +248,32 @@ $ qbittools reannounce
 
 </details>
 
+##### Reannounce with systemd
+Reannounce can be executed and restarted on problems automatically by systemd. Create a new service at `/etc/systemd/system/` with the following contents:
+
+<details><summary>Click to expand</summary>
+
+```ini
+[Unit]
+Description=qbittools reannounce
+After=qbittorrent@%i.service
+
+[Service]
+User=%i
+Group=%i
+ExecStart=/usr/local/bin/qbittools reannounce
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+```
+
+</details>
+
+Restart the daemon with `systemctl daemon-reload` and start the service with `systemctl start qbittools-reannounce@username` by replacing username with the user you want to run it from. Check service logs with `journalctl -u qbittools-reannounce@username.service` if necessary.
+
 #### Update passkey
 Update passkey in all matching torrents (all tracker urls that match `--old` parameter):
 ```bash
@@ -295,4 +323,26 @@ Find files no longer associated with any torrent, but still present in download 
 
 ```bash
 $ qbittools orphaned
+```
+
+### FlexGet
+
+qbittools can be used together with FlexGet via `exec` plugin, configuration example:
+```yml
+taskname:
+  rss:
+    url: https://site/feed.rss
+    all_entries: no
+  seen:
+    local: yes
+  accept_all: yes
+  download:
+    path: ~/torrents/rss/
+    overwrite: yes
+  exec:
+    auto_escape: yes
+    fail_entries: yes
+    on_output:
+      for_accepted:
+        - qbittools add "{{location}}" -c books --rename "{{title}}" --content-layout Subfolder
 ```
