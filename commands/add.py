@@ -81,7 +81,8 @@ def __init__(args, logger):
         is_first_last_piece_priority=args.first_last_piece_prio,
         tags=','.join(args.tags),
         ratio_limit=args.ratio_limit,
-        seeding_time_limit=args.seeding_time_limit
+        seeding_time_limit=args.seeding_time_limit,
+        content_layout=args.content_layout
     )
 
     logger.info(f"Adding torrents: {resp}")
@@ -96,6 +97,7 @@ def add_arguments(subparser):
     parser.add_argument('-t', '--tags', nargs='*', metavar='mytag', default=[], help='Tags for the torrent, split by a whitespace, qBit 4.3.2+', required=False)
     parser.add_argument('--skip-checking', action='store_true', help='Skip hash checking')
     parser.add_argument('--add-paused', action='store_true', help='Add torrents in the paused state')
+    parser.add_argument('--content-layout', default=None, choices=["Original", "Subfolder", "NoSubfolder"], help='Control filesystem structure for content')
     parser.add_argument('--root-folder', action='store_true', dest='root_folder', help='Create the root folder')
     parser.add_argument('--no-root-folder', action='store_false', dest='root_folder', help='Don\'t create the root folder')
     parser.add_argument('--rename', help='New name for torrent(s)', required=False)
