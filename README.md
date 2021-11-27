@@ -344,5 +344,5 @@ taskname:
     fail_entries: yes
     on_output:
       for_accepted:
-        - qbittools add "{{location}}" -c books --rename "{{title}}" --content-layout Subfolder
+        - /usr/local/bin/qbittools add "{{location}}" -c books --rename "{{title}}" --content-layout Subfolder
 ```
