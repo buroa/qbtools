@@ -6,8 +6,6 @@ qbittools is a feature rich CLI for the management of torrents in qBittorrent.
 
 If you're feeling generous, you can support this project and me:
 
-Ko-fi (PayPal): https://ko-fi.com/U7U46LR9L
-
 By renting a server with my affiliate link: https://clients.walkerservers.com/aff.php?aff=249
 
 Monero: `44ow4aVdjJK7opDHpRsTiXV6hh5y1T7W81phsasJPBcARox7shnWCemDts6rC3icMA6AuBTV4cWR56dFujcLK7P2TYwBQZv`
