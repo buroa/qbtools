@@ -8,7 +8,19 @@ If you're feeling generous, you can support this project and me:
 
 By renting a server with my affiliate link: https://clients.walkerservers.com/aff.php?aff=249
 
-Monero: `44ow4aVdjJK7opDHpRsTiXV6hh5y1T7W81phsasJPBcARox7shnWCemDts6rC3icMA6AuBTV4cWR56dFujcLK7P2TYwBQZv`
+BTC: `bc1q468wxv2uvy65ev5l7qlw5zcd0jd765hpncnayy`
+
+LTC: `ltc1qqtm7ss90t7cuzwrjzfwhjfjzt5rswjzftgz9ja`
+
+ETH: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
+
+USDC TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
+
+USDC ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
+
+USDT TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
+
+USDT ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
 
 Many thanks!
 
