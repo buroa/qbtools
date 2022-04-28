@@ -10,17 +10,13 @@ By renting a server with my affiliate link: https://clients.walkerservers.com/af
 
 BTC: `bc1q468wxv2uvy65ev5l7qlw5zcd0jd765hpncnayy`
 
+BCH: `qpfspyeljf4d78jyw8p65jxcnxzmwjkk75kccnhuvf`
+
 LTC: `ltc1qqtm7ss90t7cuzwrjzfwhjfjzt5rswjzftgz9ja`
 
-ETH: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
+ETH, USDC/USDT ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
 
-USDC TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
-
-USDC ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
-
-USDT TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
-
-USDT ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
+TRX, USDC/USDT TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
 
 Many thanks!
 
