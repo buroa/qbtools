@@ -74,7 +74,7 @@ def config_values(path):
     save_path = preferences.get('downloads\\savepath')
 
     if not save_path is None:
-        save_path = pathlib.path(save_path)
+        save_path = pathlib.Path(save_path)
 
     return QbitConfig(host, port, user, save_path)
 
