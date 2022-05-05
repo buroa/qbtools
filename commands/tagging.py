@@ -100,10 +100,13 @@ def __init__(args, logger):
                 domain = tldextract.extract(tracker.url).registered_domain
                 if len(domain) > 0:
                     tags_to_add.append(f"t:{domain}")
+                    break
 
             if args.unregistered:
-                matches = ['unregistered', 'not registered', 'not found', 'not exist']
-                if any(x in tracker.msg.lower() for x in matches):
+                matches = ['unregistered', 'not registered', 'not found', 'not exist', 'unknown', 'uploaded', 'upgraded']
+                working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+
+                if not working and any(x in tracker.msg.lower() for x in matches):
                     tags_to_add.append('Unregistered')
                     if args.move_unregistered and t.time_active > 60 and not t.category == 'Unregistered':
                         t.set_category(category='Unregistered')
