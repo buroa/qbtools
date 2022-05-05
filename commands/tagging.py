@@ -23,6 +23,10 @@ def __init__(args, logger):
     today = datetime.today()
     default_tags = []
 
+    unregistered_matches = ['unregistered', 'not registered', 'not found', 'not exist', 'unknown', 'uploaded', 'upgraded']
+    maintenance_matches = ['tracker is down', 'maintenance']
+    dht_matches = ['** [DHT] **', '** [PeX] **', '** [LSD] **']
+
     if args.not_working:
         default_tags.append('Not Working')
 
@@ -31,6 +35,9 @@ def __init__(args, logger):
 
     if args.unregistered:
         default_tags.append('Unregistered')
+
+    if args.tracker_down:
+        default_tags.append('Tracker Down')
 
     if args.trackers:
         default_tags.append('t:')
@@ -59,11 +66,6 @@ def __init__(args, logger):
     logger.info('Collecting tags...')
     for t in tqdm(client.torrents.info()):
         tags_to_add = []
-
-        if args.not_working:
-            working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
-            if not working:
-                tags_to_add.append('Not Working')
 
         if args.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
@@ -95,21 +97,25 @@ def __init__(args, logger):
             elif diff.days > 180:
                 tags_to_add.append('activity:>180d')
 
-        for tracker in t.trackers:
-            if args.trackers:
-                domain = tldextract.extract(tracker.url).registered_domain
-                if len(domain) > 0:
-                    tags_to_add.append(f"t:{domain}")
-                    break
+        working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+        real_trackers = list(filter(lambda s: not s.url in dht_matches, t.trackers))
 
-            if args.unregistered:
-                matches = ['unregistered', 'not registered', 'not found', 'not exist', 'unknown', 'uploaded', 'upgraded']
-                working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+        if args.trackers and len(real_trackers) > 0:
+            domain = tldextract.extract(real_trackers[0].url).registered_domain
+            if len(domain) > 0:
+                tags_to_add.append(f"t:{domain}")
 
-                if not working and any(x in tracker.msg.lower() for x in matches):
-                    tags_to_add.append('Unregistered')
-                    if args.move_unregistered and t.time_active > 60 and not t.category == 'Unregistered':
-                        t.set_category(category='Unregistered')
+        if args.unregistered and not working:
+            if any(x in t.msg.lower() for x in unregistered_matches for t in real_trackers):
+                tags_to_add.append('Unregistered')
+
+                if args.move_unregistered and t.time_active > 60 and not t.category == 'Unregistered':
+                    t.set_category(category='Unregistered')
+        elif args.tracker_down and not working:
+            if any(x in t.msg.lower() for x in maintenance_matches for t in real_trackers):
+                tags_to_add.append('Tracker Down')
+        elif args.not_working and not working:
+            tags_to_add.append('Not Working')
 
         if args.duplicates:
             match = [(infohash, path, size) for infohash, path, size in content_paths if path == t.content_path and not t.content_path == t.save_path]
@@ -142,4 +148,5 @@ def add_arguments(subparser):
     parser.add_argument('--added-on', action='store_true', help='Tag torrents with added date (last 24h, 7 days, 30 days, etc)')
     parser.add_argument('--last-activity', action='store_true', help='Tag torrents with last activity date (last 24h, 7 days, 30 days, etc)')
     parser.add_argument('--trackers', action='store_true', help='Tag torrents with tracker domains')
+    parser.add_argument('--tracker-down', action='store_true', help='Tag torrents with temporarily down trackers')
     qbittools.add_default_args(parser)
