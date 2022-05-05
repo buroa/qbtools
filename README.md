@@ -113,7 +113,7 @@ make deps
 
 ## Configuration
 
-qBittools doesn't have any configuration files currently. It parses host, port and username from the qBittorrent configuration file located by default at `~/.config/qBittorrent/qBittorrent.conf`, you can specify a different qBittorrent config with `-c` flag. 
+qBittools doesn't have any configuration files currently. It parses host, port and username from the qBittorrent configuration file located by default at `~/.config/qBittorrent/qBittorrent.conf`, you can specify a different qBittorrent config with `-C` flag. 
 
 You also have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qBittools to retrieve it in plaintext.
 
