@@ -73,7 +73,10 @@ def config_values(path):
     user = preferences.get('webui\\username')
     save_path = preferences.get('downloads\\savepath')
 
-    return QbitConfig(host, port, user, pathlib.Path(save_path))
+    if not save_path is None:
+        save_path = pathlib.path(save_path)
+
+    return QbitConfig(host, port, user, save_path)
 
 def main():
     global config
