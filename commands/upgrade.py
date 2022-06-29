@@ -2,17 +2,17 @@
 
 from _version import __version__
 from packaging.version import Version, parse
-import requests
-import os, tempfile, sys, zipfile, shutil, subprocess
+import requests, platform
+import os, tempfile, sys, shutil, subprocess
 from pathlib import Path
 from tqdm import tqdm
 from dulwich import porcelain
 import qbittools
 
-def download_version(ver):
-    url = f"https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/{ver}/download?job=release"
+def download_version(ver, name):
+    url = f"https://gitlab.com/api/v4/projects/23524151/packages/generic/qbittools/{ver}/{name}"
     temp_dir = tempfile.mkdtemp()
-    download_file = Path(temp_dir, "qbittools.zip")
+    download_file = Path(temp_dir, "qbittools")
     qbittools.logger.info(f"Downloading {url} to {download_file}")
 
     r = requests.get(url, stream=True)
@@ -34,11 +34,6 @@ def download_version(ver):
         return
 
     return download_file, temp_dir
-
-def extract_archive(path, dest):
-    with zipfile.ZipFile(path, "r") as z:
-        z.extract("qbittools", dest)
-        return Path(dest, "qbittools")
 
 def confirm():
     answer = ""
@@ -67,7 +62,6 @@ def __init__(args, logger):
         sys.exit(1)
 
     latest_version = max(versions)
-
     current_version = Version(__version__)
     logger.info(f"Current version: {current_version}")
     logger.info(f"Latest version: {latest_version}")
@@ -79,13 +73,14 @@ def __init__(args, logger):
         if not confirm():
             return
 
-        download = download_version(latest_version)
+        os = platform.uname().system.lower()
+        arch = platform.uname().machine.lower()
+
+        download = download_version(latest_version, f"qbittools")
         if not download:
             return
 
-        archive, temp_dir = download
-        new_bin = extract_archive(archive, temp_dir)
-        logger.info(f"Extracted binary to {new_bin}")
+        new_bin, temp_dir = download
         logger.info(f"Replacing {old_bin} with {new_bin}")
 
         shutil.copymode(old_bin, new_bin)

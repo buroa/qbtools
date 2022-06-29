@@ -1,16 +1,6 @@
 #!/bin/bash
 set -e
 
-if ! [ -x "$(command -v git)" ]; then
-  echo 'Error: git is not installed. Install git and unzip or download a binary manually from https://gitlab.com/AlexKM/qbittools/-/releases' >&2
-  exit 1
-fi
-
-if ! [ -x "$(command -v unzip)" ]; then
-  echo 'Error: unzip is not installed. Install git and unzip or download a binary manually from https://gitlab.com/AlexKM/qbittools/-/releases' >&2
-  exit 1
-fi
-
 destination=/usr/local/bin/qbittools
 
 while [[ $# -gt 0 ]]
@@ -26,11 +16,22 @@ case $key in
 esac
 done
 
-temp_dir=$(mktemp -d)
-tag=$(git ls-remote --exit-code --tags --refs https://gitlab.com/AlexKM/qbittools.git | awk '{sub("refs/tags/", ""); print $2 }' | sort -r | head -n1)
+tag=$(curl -s https://gitlab.com/api/v4/projects/23524151/releases | python3 -c "import sys, json; print(json.load(sys.stdin)[0]['tag_name'])")
 
-curl -L https://gitlab.com/AlexKM/qbittools/-/jobs/artifacts/$tag/download?job=release -o $temp_dir/qbittools.zip
-unzip $temp_dir/qbittools.zip -d $temp_dir
-mv $temp_dir/qbittools $destination
+if [ -z "$tag" ]; then
+    echo "Couldn't find the latest tag!"
+    exit 1
+fi
+
+arch=$(uname -m)
+os=$(uname -s)
+url="https://gitlab.com/api/v4/projects/23524151/packages/generic/qbittools/$tag/qbittools_${os,,}_${arch,,}"
+
+http_code=$(curl -L $url -o $destination --write-out "%{http_code}")
+
+if [[ ${http_code} -lt 200 || ${http_code} -gt 299 ]] ; then
+    echo "Curl failed with $http_code code, check response at $destination"
+    exit 22
+fi
+
 chmod +rx $destination
-rm -rf $temp_dir
