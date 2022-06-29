@@ -35,3 +35,4 @@ if [[ ${http_code} -lt 200 || ${http_code} -gt 299 ]] ; then
 fi
 
 chmod +rx $destination
+echo "Installed qbittools to $destination!"
