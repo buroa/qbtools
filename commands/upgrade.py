@@ -76,7 +76,7 @@ def __init__(args, logger):
         os = platform.uname().system.lower()
         arch = platform.uname().machine.lower()
 
-        download = download_version(latest_version, f"qbittools")
+        download = download_version(latest_version, f"qbittools_{os}_{arch}")
         if not download:
             return
 
