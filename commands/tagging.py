@@ -23,7 +23,7 @@ def __init__(args, logger):
     today = datetime.today()
     default_tags = []
 
-    unregistered_matches = ['unregistered', 'not registered', 'not found', 'not exist', 'unknown', 'uploaded', 'upgraded']
+    unregistered_matches = ['unregistered', 'not registered', 'not found', 'not exist', 'unknown', 'uploaded', 'upgraded', 'season pack']
     maintenance_matches = ['tracker is down', 'maintenance']
     dht_matches = ['** [DHT] **', '** [PeX] **', '** [LSD] **']
 

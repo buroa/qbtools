@@ -42,7 +42,7 @@ def qbit_client(args):
         args.username = config.username
 
     if args.server is None or args.port is None:
-        logger.error('Unable to get qBittorrent host and port automatically, specify config file or host/port manually')
+        logger.error('Unable to get qBittorrent host and port automatically, specify config file or host/port manually, see help with -h')
         sys.exit(1)
 
     client = qbittorrentapi.Client(host=f"{args.server}:{args.port}", username=args.username, password=args.password)
