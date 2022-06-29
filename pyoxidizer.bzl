@@ -3,16 +3,15 @@
 # https://pyoxidizer.readthedocs.io/en/stable/ for details of this
 # configuration file format.
 
-# Obtain the default PythonDistribution for our build target. We link
-# this distribution into our produced executable and extract the Python
-# standard library from it.
-def make_dist():
-    return default_python_distribution()
-
 # Configuration files consist of functions which define build "targets."
 # This function creates a Python executable and installs it in a destination
 # directory.
-def make_exe(dist):
+def make_exe():
+    # Obtain the default PythonDistribution for our build target. We link
+    # this distribution into our produced executable and extract the Python
+    # standard library from it.
+    dist = default_python_distribution()
+
     # This function creates a `PythonPackagingPolicy` instance, which
     # influences how executables are built and how resources are added to
     # the executable. You can customize the default behavior by assigning
@@ -32,7 +31,7 @@ def make_exe(dist):
     # levels. The default optimization level used by Python is 0.
     # policy.bytecode_optimize_level_zero = True
     # policy.bytecode_optimize_level_one = True
-    policy.bytecode_optimize_level_two = True
+    # policy.bytecode_optimize_level_two = True
 
     # Package all available Python extensions in the distribution.
     # policy.extension_module_filter = "all"
@@ -158,16 +157,30 @@ def make_exe(dist):
     # Enable Python memory allocator debug hooks.
     # python_config.allocator_debug = True
 
+    # Automatically calls `multiprocessing.set_start_method()` with an
+    # appropriate value when OxidizedFinder imports the `multiprocessing`
+    # module.
+    # python_config.multiprocessing_start_method = 'auto'
+
+    # Do not call `multiprocessing.set_start_method()` automatically. (This
+    # is the default behavior of Python applications.)
+    # python_config.multiprocessing_start_method = 'none'
+
+    # Call `multiprocessing.set_start_method()` with explicit values.
+    # python_config.multiprocessing_start_method = 'fork'
+    # python_config.multiprocessing_start_method = 'forkserver'
+    # python_config.multiprocessing_start_method = 'spawn'
+
     # Control whether `oxidized_importer` is the first importer on
     # `sys.meta_path`.
-    python_config.oxidized_importer = True
+    # python_config.oxidized_importer = False
 
     # Enable the standard path-based importer which attempts to load
     # modules from the filesystem.
-    python_config.filesystem_importer = True
+    # python_config.filesystem_importer = True
 
-    # Set `sys.frozen = True`
-    # python_config.sys_frozen = True
+    # Set `sys.frozen = False`
+    # python_config.sys_frozen = False
 
     # Set `sys.meipass`
     # python_config.sys_meipass = True
@@ -225,7 +238,16 @@ def make_exe(dist):
     # collected files inside Python wheels. `add_python_resources()` adds these
     # objects to the binary, with a load location as defined by the packaging
     # policy's resource location attributes.
-    #exe.add_python_resources(exe.pip_download(["pyflakes==2.2.0"]))
+    exe.add_python_resources(exe.pip_download([
+        "qbittorrent-api",
+        "tldextract",
+        "tqdm",
+        "requests",
+        "packaging",
+        "pathlib3x",
+        "humanfriendly",
+        "dulwich"
+    ]))
 
     # Invoke `pip install` with our Python distribution to install a single package.
     # `pip_install()` returns objects representing installed files.
@@ -236,7 +258,7 @@ def make_exe(dist):
 
     # Invoke `pip install` using a requirements file and add the collected resources
     # to our binary.
-    exe.add_python_resources(exe.pip_install(["-r", "requirements.txt"]))
+    #exe.add_python_resources(exe.pip_install(["-r", "requirements.txt"]))
 
     exe.add_python_resources(exe.read_package_root(
         path=".",
@@ -257,7 +279,7 @@ def make_exe(dist):
 
     # Filter all resources collected so far through a filter of names
     # in a file.
-    #exe.filter_from_files(files=["/path/to/filter-file"]))
+    #exe.filter_resources_from_files(files=["/path/to/filter-file"]))
 
     # Return our `PythonExecutable` instance so it can be built and
     # referenced by other consumers of this target.
@@ -327,8 +349,7 @@ def register_code_signers():
 register_code_signers()
 
 # Tell PyOxidizer about the build targets defined above.
-register_target("dist", make_dist)
-register_target("exe", make_exe, depends=["dist"])
+register_target("exe", make_exe)
 register_target("resources", make_embedded_resources, depends=["exe"], default_build_script=True)
 register_target("install", make_install, depends=["exe"], default=True)
 register_target("msi_installer", make_msi, depends=["exe"])
@@ -336,11 +357,3 @@ register_target("msi_installer", make_msi, depends=["exe"])
 # Resolve whatever targets the invoker of this configuration file is requesting
 # be resolved.
 resolve_targets()
-
-# END OF COMMON USER-ADJUSTED SETTINGS.
-#
-# Everything below this is typically managed by PyOxidizer and doesn't need
-# to be updated by people.
-
-PYOXIDIZER_VERSION = "0.14.1"
-PYOXIDIZER_COMMIT = "UNKNOWN"
