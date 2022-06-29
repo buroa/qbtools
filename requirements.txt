@@ -2,7 +2,7 @@ qbittorrent-api
 tldextract
 tqdm
 requests
-gitpython
 packaging
 pathlib3x
 humanfriendly
+dulwich

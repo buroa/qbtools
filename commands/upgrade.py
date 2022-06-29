@@ -2,10 +2,11 @@
 
 from _version import __version__
 from packaging.version import Version, parse
-import git, requests
+import requests
 import os, tempfile, sys, zipfile, shutil, subprocess
 from pathlib import Path
 from tqdm import tqdm
+from dulwich import porcelain
 import qbittools
 
 def download_version(ver):
@@ -56,24 +57,29 @@ def __init__(args, logger):
         return
 
     url = "https://gitlab.com/AlexKM/qbittools.git"
-    raw = git.cmd.Git().ls_remote("--tags", "--refs", url).split('\n')
+    remote_refs = porcelain.ls_remote(url)
 
-    remote_refs = list(map(lambda x: tuple(x.split('\t')), raw))
-    remote_refs = sorted(list(map(lambda ref: (ref[0], ref[1].replace("refs/tags/", "")), remote_refs)), key=lambda x: Version(x[1]), reverse=True)
+    versions = list(map(lambda x: parse(x.decode("utf-8").replace("refs/tags/", "")), remote_refs))
+    versions = list(filter(lambda x: isinstance(x, Version), versions))
 
-    cur_ver = Version(__version__)
-    latest_ver = Version(remote_refs[0][1])
-    logger.info(f"Current version: {cur_ver}")
-    logger.info(f"Latest version: {latest_ver}")
+    if len(versions) == 0:
+        logger.error('Failed to find the latest version.')
+        sys.exit(1)
 
-    if cur_ver == latest_ver:
-        logger.info(f"You use the latest {cur_ver} version, no update needed")
-    elif cur_ver < latest_ver:
+    latest_version = max(versions)
+
+    current_version = Version(__version__)
+    logger.info(f"Current version: {current_version}")
+    logger.info(f"Latest version: {latest_version}")
+
+    if current_version == latest_version:
+        logger.info(f"You use the latest {current_version} version, no update needed")
+    elif current_version < latest_version:
         logger.info(f"Update available, this will replace {old_bin} with a new version.")
         if not confirm():
             return
 
-        download = download_version(latest_ver)
+        download = download_version(latest_version)
         if not download:
             return
 
@@ -84,6 +90,7 @@ def __init__(args, logger):
 
         shutil.copymode(old_bin, new_bin)
         subprocess.Popen(["mv", "-f", new_bin, old_bin])
+        shutil.rmtree(temp_dir)
         
         sys.exit()
 
