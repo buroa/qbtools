@@ -43,7 +43,7 @@ release:
     - upx --best --lzma build/$TARGET/release/install/qbittools
     - cp ./build/$TARGET/release/install/qbittools ./qbittools
     - pip install -U gitlab-release
-    - gitlab-release --link-artifact qbittools
+    - gitlab-release qbittools
   artifacts:
     paths:
       - qbittools

@@ -8,24 +8,27 @@ If you're feeling generous, you can support this project and me:
 
 By renting a server with my affiliate link: https://clients.walkerservers.com/aff.php?aff=249
 
+USDT TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
+
+BUSD BEP20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
+
+XMR: `44ow4aVdjJK7opDHpRsTiXV6hh5y1T7W81phsasJPBcARox7shnWCemDts6rC3icMA6AuBTV4cWR56dFujcLK7P2TYwBQZv`
+
 BTC: `bc1q468wxv2uvy65ev5l7qlw5zcd0jd765hpncnayy`
 
 BCH: `qpfspyeljf4d78jyw8p65jxcnxzmwjkk75kccnhuvf`
 
 LTC: `ltc1qqtm7ss90t7cuzwrjzfwhjfjzt5rswjzftgz9ja`
 
-TRX, USDC/USDT TRC20: `TUH5ySiTHYpG2vrPYu9uCT7ev6DLHDGzkG`
-
-BUSD BEP20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
-
-XMR: `44ow4aVdjJK7opDHpRsTiXV6hh5y1T7W81phsasJPBcARox7shnWCemDts6rC3icMA6AuBTV4cWR56dFujcLK7P2TYwBQZv`
-
-ETH, USDC/USDT/BUSD ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
+ETH, USDT/BUSD ERC20: `0xb8Eb3c011fB8549a67e8C2A33F55CEA2a5b152F3`
 
 Many thanks!
 
 ## Table of contents
 
+- [Description](#description)
+- [Donate](#donate)
+- [Table of contents](#table-of-contents)
 - [Requirements](#requirements)
 - [Installation](#installation)
   - [Docker image](#docker-image)
@@ -38,7 +41,7 @@ Many thanks!
   - [Subcommands](#subcommands)
     - [Add](#add)
       - [Operating system limits](#operating-system-limits)
-      - [ruTorrent / AutoDL](#rutorrent-autodl)
+      - [ruTorrent / AutoDL](#rutorrent--autodl)
     - [Unpause](#unpause)
       - [Automatic unpause in qBittorrent](#automatic-unpause-in-qbittorrent)
     - [Tagging](#tagging)
@@ -54,9 +57,8 @@ Many thanks!
 
 ## Requirements
 
-* Any usable Linux distribution since binary builds are built with musl and fully static starting from 0.4.0
-* git (for self-upgrading)
-* ca-certificates (for self-upgrading and connecting to https)
+* Any usable Linux distribution (binary builds are built with musl and fully static starting from 0.4.0)
+* ca-certificates (for connecting to https)
 
 ## Installation
 
