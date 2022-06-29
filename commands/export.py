@@ -14,12 +14,12 @@ def __init__(args, logger):
         torrents = list(map(lambda x: (x.hash, x.name, x.trackers), client.torrents.info(category=args.category)))
         
     logger.info(f"Matched {len(torrents)} torrents")
-    Path(os.fsdecode(args.output)).expanduser().mkdir(parents=True, exist_ok=True)
+    Path(args.output).expanduser().mkdir(parents=True, exist_ok=True)
 
     for h, name, trackers in torrents:
-        from_path = Path(os.fsdecode(args.input), f"{h}.torrent").expanduser()
+        from_path = Path(args.input, f"{h}.torrent").expanduser()
         if not from_path.exists():
-            logger.error(f"{from_path} doesn't exist!")
+            logger.error(f"{os.fsencode(from_path).decode('utf8', 'replace')} doesn't exist!")
             continue
 
         pattern = ""
@@ -33,11 +33,11 @@ def __init__(args, logger):
         if args.category:
             pattern += f" [{args.category}]"
 
-        pattern += f" {name} [{h}].torrent"
-        to_path = Path(os.fsdecode(args.output), pattern.strip()).expanduser()
+        pattern += f" {os.fsencode(name).decode('utf8', 'replace')} [{h}].torrent"
+        to_path = Path(args.output, pattern.strip()).expanduser()
 
         shutil.copy2(from_path, to_path)
-        logger.info(f"Exported {repr(to_path)}")
+        logger.info(f"Exported {os.fsencode(to_path).decode('utf8', 'replace')}")
     logger.info('Done')
 
 def add_arguments(subparser):

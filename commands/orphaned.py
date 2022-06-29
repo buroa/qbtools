@@ -8,16 +8,7 @@ import qbittools
 import qbittorrentapi
 import os, operator, sys
 import pathlib3x as pathlib
-
-def format_bytes(size):
-    power = 2**10
-    n = 0
-    power_labels = {0 : 'B', 1: 'KiB', 2: 'MiB', 3: 'GiB', 4: 'TiB'}
-    while size > power:
-        size /= power
-        n += 1
-    formatted = round(size, 2)
-    return f"{formatted} {power_labels[n]}"
+import commands.utils as utils
 
 def confirm(text):
     answer = ""
@@ -49,7 +40,7 @@ def delete_empty_dirs(folders, force=False):
                 dir_path = pathlib.Path(path) / name
 
                 if is_dir_empty(dir_path):
-                    qbittools.logger.info(f"Removing {dir_path}")
+                    qbittools.logger.info(f"Removing {os.fsencode(dir_path).decode('utf8', 'replace')}")
                     dir_path.rmdir()
 
 def __init__(args, logger):
@@ -76,16 +67,16 @@ def __init__(args, logger):
     sorted_files_with_size = sorted(files_and_sizes, key = operator.itemgetter(1), reverse=True)
 
     total_size = sum(size for file, size in sorted_files_with_size)
-    print(f"Total size: {format_bytes(total_size)}")
+    print(f"Total size: {utils.format_bytes(total_size)}")
 
     for file, size in sorted_files_with_size:
-        print(f"{format_bytes(size)}\t{os.path.relpath(file, qbittools.config.save_path)}")
+        print(f"{utils.format_bytes(size)}\t{os.path.relpath(os.fsencode(file).decode('utf8', 'replace'), qbittools.config.save_path)}")
 
     if not args.force and not confirm('OK to delete all [Y/N]? '):
         return
 
     for file, size in sorted_files_with_size:
-        logger.info(f"Removing {file}")
+        logger.info(f"Removing {os.fsencode(file).decode('utf8', 'replace')}")
         file.unlink()
     delete_empty_dirs(folders, args.force)
 

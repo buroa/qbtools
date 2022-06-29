@@ -46,13 +46,13 @@ def __init__(args, logger):
             return
 
     for t in args.torrents:
-        p = pathlib.Path(os.fsdecode(t)).expanduser()
+        p = pathlib.Path(t).expanduser()
 
         if p.is_dir():
             contents = list(p.glob('*.torrent'))
-            to_add += list(map(lambda x: os.fsdecode(x), contents))
+            to_add += list(map(lambda x: x, contents))
         elif p.is_file():
-            to_add.append(os.fsdecode(p))
+            to_add.append(p)
 
     if args.pause_active:
         for t in client.torrents.info(status_filter="active"):

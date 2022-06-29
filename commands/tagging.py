@@ -6,16 +6,7 @@ import tldextract
 from tqdm import tqdm
 import qbittools
 import qbittorrentapi
-
-def format_bytes(size):
-    power = 2**10
-    n = 0
-    power_labels = {0 : 'B', 1: 'KiB', 2: 'MiB', 3: 'GiB', 4: 'TiB'}
-    while size > power:
-        size /= power
-        n += 1
-    formatted = round(size, 2)
-    return f"{formatted} {power_labels[n]}"
+import commands.utils as utils
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
@@ -136,7 +127,7 @@ def __init__(args, logger):
         logger.info('Nothing to add, quitting')
     else:
         for tag in tqdm(tag_hashes):
-            size = format_bytes(tag_sizes[tag])
+            size = utils.format_bytes(tag_sizes[tag])
             client.torrents_add_tags(tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag])
 
 def add_arguments(subparser):

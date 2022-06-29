@@ -49,6 +49,9 @@ def qbit_client(args):
 
     try:
         client.auth_log_in()
+
+        if config.save_path is None and not client.application.preferences.save_path is None:
+            config = QbitConfig(config.host, config.port, config.username, pathlib.Path(client.application.preferences.save_path))
     except qbittorrentapi.LoginFailed as e:
         logger.error(e)
     return client
