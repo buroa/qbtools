@@ -29,29 +29,28 @@ def __init__(args, logger):
             pass
 
     logger.info('Collecting tags info...')
-    torrents = []
+    filtered_torrents = client.torrents.info()
+    all_torrents = client.torrents.info()
+
+    if args.categories:
+        filtered_torrents = list(filter(lambda x: x.category in args.categories, filtered_torrents))
 
     if args.tags:
-        torrents = list(filter(lambda x: any(y in x.tags for y in args.tags), client.torrents.info(category=args.category)))
-    else:
-        torrents = client.torrents.info(category=args.category)
+        filtered_torrents = list(filter(lambda x: any(y in x.tags for y in args.tags), filtered_torrents))
 
     tags_to_delete = list(filter(lambda tag: any(tag.startswith(x) for x in default_tags), client.torrents_tags()))
 
     if tags_to_delete:
-        if args.category or args.tags:
-            hashes = map(lambda t: t.hash, torrents)
-            client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes=hashes)
-        else:
-            client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes='all')
+        hashes = map(lambda t: t.hash, filtered_torrents)
+        client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes=hashes)
 
         logger.info('Pruning unused tags...')
-        all_torrents = client.torrents.info()
+        
         empty_tags = list(filter(lambda tag: len(list(filter(lambda t: tag in t.tags, all_torrents))) == 0, tqdm(tags_to_delete)))
         client.torrents_delete_tags(tags=empty_tags)
 
     logger.info('Collecting torrents info...')
-    for t in tqdm(torrents):
+    for t in tqdm(filtered_torrents):
         tags_to_add = []
 
         if args.added_on:
@@ -140,7 +139,7 @@ def __init__(args, logger):
 def add_arguments(subparser):
     parser = subparser.add_parser('tagging')
 
-    parser.add_argument('-c', '--category', metavar='mycategory', help='Filter by category', required=False)
+    parser.add_argument('-c', '--categories', nargs='*', metavar='mycategory', help='Filter by categories', required=False)
     parser.add_argument('-t', '--tags', nargs='*', metavar='mytag', help='Filter by tags', required=False)
 
     parser.add_argument('--move-unregistered', action='store_true', help='Move unregistered torrents to Unregistered category. Must be used with --unregistered')
@@ -152,6 +151,6 @@ def add_arguments(subparser):
     parser.add_argument('--trackers', action='store_true', help='Tag torrents with tracker domains. Significantly increases script execution time')
     parser.add_argument('--tracker-down', action='store_true', help='Tag torrents with temporarily down trackers. Significantly increases script execution time')
     parser.add_argument('--size', action='store_true', help='Add size of tagged torrents to created tags')
-    parser.add_argument('--not-linked', action='store_true', help='Tag torrents with files without hardlinks or symlinks, use with filtering by category/tag')
+    parser.add_argument('--not-linked', action='store_true', help='Tag torrents with files without hardlinks or symlinks, use with filtering by category/tag. Significantly increases script execution time')
     
     qbittools.add_default_args(parser)
