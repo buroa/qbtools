@@ -47,6 +47,6 @@ def is_linked(path):
         return True
 
     if os.path.isdir(path):
-        linked = [os.path.join(path, x) for path, subdirs, files in os.walk(path) for x in files if os.lstat(os.path.join(path, x)).st_nlink > 1]
+        linked = [os.path.join(path, x) for path, subdirs, files in os.walk(path) for x in files if os.lstat(os.path.join(path, x)).st_nlink > 1 or os.path.islink(os.path.join(path, x))]
 
         return len(linked) > 0
