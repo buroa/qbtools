@@ -1,4 +1,5 @@
-import os, time
+import os, time, stat
+import pathlib3x as pathlib
 
 def format_bytes(size):
     power = 2**10
@@ -35,3 +36,17 @@ def iowait(interval):
     iowait = '{0:.1f}'.format(((iowaitd - iowait)* 100 / tick ) / numcpu / interval)
 
     return float(iowait)
+
+def is_linked(path):
+    path = pathlib.Path(path)
+
+    if os.path.islink(path):
+        return True
+
+    if os.path.isfile(path) and os.lstat(path).st_nlink > 1:
+        return True
+
+    if os.path.isdir(path):
+        linked = [path / x for path, subdirs, files in os.walk(path) for x in files if os.lstat(path / x).st_nlink > 1]
+
+        return len(linked) > 0

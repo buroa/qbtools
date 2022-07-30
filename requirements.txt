@@ -5,4 +5,4 @@ requests
 packaging
 pathlib3x
 humanfriendly
-dulwich --global-option=--pure
+dulwich
