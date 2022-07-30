@@ -85,7 +85,7 @@ def __init__(args, logger):
 
         shutil.copymode(old_bin, new_bin)
         subprocess.Popen(["mv", "-f", new_bin, old_bin])
-        shutil.rmtree(temp_dir)
+        # shutil.rmtree(temp_dir)
         
         sys.exit()
 
