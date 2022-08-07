@@ -87,8 +87,8 @@ def __init__(args, logger):
             # trackers call is expensive for large amount of torrents
             working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
             real_trackers = list(filter(lambda s: not s.url in dht_matches, t.trackers))
-
-            if len(real_trackers) > 0:
+            
+            if args.trackers and len(real_trackers) > 0:
                 domain = tldextract.extract(sorted(real_trackers, key=lambda x: x.url)[0].url).registered_domain
                 if len(domain) > 0:
                     tags_to_add.append(f"t:{domain}")
