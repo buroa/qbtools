@@ -7,7 +7,7 @@ def __init__(args, logger):
     client = qbittools.qbit_client(args)
 
     iterations = 0
-    timeout = 2
+    timeout = 5
     logger.info("Started reannounce process")
 
     while True:
@@ -25,20 +25,18 @@ def __init__(args, logger):
                 logger.warning("[%s] is inactive for too long, not reannouncing...", t.name)
             elif (invalid or not working) and t.time_active < 60:
                 if invalid:
-                    logger.info("[%s] is invalid, active for %ss, pausing...", t.name, t.time_active)
+                    logger.warning("[%s] is invalid, active for %ss, pausing/resuming...", t.name, t.time_active)
                     t.pause()
-                    time.sleep(timeout)
-                    logger.info("[%s] is invalid, active for %ss, resuming...", t.name, t.time_active)
                     t.resume()
                 logger.info("[%s] is not working, active for %ss, reannouncing...", t.name, t.time_active)
                 t.reannounce()
             elif t.num_seeds == 0 and t.progress == 0:
                 if t.time_active < 120 or (t.time_active >= 120 and iterations % 2 == 0):
-                    logger.warning("[%s] has no seeds, active for %ss, reannouncing...", t.name, t.time_active)
+                    logger.info("[%s] has no seeds, active for %ss, reannouncing...", t.name, t.time_active)
                     t.reannounce()
                 else:
                     wait = (2 - iterations % 2) * timeout
-                    logger.warning("[%s] has no seeds, active for %ss, waiting %s...", t.name, t.time_active, wait)
+                    logger.info("[%s] has no seeds, active for %ss, waiting %s...", t.name, t.time_active, wait)
                     
         time.sleep(timeout)
 
