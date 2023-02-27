@@ -7,8 +7,8 @@ def __init__(args, logger):
     client = qbittools.qbit_client(args)
 
     iterations = 0
-    timeout = 5
-    logger.info('Started reannounce process')
+    timeout = 2
+    logger.info("Started reannounce process")
 
     while True:
         iterations += 1
@@ -17,25 +17,31 @@ def __init__(args, logger):
         torrents = client.torrents.info(status_filter="downloading")
 
         for t in torrents:
+            invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
             working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
             expired = t.time_active > 60 * 60
 
             if expired and (not working or t.num_seeds == 0) and t.progress == 0:
-                logger.info(f"[{t.name}] is inactive for too long, not reannouncing...")
-            elif not working:
-                if t.time_active < 60:
-                    logger.info(f"[{t.name}] is not working, active for {t.time_active}s, reannouncing...")
-                    t.reannounce()
-                else:
-                    logger.info(f"[{t.name}] is not working, active for {t.time_active}s, deleted from tracker")
+                logger.warning("[%s] is inactive for too long, not reannouncing...", t.name)
+            elif (invalid or not working) and t.time_active < 60:
+                if invalid:
+                    logger.info("[%s] is invalid, active for %ss, pausing...", t.name, t.time_active)
+                    t.pause()
+                    time.sleep(timeout)
+                    logger.info("[%s] is invalid, active for %ss, resuming...", t.name, t.time_active)
+                    t.resume()
+                logger.info("[%s] is not working, active for %ss, reannouncing...", t.name, t.time_active)
+                t.reannounce()
             elif t.num_seeds == 0 and t.progress == 0:
                 if t.time_active < 120 or (t.time_active >= 120 and iterations % 2 == 0):
-                    logger.info(f"[{t.name}] has no seeds, active for {t.time_active}s, reannouncing...")
+                    logger.warning("[%s] has no seeds, active for %ss, reannouncing...", t.name, t.time_active)
                     t.reannounce()
                 else:
-                    logger.info(f"[{t.name}] has no seeds, active for {t.time_active}s, waiting {(2 - iterations % 2) * timeout}s...")
+                    wait = (2 - iterations % 2) * timeout
+                    logger.warning("[%s] has no seeds, active for %ss, waiting %s...", t.name, t.time_active, wait)
+                    
         time.sleep(timeout)
 
 def add_arguments(subparser):
-    parser = subparser.add_parser('reannounce')
+    parser = subparser.add_parser("reannounce")
     qbittools.add_default_args(parser)

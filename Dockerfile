@@ -1,14 +1,31 @@
-FROM python:3 as builder
-ENV DEBIAN_FRONTEND noninteractive
-RUN apt update && apt install -y upx binutils musl-tools --no-install-recommends && rm -rf /var/lib/apt/lists/*
-RUN python3 -m pip install pyoxidizer
-WORKDIR /usr/src/myapp
-COPY . .
-RUN pyoxidizer build --release --target-triple x86_64-unknown-linux-musl
-RUN strip build/x86_64-unknown-linux-musl/release/install/qbittools
-RUN upx --best --lzma build/x86_64-unknown-linux-musl/release/install/qbittools
+FROM python:3.11-slim-bullseye as base
 
-FROM alpine:latest
-RUN apk add --no-cache git ca-certificates
-COPY --from=builder /usr/src/myapp/build/x86_64-unknown-linux-musl/release/install/qbittools /usr/local/bin/qbittools
-ENTRYPOINT ["qbittools"]
+FROM base as pip
+
+WORKDIR /install
+
+COPY requirements.txt /requirements.txt
+
+RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt
+
+RUN python3 -c "import compileall; \
+    compileall.compile_path(maxlevels=10)"
+
+FROM base as app
+
+WORKDIR /app
+
+COPY qbittools.py .
+COPY _version.py .
+COPY commands commands/
+
+RUN python3 -m compileall qbittools.py commands/
+
+FROM base as final
+
+WORKDIR /app
+
+COPY --from=pip /install /usr/local
+COPY --from=app /app .
+
+ENTRYPOINT ["python3", "qbittools.py"]
