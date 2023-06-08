@@ -15,9 +15,7 @@ FROM base as app
 
 WORKDIR /app
 
-COPY qbittools.py .
-COPY _version.py .
-COPY commands commands/
+COPY qbittools/ .
 
 RUN python3 -m compileall qbittools.py commands/
 
