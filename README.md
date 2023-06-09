@@ -1,3 +1,7 @@
+## Upstream
+
+This is a maintained fork of the upstream project at https://gitlab.com/AlexKM/qbittools.
+
 ## Description
 
 qbittools is a feature rich CLI for the management of torrents in qBittorrent.
