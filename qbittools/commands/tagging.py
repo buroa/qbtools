@@ -12,11 +12,49 @@ def __init__(args, logger):
     client = qbittools.qbit_client(args)
 
     today = datetime.today()
-    default_tags = ['Not Working', 'added:', 'Unregistered', 'Tracker Down', 't:', 'Duplicates', 'activity:', 'Not Linked']
+    default_tags = [
+        'Not Working',
+        'added:',
+        'Unregistered',
+        'Tracker Down',
+        't:',
+        'Duplicates',
+        'activity:',
+        'Not Linked'
+    ]
 
-    unregistered_matches = ['unregistered', 'not registered', 'not found', 'not exist', 'unknown', 'uploaded', 'upgraded', 'season pack', 'packs are available', 'pack is available', 'internal available', 'season pack out']
-    maintenance_matches = ['tracker is down', 'maintenance']
-    dht_matches = ['** [DHT] **', '** [PeX] **', '** [LSD] **']
+    unregistered_matches = [
+        'unregistered',
+        'not registered',
+        'not found',
+        'not exist',
+        'unknown',
+        'uploaded',
+        'upgraded',
+        'season pack',
+        'packs are available',
+        'pack is available',
+        'internal available',
+        'season pack out',
+        'dead',
+        'dupe',
+        'complete season uploaded',
+        'problem with',
+        'specifically banned',
+        'trumped',
+        'i\'m sorry dave, i can\'t do that' # weird stuff from racingforme
+    ]
+    
+    maintenance_matches = [
+        'tracker is down',
+        'maintenance'
+    ]
+
+    dht_matches = [
+        '** [DHT] **',
+        '** [PeX] **',
+        '** [LSD] **'
+    ]
 
     tag_hashes = collections.defaultdict(list)
     tag_sizes = collections.defaultdict(int)
@@ -38,15 +76,15 @@ def __init__(args, logger):
     if args.tags:
         filtered_torrents = list(filter(lambda x: any(y in x.tags for y in args.tags), filtered_torrents))
 
-    tags_to_delete = list(filter(lambda tag: any(tag.startswith(x) for x in default_tags), client.torrents_tags()))
+    tags_to_delete = list(filter(lambda tag: any(tag.lower().startswith(x.lower()) for x in default_tags), client.torrents_tags()))
 
     if tags_to_delete:
-        hashes = map(lambda t: t.hash, filtered_torrents)
+        hashes = list(map(lambda t: t.hash, filtered_torrents))
         client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes=hashes)
 
-        logger.info('Pruning unused tags...')
+        logger.info('Pruning old tags...')
         
-        empty_tags = list(filter(lambda tag: len(list(filter(lambda t: tag in t.tags, all_torrents))) == 0, tqdm(tags_to_delete)))
+        empty_tags = list(filter(lambda tag: len(list(filter(lambda t: tag in t.tags, client.torrents.info()))) == 0, tqdm(tags_to_delete)))
         client.torrents_delete_tags(tags=empty_tags)
 
     logger.info('Collecting torrents info...')
@@ -93,17 +131,19 @@ def __init__(args, logger):
                 if len(domain) > 0:
                     tags_to_add.append(f"t:{domain}")
 
-            if args.unregistered and not working:
-                if any(x in rt.msg.lower() for x in unregistered_matches for rt in real_trackers):
+            if not working:
+                unregistered_matched = any(rt.msg.lower().startswith(x.lower()) for x in unregistered_matches for rt in real_trackers)
+                maintenance_matched = any(rt.msg.lower().startswith(x.lower()) for x in maintenance_matches for rt in real_trackers)
+
+                if args.unregistered and unregistered_matched:
                     tags_to_add.append('Unregistered')
 
                     if args.move_unregistered and t.time_active > 60 and not t.category == 'Unregistered':
                         t.set_category(category='Unregistered')
-            elif args.tracker_down and not working:
-                if any(x in rt.msg.lower() for x in maintenance_matches for rt in real_trackers):
+                elif args.tracker_down and maintenance_matched:
                     tags_to_add.append('Tracker Down')
-            elif args.not_working and not working:
-                tags_to_add.append('Not Working')
+                elif args.not_working:
+                    tags_to_add.append('Not Working')
 
         if args.duplicates:
             match = [(infohash, path, size) for infohash, path, size in content_paths if path == t.content_path and not t.content_path == t.save_path]
