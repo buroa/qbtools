@@ -63,6 +63,7 @@ def qbit_client(args):
         host=f"{args.server}:{args.port}",
         username=args.username,
         password=args.password,
+        REQUESTS_ARGS={"timeout":180.1}
     )
 
     try:
