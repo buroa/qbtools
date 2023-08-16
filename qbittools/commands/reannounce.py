@@ -24,7 +24,7 @@ def __init__(args, logger):
                 logger.warning("[%s] is inactive for too long, not reannouncing...", t.name)
 
             elif (invalid or not working) and t.time_active < 60:
-                if invalid:
+                if invalid and args.pause_resume:
                     logger.warning("[%s] is invalid, active for %ss, pausing/resuming...", t.name, t.time_active)
                     t.pause()
                     t.resume()
@@ -40,25 +40,31 @@ def __init__(args, logger):
                     wait = (2 - iterations % 2) * timeout
                     logger.info("[%s] has no seeds, active for %ss, waiting %s...", t.name, t.time_active, wait)
 
-        torrents = client.torrents.info(status_filter="seeding", sort="time_active")
-        for t in torrents:
-            if t.time_active > 300:
-                continue
-            
-            invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
-            working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+        if args.process_seeding:
 
-            if invalid or not working:
-                if invalid:
-                    logger.warning("[%s] is invalid, active for %ss, pausing/resuming...", t.name, t.time_active)
-                    t.pause()
-                    t.resume()
+            torrents = client.torrents.info(status_filter="seeding", sort="time_active")
+            for t in torrents:
+                if t.time_active > 300:
+                    continue
 
-                logger.info("[%s] is not working, active for %ss, reannouncing...", t.name, t.time_active)
-                t.reannounce()
+                invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
+                working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+
+                if invalid or not working:
+                    if invalid and args.pause_resume:
+                        logger.warning("[%s] is invalid, active for %ss, pausing/resuming...", t.name, t.time_active)
+                        t.pause()
+                        t.resume()
+
+                    logger.info("[%s] is not working, active for %ss, reannouncing...", t.name, t.time_active)
+                    t.reannounce()
 
         time.sleep(timeout)
 
 def add_arguments(subparser):
     parser = subparser.add_parser("reannounce")
+
+    parser.add_argument('--pause-resume', action='store_true', help='Will pause/resume torrents that are invalid.')
+    parser.add_argument('--process-seeding', action='store_true', help='Will also process seeding torrents for reannouncements.')
+
     qbittools.add_default_args(parser)
