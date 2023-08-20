@@ -25,6 +25,7 @@ def __init__(args, logger):
 
     unregistered_matches = [
         'unregistered',
+        'not authorized',
         'not registered',
         'not found',
         'not exist',
