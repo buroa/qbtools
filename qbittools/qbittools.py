@@ -9,7 +9,7 @@ if getattr(sys, "oxidized", False):
     os.environ["PYOXIDIZER"] = "1"
 
 import qbittorrentapi
-import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.upgrade, commands.unpause, commands.mover, commands.orphaned
+import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.unpause, commands.mover, commands.orphaned
 
 
 class QbitConfig(NamedTuple):
@@ -129,7 +129,6 @@ def main():
         "reannounce",
         "update_passkey",
         "tagging",
-        "upgrade",
         "unpause",
         "mover",
         "orphaned",
