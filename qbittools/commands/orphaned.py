@@ -1,12 +1,9 @@
 #!/usr/bin/env python3
 
-import collections
 from datetime import datetime
-import tldextract
 from tqdm import tqdm
 import qbittools
-import qbittorrentapi
-import os, operator, sys
+import os, operator
 import pathlib3x as pathlib
 import commands.utils as utils
 

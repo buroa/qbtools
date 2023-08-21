@@ -2,7 +2,6 @@
 
 import collections
 from datetime import datetime
-import tldextract
 from tqdm import tqdm
 import qbittools
 import qbittorrentapi

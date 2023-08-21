@@ -8,6 +8,7 @@ qbittools is a feature rich CLI for the management of torrents in qBittorrent.
 
 ## Table of contents
 
+- [Upstream](#upstream)
 - [Description](#description)
 - [Table of contents](#table-of-contents)
 - [Requirements](#requirements)
@@ -33,7 +34,6 @@ qbittools is a feature rich CLI for the management of torrents in qBittorrent.
     - [Mover](#mover)
       - [Automatic moving with Cron](#automatic-moving-with-cron)
     - [Orphaned](#orphaned)
-  - [FlexGet](#flexget)
 
 ## Requirements
 
@@ -317,27 +317,4 @@ Find files no longer associated with any torrent, but still present in download 
 
 ```bash
 $ qbittools orphaned
-```
-
-### FlexGet
-
-qbittools can be used together with FlexGet via `exec` plugin, configuration example:
-
-```yml
-taskname:
-  rss:
-    url: https://site/feed.rss
-    all_entries: no
-  seen:
-    local: yes
-  accept_all: yes
-  download:
-    path: ~/torrents/rss/
-    overwrite: yes
-  exec:
-    auto_escape: yes
-    fail_entries: yes
-    on_output:
-      for_accepted:
-        - /usr/local/bin/qbittools add "{{location}}" -c books --rename "{{title}}" --content-layout Subfolder
 ```

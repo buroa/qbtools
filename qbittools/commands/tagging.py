@@ -43,9 +43,10 @@ def __init__(args, logger):
         'problem with',
         'specifically banned',
         'trumped',
+        'torrent existiert nicht',
         'i\'m sorry dave, i can\'t do that' # weird stuff from racingforme
     ]
-    
+
     maintenance_matches = [
         'tracker is down',
         'maintenance'
@@ -69,7 +70,6 @@ def __init__(args, logger):
 
     logger.info('Collecting tags info...')
     filtered_torrents = client.torrents.info()
-    all_torrents = client.torrents.info()
 
     if args.categories:
         filtered_torrents = list(filter(lambda x: x.category in args.categories, filtered_torrents))
@@ -84,7 +84,7 @@ def __init__(args, logger):
         client.torrents_remove_tags(tags=tags_to_delete, torrent_hashes=hashes)
 
         logger.info('Pruning old tags...')
-        
+
         empty_tags = list(filter(lambda tag: len(list(filter(lambda t: tag in t.tags, client.torrents.info()))) == 0, tqdm(tags_to_delete)))
         client.torrents_delete_tags(tags=empty_tags)
 
@@ -126,7 +126,7 @@ def __init__(args, logger):
             # trackers call is expensive for large amount of torrents
             working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
             real_trackers = list(filter(lambda s: not s.url in dht_matches, t.trackers))
-            
+
             if args.trackers and len(real_trackers) > 0:
                 domain = tldextract.extract(sorted(real_trackers, key=lambda x: x.url)[0].url).registered_domain
                 if len(domain) > 0:
@@ -155,7 +155,7 @@ def __init__(args, logger):
                     tag_sizes["Duplicates"] += match[0][2]
 
             content_paths.append((t.hash, t.content_path, t.size))
-        
+
         if args.not_linked and not utils.is_linked(t.content_path):
             tags_to_add.append("Not Linked")
 
@@ -193,5 +193,5 @@ def add_arguments(subparser):
     parser.add_argument('--tracker-down', action='store_true', help='Tag torrents with temporarily down trackers. Significantly increases script execution time')
     parser.add_argument('--size', action='store_true', help='Add size of tagged torrents to created tags')
     parser.add_argument('--not-linked', action='store_true', help='Tag torrents with files without hardlinks or symlinks, use with filtering by category/tag. Significantly increases script execution time')
-    
+
     qbittools.add_default_args(parser)
