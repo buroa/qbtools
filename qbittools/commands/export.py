@@ -12,7 +12,7 @@ def __init__(args, logger):
         torrents = list(map(lambda x: (x.hash, x.name, x.trackers), matches))
     else:
         torrents = list(map(lambda x: (x.hash, x.name, x.trackers), client.torrents.info(category=args.category)))
-        
+
     logger.info(f"Matched {len(torrents)} torrents")
     Path(args.output).expanduser().mkdir(parents=True, exist_ok=True)
 

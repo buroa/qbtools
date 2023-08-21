@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import pathlib, os
+import pathlib
 import qbittools
 import commands.utils as utils
 from humanfriendly import format_size, parse_size
@@ -29,7 +29,7 @@ def __init__(args, logger):
 
         if args.category and client.application.preferences.auto_tmm_enabled and args.tmm != False:
             category = client.torrent_categories.categories.get(args.category)
-            
+
             if category and category.savePath != '':
                 logger.info(f"Checking free space in {category.savePath}")
                 free = utils.free_space(category.savePath)

@@ -1,8 +1,7 @@
-qbittorrent-api
-tldextract
-tqdm
-requests
-packaging
-pathlib3x
-humanfriendly
-dulwich
+qbittorrent-api==2023.7.52
+tldextract==3.4.4
+tqdm==4.66.1
+requests==2.31.0
+packaging==23.1
+pathlib3x==2.0.3
+humanfriendly==10.0

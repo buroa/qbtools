@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import pathlib, hashlib, os
 import qbittools
 
 def __init__(args, logger):

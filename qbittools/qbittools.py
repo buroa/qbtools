@@ -96,6 +96,7 @@ def config_values(path):
     if not host is None:
         try:
             host = ipaddress.ip_address(host)
+            host = 'http://' + str(host)
         except ValueError as e:
             host = "127.0.0.1"
 
