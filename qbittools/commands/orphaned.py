@@ -1,83 +1,38 @@
 #!/usr/bin/env python3
 
-from datetime import datetime
-from tqdm import tqdm
 import qbittools
-import os, operator
-import pathlib3x as pathlib
-import commands.utils as utils
-
-def confirm(text):
-    answer = ""
-    while answer not in ["y", "n"]:
-        answer = input(text).lower()
-    return answer == "y"
-
-def is_dir_empty(path):
-    with os.scandir(path) as scan:
-        return next(scan, None) is None
-
-def delete_empty_dirs(folders, force=False):
-    qbittools.logger.info(f"Collecting empty directories...")
-    fs_dirs = [pathlib.Path(path) / name for folder in folders for path, subdirs, files in os.walk(folder) for name in subdirs if is_dir_empty(pathlib.Path(path) / name)]
-
-    if len(fs_dirs) == 0:
-        qbittools.logger.info('None found')
-        return
-
-    for path in fs_dirs:
-        print(path)
-
-    if not force and not confirm('OK to delete all including parent directories if these are empty too [Y/N]? '):
-        return
-
-    for folder in folders:
-        for path, subdirs, files in os.walk(folder, topdown=False):
-            for name in subdirs:
-                dir_path = pathlib.Path(path) / name
-
-                if is_dir_empty(dir_path):
-                    qbittools.logger.info(f"Removing {os.fsencode(dir_path).decode('utf8', 'replace')}")
-                    dir_path.rmdir()
+import os
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
+    completed_dir = qbittools.config.save_path
 
-    folders = {qbittools.config.save_path}
-    folders |= {category.savePath for category in client.torrents_categories().values() if category.savePath != '' and not qbittools.config.save_path.is_relative_to(category.savePath)}
-    logger.info(f"Download folders: {list(map(str, folders))}")
-    logger.info('Collecting files from download folders...')
-    fs_files = {pathlib.Path(path) / name for folder in tqdm(folders) for path, subdirs, files in os.walk(folder) for name in files}
+    torrent_list = client.torrents.info()
+    completed_dir_list = completed_dir.split(os.sep)
 
-    logger.info('Collecting files from qBittorrent...')
-    qbit_files = {pathlib.Path(torrent.save_path) / file.name for torrent in tqdm(client.torrents.info()) for file in torrent.files}
-    diff = fs_files - qbit_files
+    qbittorrent_files = set()
+    for torrent in torrent_list:
+        torrent_files = torrent['content_path']
+        if os.path.isfile(torrent_files):
+            torrent_path_list = torrent_files.split(os.sep)
+            merged_list = [value for value in torrent_path_list if value not in completed_dir_list]
+            if len(merged_list) > 2:
+                torrent_files = os.path.dirname(torrent_files)
+            qbittorrent_files.add(torrent_files)
+        if os.path.isdir(torrent_files):
+            qbittorrent_files.add(torrent_files)
 
-    if len(diff) == 0:
-        logger.info('Nothing to delete')
-        delete_empty_dirs(folders, args.force)
-        return
-
-
-    logger.info('Preparing list of orphaned files...')
-    files_and_sizes = ((path, path.stat().st_size) for path in tqdm(diff))
-    sorted_files_with_size = sorted(files_and_sizes, key = operator.itemgetter(1), reverse=True)
-
-    total_size = sum(size for file, size in sorted_files_with_size)
-    print(f"Total size: {utils.format_bytes(total_size)}")
-
-    for file, size in sorted_files_with_size:
-        print(f"{utils.format_bytes(size)}\t{os.path.relpath(os.fsencode(file).decode('utf8', 'replace'), qbittools.config.save_path)}")
-
-    if not args.force and not confirm('OK to delete all [Y/N]? '):
-        return
-
-    for file, size in sorted_files_with_size:
-        logger.info(f"Removing {os.fsencode(file).decode('utf8', 'replace')}")
-        file.unlink()
-    delete_empty_dirs(folders, args.force)
+    folders = [folder for folder in os.listdir(completed_dir) if os.path.isdir(os.path.join(completed_dir, folder))]
+    for folder in folders:
+        folder_path = os.path.join(completed_dir, folder)
+        contents = os.listdir(folder_path)
+        for item in contents:
+            item_path = os.path.join(folder_path, item)
+            if item_path not in qbittorrent_files:
+                if not args.confirm:
+                    logger.info(f"Skipping deletion of {item_path}")
 
 def add_arguments(subparser):
     parser = subparser.add_parser('orphaned')
-    parser.add_argument('--force', action='store_true', help='Delete without asking')
+    parser.add_argument('--confirm', action='store_true', help='Confirm deletion of orphaned files')
     qbittools.add_default_args(parser)
