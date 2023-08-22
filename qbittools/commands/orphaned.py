@@ -5,7 +5,7 @@ import os
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
-    completed_dir = qbittools.config.save_path
+    completed_dir = str(qbittools.config.save_path)
 
     torrent_list = client.torrents.info()
     completed_dir_list = completed_dir.split(os.sep)
