@@ -16,21 +16,21 @@ def __init__(args, logger):
     logger.info(f"Use --confirm to delete files in {completed_dir} that are not in qBittorrent")
 
     logger.info(f"Getting a list of all torrents 'content_path' in qBittorrent")
-    qbittorrent_files = set()
+    qbittorrent_items = set()
     for torrent in torrent_list:
-        content_path = torrent['content_path']
-        if os.path.isfile(content_path):
+        item_path = torrent['content_path']
+        if os.path.isfile(item_path):
             # Account for the fact that an item's data may be in a subdirectory of the completed/$category directory
             # e.g. completed/$category/$name/$name.mkv
-            torrent_path_list = torrent_files.split(os.sep)
+            torrent_path_list = item_path.split(os.sep)
             merged_list = [value for value in torrent_path_list if value not in completed_dir_list]
             if len(merged_list) > 2:
-                torrent_files = os.path.dirname(content_path)
-            qbittorrent_files.add(content_path)
-        if os.path.isdir(content_path):
-            qbittorrent_files.add(content_path)
+                item_path = os.path.dirname(item_path)
+            qbittorrent_items.add(item_path)
+        if os.path.isdir(item_path):
+            qbittorrent_items.add(item_path)
 
-    logger.info(f"Found {len(qbittorrent_files)} total items in qBittorrent")
+    logger.info(f"Found {len(qbittorrent_items)} total items in qBittorrent")
 
     logger.info(f"Get a list of all files and folders in the completed directory")
     folders = [folder for folder in os.listdir(completed_dir) if os.path.isdir(os.path.join(completed_dir, folder))]
@@ -39,7 +39,7 @@ def __init__(args, logger):
         contents = os.listdir(folder_path)
         for item in contents:
             item_path = os.path.join(folder_path, item)
-            if item_path not in qbittorrent_files:
+            if item_path not in qbittorrent_items:
                 if not args.confirm:
                     logger.info(f"Skipping deletion of {item_path}")
                 else:
