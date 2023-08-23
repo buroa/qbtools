@@ -3,6 +3,7 @@
 import qbittools
 import os
 import shutil
+import fnmatch
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
@@ -39,23 +40,25 @@ def __init__(args, logger):
         contents = os.listdir(folder_path)
         for item in contents:
             item_path = os.path.join(folder_path, item)
-            if item_path not in qbittorrent_items:
-                if not args.confirm:
-                    logger.info(f"Skipping deletion of {item_path}")
-                else:
-                    try:
-                        if os.path.isfile(item_path):
-                            logger.info(f"Deleting file {item_path}")
-                            os.remove(item_path)
-                        elif os.path.isdir(item_path):
-                            logger.info(f"Deleting folder {item_path}")
-                            shutil.rmtree(item_path)
-                        else:
-                            logger.debug(f"{item_path} does not exist.")
-                    except Exception as e:
-                        logger.error(f"An error occurred: {e}")
+            if not any(fnmatch.fnmatch(item, pattern) for pattern in args.ignore_patterns):
+                if item_path not in qbittorrent_items:
+                    if not args.confirm:
+                        logger.info(f"Skipping deletion of {item_path}")
+                    else:
+                        try:
+                            if os.path.isfile(item_path):
+                                logger.info(f"Deleting file {item_path}")
+                                os.remove(item_path)
+                            elif os.path.isdir(item_path):
+                                logger.info(f"Deleting folder {item_path}")
+                                shutil.rmtree(item_path)
+                            else:
+                                logger.debug(f"{item_path} does not exist.")
+                        except Exception as e:
+                            logger.error(f"An error occurred: {e}")
 
 def add_arguments(subparser):
     parser = subparser.add_parser('orphaned')
-    parser.add_argument('--confirm', action='store_true', help='Confirm deletion of orphaned files')
+    parser.add_argument('--confirm', action='store_true', help='Confirm deletion of orphaned files', required=False)
+    parser.add_argument('--ignore-patterns', nargs='*', help='Ignore patterns, split by a whitespace (e.g. "*_unpackerr .DS_Store")', default=[], required=False)
     qbittools.add_default_args(parser)
