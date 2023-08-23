@@ -135,7 +135,7 @@ def __init__(args, logger):
 
         indexer = filter_indexer_by_url(indexers, domain)
         if indexer:
-            if torrent['ratio'] >= indexer['required_seed_ratio'] and torrent['ratio'] != 0:
+            if torrent['ratio'] >= indexer['required_seed_ratio'] and indexer['required_seed_ratio'] != 0:
                 logger.info(f"Removing torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired ratio ({round(torrent['ratio'], 2)})")
                 if not args.dry_run:
                     torrent.delete(delete_files=False)
