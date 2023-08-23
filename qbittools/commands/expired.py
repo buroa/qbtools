@@ -109,7 +109,8 @@ def dhms(total_seconds: int) -> str:
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
     indexers = [item for sublist in args.indexer for item in sublist]
-    filtered_indexer_list = filter_indexer_by_args(indexers)
+    if not args.all_indexers:
+        indexers = filter_indexer_by_args(indexers)
     ignore_categories = [item for sublist in args.ignore_category for item in sublist]
 
     logger.info(f"Checking for expired torrents in qBittorrent")
@@ -128,7 +129,7 @@ def __init__(args, logger):
         real_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, torrent.trackers))
         domain = extractTLD(sorted(real_trackers, key=lambda x: x.url)[0].url).registered_domain
 
-        indexer = filter_indexer_by_url(filtered_indexer_list, domain)
+        indexer = filter_indexer_by_url(indexers, domain)
         if indexer:
             if torrent['ratio'] >= indexer['required_seed_ratio'] and torrent['ratio'] != 0:
                 logger.info(f"Removing torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired ratio ({round(torrent['ratio'], 2)})")
@@ -142,6 +143,7 @@ def __init__(args, logger):
 def add_arguments(subparser):
     parser = subparser.add_parser('expired')
     parser.add_argument('--dry-run', action='store_true', help='Do not delete the torrents only log them', required=False)
+    parser.add_argument('--all-indexers', action='store_true', help='Include all indexers, ignores --indexer arg', required=False)
     parser.add_argument('--indexer', nargs='*', action='append', metavar='myindexer', default=[], help='Indexer, can be repeated multiple times', required=False)
     parser.add_argument('--ignore-category', nargs='*', action='append', metavar='mycategory', default=[], help='Ignore category, can be repeated multiple times', required=False)
 
