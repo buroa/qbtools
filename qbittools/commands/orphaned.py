@@ -41,7 +41,7 @@ def __init__(args, logger):
         contents = os.listdir(folder_path)
         for item in contents:
             item_path = os.path.join(folder_path, item)
-            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in args.ignore_patterns):
+            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in args.ignore_patterns.split()):
                 if item_path not in qbittorrent_items:
                     if not args.confirm:
                         logger.info(f"Skipping deletion of {item_path}")
