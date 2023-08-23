@@ -5,15 +5,27 @@ import tldextract
 import qbittools
 
 INDEXER_SPECS = {
+    'avistaz': {
+        'name': 'avistaz',
+        'urls': ['avistaz.to'],
+        'required_seed_ratio': 1.0,
+        'required_seed_days': 10.5,
+    },
+    'blutopia': {
+        'name': 'blutopia',
+        'urls': ['blutopia.cc', 'blutopia.xyz'],
+        'required_seed_ratio': 0,
+        'required_seed_days': 7.5,
+    },
     'filelist': {
         'name': 'filelist',
         'urls': ['filelist.io', 'flro.org'],
         'required_seed_ratio': 1.05,
         'required_seed_days': 2.5,
     },
-    'torrentleech': {
-        'name': 'torrentleech',
-        'urls': ['tleechreload.org', 'torrentleech.org'],
+    'hd-space': {
+        'name': 'hd-space',
+        'urls': ['hd-space.pw'],
         'required_seed_ratio': 1.05,
         'required_seed_days': 10.5,
     },
@@ -23,10 +35,16 @@ INDEXER_SPECS = {
         'required_seed_ratio': 1.05,
         'required_seed_days': 10.5,
     },
-    'hd-space': {
-        'name': 'hd-space',
-        'urls': ['hd-space.pw'],
+    'iptorrents': {
+        'name': 'iptorrents',
+        'urls': ['bgp.technology', 'empirehost.me', 'stackoverflow.tech'],
         'required_seed_ratio': 1.05,
+        'required_seed_days': 14.5,
+    },
+    'privatehd': {
+        'name': 'privatehd',
+        'urls': ['privatehd.to'],
+        'required_seed_ratio': 1.0,
         'required_seed_days': 10.5,
     },
     'scenetime': {
@@ -35,11 +53,11 @@ INDEXER_SPECS = {
         'required_seed_ratio': 0,
         'required_seed_days': 3.5,
     },
-    'iptorrents': {
-        'name': 'iptorrents',
-        'urls': ['bgp.technology', 'empirehost.me', 'stackoverflow.tech'],
+    'torrentleech': {
+        'name': 'torrentleech',
+        'urls': ['tleechreload.org', 'torrentleech.org'],
         'required_seed_ratio': 1.05,
-        'required_seed_days': 14.5,
+        'required_seed_days': 10.5,
     },
     'torrentseeds': {
         'name': 'torrentseeds',
