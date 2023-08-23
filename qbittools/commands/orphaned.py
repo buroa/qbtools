@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import qbittools
 import os
 import shutil
 from fnmatch import fnmatch
+
+import qbittools
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
@@ -35,7 +36,7 @@ def __init__(args, logger):
 
     logger.info(f"Found {len(qbittorrent_items)} total items in qBittorrent")
 
-    logger.info(f"Get a list of all files and folders in the completed directory")
+    logger.info(f"Getting a list of all files and folders in {completed_dir}/$qbcategory")
     folders = [folder for folder in os.listdir(completed_dir) if os.path.isdir(os.path.join(completed_dir, folder))]
     for folder in folders:
         folder_path = os.path.join(completed_dir, folder)
@@ -45,7 +46,7 @@ def __init__(args, logger):
             if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in ignore_patterns):
                 if item_path not in qbittorrent_items:
                     if not args.confirm:
-                        logger.info(f"Skipping deletion of {item_path}")
+                        logger.info(f"Deleting item {item_path}")
                     else:
                         try:
                             if os.path.isfile(item_path):
