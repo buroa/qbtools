@@ -3,7 +3,7 @@
 import qbittools
 import os
 import shutil
-import fnmatch
+from fnmatch import fnmatch
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
@@ -41,7 +41,7 @@ def __init__(args, logger):
         contents = os.listdir(folder_path)
         for item in contents:
             item_path = os.path.join(folder_path, item)
-            if not any(fnmatch.fnmatch(item, pattern) or fnmatch.fnmatch(item_path, pattern) for pattern in args.ignore_patterns):
+            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in args.ignore_patterns):
                 if item_path not in qbittorrent_items:
                     if not args.confirm:
                         logger.info(f"Skipping deletion of {item_path}")
@@ -57,11 +57,13 @@ def __init__(args, logger):
                                 logger.debug(f"{item_path} does not exist.")
                         except Exception as e:
                             logger.error(f"An error occurred: {e}")
+            else:
+                logger.info(f"Skipping {item_path} because it matches an ignore pattern")
 
     logger.info(f"Completed checking for orphaned files in qBittorrent")
 
 def add_arguments(subparser):
     parser = subparser.add_parser('orphaned')
     parser.add_argument('--confirm', action='store_true', help='Confirm deletion of orphaned files', required=False)
-    parser.add_argument('--ignore-patterns', nargs='*', help='Ignore patterns, split by a whitespace (e.g. "*_unpackerr .DS_Store */manual/*")', default=[], required=False)
+    parser.add_argument('-i', '--ignore-patterns', nargs='*', metavar='mypattern', default=[], help='Ignore patterns, split by a whitespace', required=False)
     qbittools.add_default_args(parser)
