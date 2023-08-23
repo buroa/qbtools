@@ -108,16 +108,20 @@ def dhms(total_seconds: int) -> str:
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
-    indexers = [item for sublist in args.indexer for item in sublist]
-    if not args.all_indexers:
-        indexers = filter_indexer_by_args(indexers)
     ignore_categories = [item for sublist in args.ignore_category for item in sublist]
 
-    logger.info(f"Checking for expired torrents in qBittorrent")
-    logger.info(f"Using indexers '{' '.join(indexers)}'")
+    indexers = [item for sublist in args.indexer for item in sublist]
+    if not args.all_indexers:
+        logger.info(f"Using specific indexers '{' '.join(indexers)}'")
+        indexers = filter_indexer_by_args(indexers)
+    else:
+        logger.info(f"Using all indexers")
+        indexers = filter_indexer_by_args(list(INDEXER_SPECS.keys()))
+
     if args.dry_run:
         logger.info(f"Dry run mode initiated, no torrents will be deleted")
 
+    logger.info(f"Checking for expired torrents in qBittorrent")
     extractTLD = tldextract.TLDExtract(cache_dir=None)
 
     torrents_info = client.torrents.info()
