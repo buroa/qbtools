@@ -9,7 +9,7 @@ if getattr(sys, "oxidized", False):
     os.environ["PYOXIDIZER"] = "1"
 
 import qbittorrentapi
-import commands.orphaned, commands.reannounce, commands.tagging
+import commands.expired, commands.orphaned, commands.reannounce, commands.tagging
 
 class QbitConfig(NamedTuple):
     host: str
@@ -110,7 +110,7 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
 
-    for cmd in ["reannounce", "tagging", "orphaned"]:
+    for cmd in ["expired", "reannounce", "tagging", "orphaned"]:
         mod = getattr(globals()["commands"], cmd)
         getattr(mod, "add_arguments")(subparsers)
 
