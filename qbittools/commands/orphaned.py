@@ -15,7 +15,7 @@ def __init__(args, logger):
     logger.info(f"Checking for orphaned files in qBittorrent")
     logger.info(f"Not deleting files in {completed_dir} that are in qBittorrent")
     logger.info(f"Use --confirm to delete files in {completed_dir} that are not in qBittorrent")
-    logger.info(f"Ignoring file/folder patterns '{args.ignore_patterns.join(' ')}'")
+    logger.info(f"Ignoring file/folder patterns {args.ignore_patterns}")
 
     logger.info(f"Getting a list of all torrents 'content_path' in qBittorrent")
     qbittorrent_items = set()
