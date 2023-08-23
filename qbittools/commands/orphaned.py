@@ -8,6 +8,7 @@ from fnmatch import fnmatch
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
     completed_dir = str(qbittools.config.save_path)
+    ignore_patterns = ' '.join(args.ignore_patterns)
 
     torrent_list = client.torrents.info()
     completed_dir_list = completed_dir.split(os.sep)
@@ -15,7 +16,7 @@ def __init__(args, logger):
     logger.info(f"Checking for orphaned files in qBittorrent")
     logger.info(f"Not deleting files in {completed_dir} that are in qBittorrent")
     logger.info(f"Use --confirm to delete files in {completed_dir} that are not in qBittorrent")
-    logger.info(f"Ignoring file/folder patterns '{' '.join(args.ignore_patterns)}'")
+    logger.info(f"Ignoring file/folder patterns '{ignore_patterns}'")
 
     logger.info(f"Getting a list of all torrents 'content_path' in qBittorrent")
     qbittorrent_items = set()
@@ -41,7 +42,7 @@ def __init__(args, logger):
         contents = os.listdir(folder_path)
         for item in contents:
             item_path = os.path.join(folder_path, item)
-            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in args.ignore_patterns.split()):
+            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in ignore_patterns.split()):
                 if item_path not in qbittorrent_items:
                     if not args.confirm:
                         logger.info(f"Skipping deletion of {item_path}")
