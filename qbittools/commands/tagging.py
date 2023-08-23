@@ -4,9 +4,10 @@ import collections
 from datetime import datetime
 import tldextract
 from tqdm import tqdm
-import qbittools
 import qbittorrentapi
 import commands.utils as utils
+
+import qbittools
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)

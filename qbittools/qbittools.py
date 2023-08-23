@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse, logging, sys, pkgutil, collections, os, configparser
+import argparse, logging, sys, os, configparser
 import ipaddress
 from typing import NamedTuple
 import pathlib3x as pathlib
@@ -9,8 +9,7 @@ if getattr(sys, "oxidized", False):
     os.environ["PYOXIDIZER"] = "1"
 
 import qbittorrentapi
-import commands.add, commands.export, commands.reannounce, commands.update_passkey, commands.tagging, commands.unpause, commands.mover, commands.orphaned
-
+import commands.orphaned, commands.reannounce, commands.tagging
 
 class QbitConfig(NamedTuple):
     host: str
@@ -18,26 +17,15 @@ class QbitConfig(NamedTuple):
     username: str
     save_path: pathlib.Path
 
-
 logger = logging.getLogger(__name__)
 config = None
 
-
 def add_default_args(parser):
-    parser.add_argument(
-        "-C",
-        "--config",
-        metavar="~/.config/qBittorrent/qBittorrent.conf",
-        default="~/.config/qBittorrent/qBittorrent.conf",
-        required=False,
-    )
+    parser.add_argument("-C", "--config", metavar="~/.config/qBittorrent/qBittorrent.conf", default="~/.config/qBittorrent/qBittorrent.conf", required=False)
+    parser.add_argument("-s", "--server", metavar="127.0.0.1", help="host", required=False)
     parser.add_argument("-p", "--port", metavar="12345", help="port", required=False)
-    parser.add_argument(
-        "-s", "--server", metavar="127.0.0.1", help="host", required=False
-    )
     parser.add_argument("-U", "--username", metavar="username", required=False)
     parser.add_argument("-P", "--password", metavar="password", required=False)
-
 
 def qbit_client(args):
     global config
@@ -82,7 +70,6 @@ def qbit_client(args):
         logger.error(e)
     return client
 
-
 def config_values(path):
     config = configparser.ConfigParser()
     config.read(pathlib.Path(path).expanduser())
@@ -109,11 +96,10 @@ def config_values(path):
 
     return QbitConfig(host, port, user, save_path)
 
-
 def main():
     global config
 
-    logging.getLogger("filelock").setLevel(logging.ERROR)  # supress lock messages
+    logging.getLogger("filelock").setLevel(logging.ERROR) # supress lock messages
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,
@@ -124,16 +110,7 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
 
-    for cmd in [
-        "add",
-        "export",
-        "reannounce",
-        "update_passkey",
-        "tagging",
-        "unpause",
-        "mover",
-        "orphaned",
-    ]:
+    for cmd in ["reannounce", "tagging", "orphaned"]:
         mod = getattr(globals()["commands"], cmd)
         getattr(mod, "add_arguments")(subparsers)
 
@@ -145,7 +122,6 @@ def main():
 
     mod = getattr(globals()["commands"], args.command)
     cmd = getattr(mod, "__init__")(args, logger)
-
 
 if __name__ == "__main__":
     main()
