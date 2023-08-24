@@ -53,6 +53,12 @@ INDEXER_SPECS = {
         'required_seed_ratio': 0,
         'required_seed_days': 3.5,
     },
+    'torrentday': {
+        'name': 'torrentday',
+        'urls': ['jumbohostpro.eu', 'td-peers.com'],
+        'required_seed_ratio': 1.05,
+        'required_seed_days': 3.5,
+    },
     'torrentleech': {
         'name': 'torrentleech',
         'urls': ['tleechreload.org', 'torrentleech.org'],

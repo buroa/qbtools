@@ -78,6 +78,7 @@ SITE_MAPPINGS = {
     'privatehd': { 'urls': ['privatehd.to'] },
     'redacted': { 'urls': ['flacsfor.me'] },
     'scenetime': { 'urls': ['scenetime.com'] },
+    'torrentday': { 'urls': ['jumbohostpro.eu', 'td-peers.com'] },
     'torrentleech': { 'urls': ['tleechreload.org', 'torrentleech.org'] },
     'torrentseeds': { 'urls': ['torrentseeds.org'] },
     'uhdbits': { 'urls': ['uhdbits.org'] },
