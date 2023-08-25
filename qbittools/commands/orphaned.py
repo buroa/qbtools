@@ -13,7 +13,7 @@ def __init__(args, logger):
 
     completed_dir = str(qbittools.config.save_path)
     completed_dir_list = completed_dir.split(os.sep)
-    ignore_patterns = [item for sublist in args.ignore_pattern for item in sublist]
+    exclude_patterns = [i for s in args.exclude_pattern for i in s]
 
     logger.info(f"Gathering a list of all torrents in qBittorrent...")
     qbittorrent_items = set()
@@ -38,7 +38,7 @@ def __init__(args, logger):
         contents = os.listdir(folder_path)
         for item in contents:
             item_path = os.path.join(folder_path, item)
-            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in ignore_patterns):
+            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in exclude_patterns):
                 if item_path not in qbittorrent_items:
                     if not args.dry_run:
                         try:
@@ -58,20 +58,23 @@ def __init__(args, logger):
                         logger.info(f"The flag --dry-run is set, skipping item {item_path}...")
 
             else:
-                logger.info(f"Skipping {item_path} because it matches an ignore pattern...")
+                logger.info(f"Skipping {item_path} because it matches an exclude pattern...")
     #TODO: Add more stats like total reclaimed data, total items deleted, etc.
     logger.info(f"Done deleting orphaned files on disk not in qBittorrent")
 
 def add_arguments(subparser):
     """
     Description:
-        Search for files on disk that are not in qBittorrent and delete them.
+        Search for files on disk that are not in qBittorrent and delete them. Pair this with the prune command to delete torrents that are not in qBittorrent.
     Usage:
         qbittools.py orphaned --help
+    Example:
+        # Delete all files in the completed directory that are not in qBittorrent and don't match the exclude patterns
+        qbittools.py orphaned --exclude-pattern "*_unpackerred" --exclude-pattern "*/manual/*" --dry-run
     """
     parser = subparser.add_parser('orphaned')
 
-    parser.add_argument('--ignore-pattern', nargs='*', action='append', metavar='mypattern', default=[], help='Ignore pattern, can be repeated multiple times', required=False)
+    parser.add_argument('--exclude-pattern', nargs='*', action='append', metavar='mypattern', default=[], help='Exclude pattern, can be repeated multiple times', required=False)
 
     parser.add_argument('--dry-run', action='store_true', help='Do not delete any data on disk', default=False, required=False)
 

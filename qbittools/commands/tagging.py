@@ -56,7 +56,6 @@ DHT_MATCHES = [
 ]
 
 def __init__(args, logger):
-
     client = qbittools.qbit_client(args)
 
     extractTLD = tldextract.TLDExtract(cache_dir=None)
@@ -66,12 +65,12 @@ def __init__(args, logger):
     content_paths = []
 
     filtered_torrents = client.torrents.info()
-    if args.ignore_category:
-        ignore_categories = [item for sublist in args.ignore_category for item in sublist]
-        filtered_torrents = list(filter(lambda x: x.category not in ignore_categories, filtered_torrents))
-    if args.ignore_tag:
-        ignore_tags = [item for sublist in args.ignore_tag for item in sublist]
-        filtered_torrents = list(filter(lambda x: any(y not in x.tags for y in ignore_tags), filtered_torrents))
+    exclude_categories = [i for s in args.exclude_category for i in s]
+    exclude_tags = [i for s in args.exclude_tag for i in s]
+    if len(exclude_categories):
+        filtered_torrents = list(filter(lambda x: x.category not in exclude_categories, filtered_torrents))
+    if len(exclude_tags):
+        filtered_torrents = list(filter(lambda x: any(y not in x.tags for y in exclude_tags), filtered_torrents))
 
     logger.info(f"Gathering items to tag in qBittorrent...")
     for t in filtered_torrents:
@@ -189,11 +188,14 @@ def add_arguments(subparser):
         Tag torrents. This command can be used to tag torrents with various tags, such as torrents that have not been active for a while, torrents that have not been working for a while, torrents that have expired an ratio or seeding time, torrents that have the same content path, etc.
     Usage:
         qbittools.py tagging --help
+    Example:
+        # Tag torrents
+        qbittools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
     parser = subparser.add_parser('tagging')
 
-    parser.add_argument('--ignore-category', nargs='*', action='append', metavar='mycategory', default=[], help='Ignore all torrent with this category, can be repeated multiple times', required=False)
-    parser.add_argument('--ignore-tag', nargs='*', action='append', metavar='mytag', default=[], help='Ignore all torrents with this tag, can be repeated multiple times', required=False)
+    parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude all torrent with this category, can be repeated multiple times', required=False)
+    parser.add_argument('--exclude-tag', nargs='*', action='append', metavar='mytag', default=[], help='Exclude all torrents with this tag, can be repeated multiple times', required=False)
 
     parser.add_argument('--added-on', action='store_true', help='Tag torrents with added date (last 24h, 7 days, 30 days, etc)')
     parser.add_argument('--domains', action='store_true', help='Tag torrents with tracker domains')

@@ -1,10 +1,10 @@
-FROM python:3.11-slim-bullseye as base
+FROM python:3.11.4-alpine3.18 as base
 
 FROM base as pip
 WORKDIR /install
 COPY requirements.txt /requirements.txt
-RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt
-RUN python3 -c "import compileall; compileall.compile_path(maxlevels=10)"
+RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt \
+    && python3 -c "import compileall; compileall.compile_path(maxlevels=10)"
 
 FROM base as app
 WORKDIR /app

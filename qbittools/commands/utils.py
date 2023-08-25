@@ -1,3 +1,4 @@
+#TODO: Move to JSON config file and let it be user provided
 INDEXER_SPECS = {
     'alpharatio': {
         'name': 'alpharatio',
@@ -5,6 +6,7 @@ INDEXER_SPECS = {
         'required_seed_ratio': 1.05,
         'required_seed_days': 7.5,
     },
+    # TODO: Discover seeding requirements
     'animetorrents.me': {
         'name': 'animetorrents',
         'urls': ['animetorrents.me'],
@@ -27,7 +29,7 @@ INDEXER_SPECS = {
         'name': 'beyond-hd',
         'urls': ['beyond-hd.me'],
         'required_seed_ratio': 0,
-        'required_seed_days': 0,
+        'required_seed_days': 30.5,
     },
     'blutopia': {
         'name': 'blutopia',
@@ -38,8 +40,8 @@ INDEXER_SPECS = {
     'broadcasthenet': {
         'name': 'broadcasthenet',
         'urls': ['landof.tv'],
-        'required_seed_ratio': 0,
-        'required_seed_days': 0,
+        'required_seed_ratio': 1.05,
+        'required_seed_days': 5.5,
     },
     'cinemaz': {
         'name': 'cinemaz',
@@ -89,12 +91,14 @@ INDEXER_SPECS = {
         'required_seed_ratio': 1.05,
         'required_seed_days': 14.5,
     },
+    # TODO: Discover seeding requirements
     'karagarga': {
         'name': 'karagarga',
         'urls': ['karagarga.in'],
         'required_seed_ratio': 0,
         'required_seed_days': 0,
     },
+    # TODO: Discover seeding requirements
     'kraytracker': {
         'name': 'kraytracker',
         'urls': ['kraytracker.com'],
@@ -104,27 +108,31 @@ INDEXER_SPECS = {
     'morethantv': {
         'name': 'morethantv',
         'urls': ['morethantv.me'],
-        'required_seed_ratio': 0,
-        'required_seed_days': 0,
+        'required_seed_ratio': 1.05,
+        'required_seed_days': 7.5,
     },
+    # TODO: Discover seeding requirements
     'myanonamouse': {
         'name': 'myanonamouse',
         'urls': ['myanonamouse.net'],
         'required_seed_ratio': 0,
         'required_seed_days': 0,
     },
+    # TODO: Discover seeding requirements
     'myspleen': {
         'name': 'myspleen',
         'urls': ['myspleen.org'],
         'required_seed_ratio': 0,
         'required_seed_days': 0,
     },
+    # TODO: Discover seeding requirements
     'orpheus': {
         'name': 'orpheus',
         'urls': ['home.opsfet.ch'],
         'required_seed_ratio': 0,
         'required_seed_days': 0,
     },
+    # TODO: Discover seeding requirements
     'passthepopcorn': {
         'name': 'passthepopcorn',
         'urls': ['passthepopcorn.me'],
@@ -143,6 +151,7 @@ INDEXER_SPECS = {
         'required_seed_ratio': 0,
         'required_seed_days': 4.5,
     },
+    # TODO: Discover seeding requirements
     'redacted': {
         'name': 'redacted',
         'urls': ['flacsfor.me'],
@@ -188,8 +197,8 @@ INDEXER_SPECS = {
     'uhdbits': {
         'name': 'uhdbits',
         'urls': ['uhdbits.org'],
-        'required_seed_ratio': 0,
-        'required_seed_days': 0,
+        'required_seed_ratio': 1.05,
+        'required_seed_days': 7.5,
     },
 }
 
