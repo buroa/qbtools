@@ -124,9 +124,6 @@ def __init__(args, logger):
         logger.info(f"Using all indexers")
         indexers = filter_indexer_by_args(list(INDEXER_SPECS.keys()))
 
-    if args.dry_run:
-        logger.info(f"Dry run mode initiated, no torrents will be deleted")
-
     logger.info(f"Checking for expired torrents in qBittorrent")
     extractTLD = tldextract.TLDExtract(cache_dir=None)
 
@@ -142,19 +139,25 @@ def __init__(args, logger):
         indexer = filter_indexer_by_url(indexers, domain)
         if indexer:
             if torrent['ratio'] >= indexer['required_seed_ratio'] and indexer['required_seed_ratio'] != 0:
-                logger.info(f"Removing torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired ratio ({round(torrent['ratio'], 2)})")
-                if not args.dry_run:
+                if args.delete:
+                    logger.info(f"Removing torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired ratio ({round(torrent['ratio'], 2)})")
                     torrent.delete(delete_files=False)
+                else:
+                    logger.info(f"Tagging torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired ratio ({round(torrent['ratio'], 2)})")
+                    client.torrents_add_tags(tags='expired', torrent_hashes=torrent['hash'])
             elif torrent['seeding_time'] >= seconds(indexer['required_seed_days']):
-                logger.info(f"Removing torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired seeding time ({dhms(torrent['seeding_time'])})")
-                if not args.dry_run:
+                if args.delete:
+                    logger.info(f"Removing torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired seeding time ({dhms(torrent['seeding_time'])})")
                     torrent.delete(delete_files=False)
+                else:
+                    logger.info(f"Tagging torrent {torrent['name']} ({domain}) with matching indexer {indexer['name']} due to an expired seeding time ({dhms(torrent['seeding_time'])})")
+                    client.torrents_add_tags(tags='expired', torrent_hashes=torrent['hash'])
 
 def add_arguments(subparser):
     parser = subparser.add_parser('expired')
-    parser.add_argument('--dry-run', action='store_true', help='Do not delete the torrents only log them', required=False)
     parser.add_argument('--all-indexers', action='store_true', help='Include all indexers, ignores --indexer arg', required=False)
     parser.add_argument('--indexer', nargs='*', action='append', metavar='myindexer', default=[], help='Indexer, can be repeated multiple times', required=False)
     parser.add_argument('--ignore-category', nargs='*', action='append', metavar='mycategory', default=[], help='Ignore category, can be repeated multiple times', required=False)
+    parser.add_argument('--delete', action='store_true', help='Delete torrent when expired, otherwise tag it with expired', required=False)
 
     qbittools.add_default_args(parser)
