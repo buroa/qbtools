@@ -69,7 +69,7 @@ INDEXER_SPECS = {
     },
     'hd-olimpo': {
         'name': 'hd-olimpo',
-        'urls': ['hd-space.club'],
+        'urls': ['hd-olimpo.club'],
         'required_seed_ratio': 0,
         'required_seed_days': 3.5,
     },
