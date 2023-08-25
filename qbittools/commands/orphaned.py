@@ -7,21 +7,17 @@ from fnmatch import fnmatch
 import qbittools
 
 def __init__(args, logger):
+    logger.info(f"Checking for orphaned files on disk not in qBittorrent...")
+
     client = qbittools.qbit_client(args)
+
     completed_dir = str(qbittools.config.save_path)
+    completed_dir_list = completed_dir.split(os.sep)
     ignore_patterns = [item for sublist in args.ignore_pattern for item in sublist]
 
-    torrent_list = client.torrents.info()
-    completed_dir_list = completed_dir.split(os.sep)
-
-    logger.info(f"Checking for orphaned files in qBittorrent")
-    logger.info(f"Not deleting files in {completed_dir} that are in qBittorrent")
-    logger.info(f"Use --confirm to delete files in {completed_dir} that are not in qBittorrent")
-    logger.info(f"Ignoring file/folder patterns '{' '.join(ignore_patterns)}'")
-
-    logger.info(f"Getting a list of all torrents 'content_path' in qBittorrent")
+    logger.info(f"Gathering a list of all torrents in qBittorrent...")
     qbittorrent_items = set()
-    for torrent in torrent_list:
+    for torrent in client.torrents.info():
         item_path = torrent['content_path']
         if os.path.isfile(item_path):
             # Account for the fact that an item's data may be in a subdirectory of the completed/$category directory
@@ -33,10 +29,9 @@ def __init__(args, logger):
             qbittorrent_items.add(item_path)
         if os.path.isdir(item_path):
             qbittorrent_items.add(item_path)
+    logger.info(f"Done gathering {len(qbittorrent_items)} torrents in qBittorrent")
 
-    logger.info(f"Found {len(qbittorrent_items)} total items in qBittorrent")
-
-    logger.info(f"Getting a list of all files and folders in {completed_dir}/$qbcategory")
+    logger.info(f"Deleting orphaned files on disk not in qBittorrent...")
     folders = [folder for folder in os.listdir(completed_dir) if os.path.isdir(os.path.join(completed_dir, folder))]
     for folder in folders:
         folder_path = os.path.join(completed_dir, folder)
@@ -45,27 +40,39 @@ def __init__(args, logger):
             item_path = os.path.join(folder_path, item)
             if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in ignore_patterns):
                 if item_path not in qbittorrent_items:
-                    if not args.confirm:
-                        logger.info(f"Deleting item {item_path}")
-                    else:
+                    if not args.dry_run:
                         try:
                             if os.path.isfile(item_path):
-                                logger.info(f"Deleting file {item_path}")
+                                logger.info(f"Deleting file {item_path}...")
                                 os.remove(item_path)
+                                logger.info(f"Deleted file {item_path}")
                             elif os.path.isdir(item_path):
-                                logger.info(f"Deleting folder {item_path}")
+                                logger.info(f"Deleting folder {item_path}...")
                                 shutil.rmtree(item_path)
+                                logger.info(f"Deleted folder {item_path}")
                             else:
-                                logger.debug(f"{item_path} does not exist.")
+                                logger.debug(f"{item_path} does not exist")
                         except Exception as e:
                             logger.error(f"An error occurred: {e}")
-            else:
-                logger.info(f"Skipping {item_path} because it matches an ignore pattern")
+                    else:
+                        logger.info(f"The flag --dry-run is set, skipping item {item_path}...")
 
-    logger.info(f"Completed checking for orphaned files in qBittorrent")
+            else:
+                logger.info(f"Skipping {item_path} because it matches an ignore pattern...")
+    #TODO: Add more stats like total reclaimed data, total items deleted, etc.
+    logger.info(f"Done deleting orphaned files on disk not in qBittorrent")
 
 def add_arguments(subparser):
+    """
+    Description:
+        Search for files on disk that are not in qBittorrent and delete them.
+    Usage:
+        qbittools.py orphaned --help
+    """
     parser = subparser.add_parser('orphaned')
-    parser.add_argument('--confirm', action='store_true', help='Confirm deletion of orphaned files', required=False)
+
     parser.add_argument('--ignore-pattern', nargs='*', action='append', metavar='mypattern', default=[], help='Ignore pattern, can be repeated multiple times', required=False)
+
+    parser.add_argument('--dry-run', action='store_true', help='Do not delete any data on disk', default=False, required=False)
+
     qbittools.add_default_args(parser)
