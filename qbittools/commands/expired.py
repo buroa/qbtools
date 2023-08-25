@@ -8,8 +8,8 @@ INDEXER_SPECS = {
     'animez': {
         'name': 'animez',
         'urls': ['animez.to', 'animetorrents.me'],
-        'required_seed_ratio': 1.0,
-        'required_seed_days': 1.0,
+        'required_seed_ratio': 1.05,
+        'required_seed_days': 1.5,
     },
     'avistaz': {
         'name': 'avistaz',
@@ -26,19 +26,19 @@ INDEXER_SPECS = {
     'cinemaz': {
         'name': 'cinemaz',
         'urls': ['cinemaz.to'],
-        'required_seed_ratio': 1.0,
+        'required_seed_ratio': 1.05,
         'required_seed_days': 10.5,
     },
     'divteam': {
         'name': 'divteam',
         'urls': ['divteam.com'],
         'required_seed_ratio': 0,
-        'required_seed_days': 2.0,
+        'required_seed_days': 2.5,
     },
     'exoticaz': {
         'name': 'exoticaz',
         'urls': ['exoticaz.to'],
-        'required_seed_ratio': 1.0,
+        'required_seed_ratio': 1.05,
         'required_seed_days': 10.5,
     },
     'filelist': {
@@ -51,7 +51,7 @@ INDEXER_SPECS = {
         'name': 'hd-olimpo',
         'urls': ['hd-space.club'],
         'required_seed_ratio': 0,
-        'required_seed_days': 3.0,
+        'required_seed_days': 3.5,
     },
     'hd-space': {
         'name': 'hd-space',
@@ -81,7 +81,7 @@ INDEXER_SPECS = {
         'name': 'redbits',
         'urls': ['redbits.xyz'],
         'required_seed_ratio': 0,
-        'required_seed_days': 4.0,
+        'required_seed_days': 4.5,
     },
     'scenetime': {
         'name': 'scenetime',
@@ -105,7 +105,7 @@ INDEXER_SPECS = {
         'name': 'torrentland',
         'urls': ['torrentland.li'],
         'required_seed_ratio': 0,
-        'required_seed_days': 4.0,
+        'required_seed_days': 4.5,
     },
     'torrentseeds': {
         'name': 'torrentseeds',
@@ -117,7 +117,7 @@ INDEXER_SPECS = {
         'name': 'xbytesv2',
         'urls': ['xbytesv2.li'],
         'required_seed_ratio': 1.05,
-        'required_seed_days': 3.0,
+        'required_seed_days': 3.5,
     },
 }
 
