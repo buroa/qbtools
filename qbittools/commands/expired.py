@@ -5,6 +5,12 @@ import tldextract
 import qbittools
 
 INDEXER_SPECS = {
+    'animez': {
+        'name': 'animez',
+        'urls': ['animez.to', 'animetorrents.me'],
+        'required_seed_ratio': 1.0,
+        'required_seed_days': 1.0,
+    },
     'avistaz': {
         'name': 'avistaz',
         'urls': ['avistaz.to'],
@@ -17,11 +23,35 @@ INDEXER_SPECS = {
         'required_seed_ratio': 0,
         'required_seed_days': 7.5,
     },
+    'cinemaz': {
+        'name': 'cinemaz',
+        'urls': ['cinemaz.to'],
+        'required_seed_ratio': 1.0,
+        'required_seed_days': 10.5,
+    },
+    'divteam': {
+        'name': 'divteam',
+        'urls': ['divteam.com'],
+        'required_seed_ratio': 0,
+        'required_seed_days': 2.0,
+    },
+    'exoticaz': {
+        'name': 'exoticaz',
+        'urls': ['exoticaz.to'],
+        'required_seed_ratio': 1.0,
+        'required_seed_days': 10.5,
+    },
     'filelist': {
         'name': 'filelist',
         'urls': ['filelist.io', 'flro.org'],
         'required_seed_ratio': 1.05,
         'required_seed_days': 2.5,
+    },
+    'hd-olimpo': {
+        'name': 'hd-olimpo',
+        'urls': ['hd-space.club'],
+        'required_seed_ratio': 0,
+        'required_seed_days': 3.0,
     },
     'hd-space': {
         'name': 'hd-space',
@@ -47,6 +77,12 @@ INDEXER_SPECS = {
         'required_seed_ratio': 1.0,
         'required_seed_days': 10.5,
     },
+    'redbits': {
+        'name': 'redbits',
+        'urls': ['redbits.xyz'],
+        'required_seed_ratio': 0,
+        'required_seed_days': 4.0,
+    },
     'scenetime': {
         'name': 'scenetime',
         'urls': ['scenetime.com'],
@@ -65,11 +101,23 @@ INDEXER_SPECS = {
         'required_seed_ratio': 1.05,
         'required_seed_days': 10.5,
     },
+    'torrentland': {
+        'name': 'torrentland',
+        'urls': ['torrentland.li'],
+        'required_seed_ratio': 0,
+        'required_seed_days': 4.0,
+    },
     'torrentseeds': {
         'name': 'torrentseeds',
         'urls': ['torrentseeds.org'],
         'required_seed_ratio': 1.05,
         'required_seed_days': 5.5,
+    },
+    'xbytesv2': {
+        'name': 'xbytesv2',
+        'urls': ['xbytesv2.li'],
+        'required_seed_ratio': 1.05,
+        'required_seed_days': 3.0,
     },
 }
 
