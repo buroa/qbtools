@@ -24,7 +24,7 @@ INDEXER_SPECS = {
         'required_seed_ratio': 1.05,
         'required_seed_days': 1.5,
     },
-    'anthelion' {
+    'anthelion': {
         'name': 'anthelion',
         'urls': ['anthelion.me'],
         'required_seed_ratio': 1.05, # Only site ratio
