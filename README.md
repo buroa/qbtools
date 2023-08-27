@@ -45,11 +45,11 @@ docker run -it --rm --network host qbittools reannounce -p 12345
 
 ## Configuration
 
-qBittools doesn't have any configuration files currently. It parses host, port and username from the qBittorrent configuration file located by default at `~/.config/qBittorrent/qBittorrent.conf`, you can specify a different qBittorrent config with `-C` flag.
-
-You also have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qBittools to retrieve it in plaintext.
+You have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qBittools to retrieve it in plaintext.
 
 You also can specify host, port and username manually without a configuration file with `-s`, `-p` and `-U` flags accordingly.
+
+There is also a `config.yaml` file which can be overrideen to add your own indexers and their corresponding requirements.
 
 ## Usage
 
@@ -60,14 +60,14 @@ All commands have extensive help with all available options.
 ```bash
 $ qbittools export -h
 usage: qbittools.py reannounce [-h] [--pause-resume] [--process-seeding]
-                               [-C ~/.config/qBittorrent/qBittorrent.conf] [-p 12345] [-s 127.0.0.1] [-U username]
+                               [-c /app/config.yaml] [-p 12345] [-s 127.0.0.1] [-U username]
                                [-P password]
 
 options:
   -h, --help            show this help message and exit
   --pause-resume        Will pause/resume torrents that are invalid.
   --process-seeding     Will also process seeding torrents for reannouncements.
-  -C ~/.config/qBittorrent/qBittorrent.conf, --config ~/.config/qBittorrent/qBittorrent.conf
+  -c /app/config.yaml, --config /app/config.yaml
   -p 12345, --port 12345
                         port
   -s 127.0.0.1, --server 127.0.0.1

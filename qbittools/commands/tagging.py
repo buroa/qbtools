@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-
+import tldextract
 import collections
 from datetime import datetime
-import tldextract
-import commands.utils as utils
 
 import qbittools
 
@@ -57,6 +54,7 @@ DHT_MATCHES = [
 
 def __init__(args, logger):
     client = qbittools.qbit_client(args)
+    trackers = qbittools.get_config(args, "trackers", [])
 
     extractTLD = tldextract.TLDExtract(cache_dir=None)
     today = datetime.today()
@@ -79,7 +77,7 @@ def __init__(args, logger):
         # TODO: Optimize - this slows down the script a lot
         filtered_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, t.trackers))
         domain = extractTLD(sorted(filtered_trackers, key=lambda x: x.url)[0].url).registered_domain
-        tracker = utils.filter_tracker_by_domain(domain)
+        tracker = qbittools.utils.filter_tracker_by_domain(domain, trackers)
 
         if args.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
@@ -134,7 +132,7 @@ def __init__(args, logger):
         if args.expired and tracker:
             if tracker['required_seed_ratio'] != 0 and t.ratio >= tracker['required_seed_ratio']:
                 tags_to_add.append('expired')
-            elif tracker['required_seed_days'] != 0 and t.seeding_time >= utils.seconds(tracker['required_seed_days']):
+            elif tracker['required_seed_days'] != 0 and t.seeding_time >= qbittools.utils.seconds(tracker['required_seed_days']):
                 tags_to_add.append('expired')
 
         if args.duplicates:
@@ -147,7 +145,7 @@ def __init__(args, logger):
 
             content_paths.append((t.hash, t.content_path, t.size))
 
-        if args.not_linked and not utils.is_linked(t.content_path):
+        if args.not_linked and not qbittools.utils.is_linked(t.content_path):
             tags_to_add.append('not-linked')
 
         for tag in tags_to_add:
@@ -175,7 +173,7 @@ def __init__(args, logger):
 
     for tag in tag_hashes:
         if args.size:
-            size = utils.format_bytes(tag_sizes[tag])
+            size = qbittools.utils.format_bytes(tag_sizes[tag])
             client.torrents_add_tags(tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag])
         else:
             client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])

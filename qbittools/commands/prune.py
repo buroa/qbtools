@@ -1,7 +1,3 @@
-#!/usr/bin/env python3
-
-import commands.utils as utils
-
 import qbittools
 
 def __init__(args, logger):
@@ -21,7 +17,7 @@ def __init__(args, logger):
 
     logger.info(f"Deleting torrents with tags [{' AND '.join(include_tags)}] but does not contain tags [{' OR '.join(exclude_tags)}]...")
     for t in filtered_torrents:
-        logger.info(f"Removed torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{utils.dhms(t['seeding_time'])}]")
+        logger.info(f"Removed torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{qbittools.utils.dhms(t['seeding_time'])}]")
         if not args.dry_run:
             t.delete(delete_files=args.with_data)
 

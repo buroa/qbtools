@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt \
 FROM base as app
 WORKDIR /app
 COPY qbittools/ .
+COPY config.yaml .
 RUN python3 -m compileall qbittools.py commands/
 
 FROM base as final

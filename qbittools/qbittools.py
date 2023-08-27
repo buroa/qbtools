@@ -1,50 +1,26 @@
 #!/usr/bin/env python3
 
-import argparse, logging, sys, os, configparser
-import ipaddress
-from typing import NamedTuple
-import pathlib3x as pathlib
-
-if getattr(sys, "oxidized", False):
-    os.environ["PYOXIDIZER"] = "1"
-
+import argparse, logging, yaml, sys
 import qbittorrentapi
-import commands.orphaned, commands.prune, commands.reannounce, commands.tagging
+import utils
 
-class QbitConfig(NamedTuple):
-    host: str
-    port: str
-    username: str
-    save_path: pathlib.Path
+import commands.orphaned, \
+       commands.prune, \
+       commands.reannounce, \
+       commands.tagging
 
 logger = logging.getLogger(__name__)
-config = None
 
 def add_default_args(parser):
-    parser.add_argument("-C", "--config", metavar="~/.config/qBittorrent/qBittorrent.conf", default="~/.config/qBittorrent/qBittorrent.conf", required=False)
+    parser.add_argument("-c", "--config", metavar="/app/config.yaml", default="/app/config.yaml", required=False)
     parser.add_argument("-s", "--server", metavar="127.0.0.1", help="host", required=False)
     parser.add_argument("-p", "--port", metavar="12345", help="port", required=False)
     parser.add_argument("-U", "--username", metavar="username", required=False)
     parser.add_argument("-P", "--password", metavar="password", required=False)
 
 def qbit_client(args):
-    global config
-
-    config = config_values(args.config)
-
-    if args.server is None:
-        args.server = config.host
-
-    if args.port is None:
-        args.port = config.port
-
-    if args.username is None:
-        args.username = config.username
-
     if args.server is None or args.port is None:
-        logger.error(
-            "Unable to get qBittorrent host and port automatically, specify config file or host/port manually, see help with -h"
-        )
+        logger.error("Please specify a server and port to connect to.")
         sys.exit(1)
 
     client = qbittorrentapi.Client(
@@ -55,50 +31,26 @@ def qbit_client(args):
 
     try:
         client.auth_log_in()
-
-        if (
-            config.save_path is None
-            and not client.application.preferences.save_path is None
-        ):
-            config = QbitConfig(
-                config.host,
-                config.port,
-                config.username,
-                pathlib.Path(client.application.preferences.save_path),
-            )
     except qbittorrentapi.LoginFailed as e:
         logger.error(e)
+
     return client
 
-def config_values(path):
-    config = configparser.ConfigParser()
-    config.read(pathlib.Path(path).expanduser())
+def get_config(args, key = None, default = None):
+    config = {}
 
-    if not "Preferences" in config:
-        return QbitConfig(None, None, None, None)
-
-    preferences = config["Preferences"]
-    host = preferences.get("webui\\address")
-
-    if not host is None:
+    with open(args.config, "r") as stream:
         try:
-            host = ipaddress.ip_address(host)
-            host = 'http://' + str(host)
-        except ValueError as e:
-            host = "127.0.0.1"
+            config = yaml.safe_load(stream)
+        except yaml.YAMLError as e:
+            logger.error(e)
 
-    port = preferences.get("webui\\port")
-    user = preferences.get("webui\\username")
-    save_path = preferences.get("downloads\\savepath")
+    if key:
+        config = config.get(key, default)
 
-    if not save_path is None:
-        save_path = pathlib.Path(save_path)
-
-    return QbitConfig(host, port, user, save_path)
+    return config
 
 def main():
-    global config
-
     logging.getLogger("filelock").setLevel(logging.ERROR) # supress lock messages
     logging.basicConfig(
         stream=sys.stdout,
