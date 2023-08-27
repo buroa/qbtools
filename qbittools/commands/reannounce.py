@@ -9,13 +9,10 @@ def __init__(args, logger):
 
     iterations = 0
     timeout = 5
-    logger.info("Started reannounce process")
 
-    while True:
-        iterations += 1
-        if iterations == 11: iterations = 1
-
+    def process_downloading():
         torrents = client.torrents.info(status_filter="downloading", sort="time_active")
+
         for t in torrents:
             invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
             working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
@@ -41,24 +38,37 @@ def __init__(args, logger):
                     wait = (2 - iterations % 2) * timeout
                     logger.info("[%s] has no seeds, active for %ss, waiting %s...", t.name, t.time_active, wait)
 
-        if args.process_seeding:
+    def process_seeding():
+        torrents = client.torrents.info(status_filter="seeding", sort="time_active")
 
-            torrents = client.torrents.info(status_filter="seeding", sort="time_active")
-            for t in torrents:
-                if t.time_active > 300:
-                    continue
+        for t in torrents:
+            if t.time_active > 300:
+                continue
 
-                invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
-                working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+            invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
+            working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
 
-                if invalid or not working:
-                    if invalid and args.pause_resume:
-                        logger.warning("[%s] is invalid, active for %ss, pausing/resuming...", t.name, t.time_active)
-                        t.pause()
-                        t.resume()
+            if invalid or not working:
+                if invalid and args.pause_resume:
+                    logger.warning("[%s] is invalid, active for %ss, pausing/resuming...", t.name, t.time_active)
+                    t.pause()
+                    t.resume()
 
-                    logger.info("[%s] is not working, active for %ss, reannouncing...", t.name, t.time_active)
-                    t.reannounce()
+                logger.info("[%s] is not working, active for %ss, reannouncing...", t.name, t.time_active)
+                t.reannounce()
+
+    logger.info("Started reannounce process")
+
+    while True:
+        iterations += 1
+        if iterations == 11: iterations = 1
+
+        try:
+            process_downloading()
+            if args.process_seeding:
+                process_seeding()
+        except Exception as e:
+            logger.exception(e)
 
         time.sleep(timeout)
 
