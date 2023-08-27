@@ -1,7 +1,4 @@
-#!/usr/bin/env python3
-
 import time
-
 import qbittools
 
 def __init__(args, logger):
@@ -68,7 +65,7 @@ def __init__(args, logger):
             if args.process_seeding:
                 process_seeding()
         except Exception as e:
-            logger.exception(e)
+            logger.error(e)
 
         time.sleep(timeout)
 

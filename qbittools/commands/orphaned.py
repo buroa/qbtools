@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import shutil
 from fnmatch import fnmatch
@@ -11,7 +9,7 @@ def __init__(args, logger):
 
     client = qbittools.qbit_client(args)
 
-    completed_dir = str(qbittools.config.save_path)
+    completed_dir = client.application.preferences.save_path
     completed_dir_list = completed_dir.split(os.sep)
     exclude_patterns = [i for s in args.exclude_pattern for i in s]
 
