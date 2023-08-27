@@ -171,7 +171,7 @@ INDEXER_SPECS = {
     },
     'superbits': {
         'name': 'superbits',
-        'urls': ['superbits.org','sptracker.cc','superbits.org'],
+        'urls': ['sptracker.cc', 'superbits.org'],
         'required_seed_ratio': 1.15,
         'required_seed_days': 2.5,
     },
