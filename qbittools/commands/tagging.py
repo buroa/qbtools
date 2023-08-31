@@ -38,6 +38,7 @@ UNREGISTERED_MATCHES = [
     'specifically banned',
     'trumped',
     'torrent existiert nicht',
+    'other',
     'i\'m sorry dave, i can\'t do that' # weird stuff from racingforme
 ]
 
