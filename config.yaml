@@ -137,6 +137,12 @@ trackers:
     required_seed_ratio: 1.05
     required_seed_days: 0
 
+  - name: nebulance
+    urls:
+    - nebulance.io
+    required_seed_ratio: 0
+    required_seed_days: 5.5
+
   - name: orpheus
     urls:
     - home.opsfet.ch
@@ -167,11 +173,29 @@ trackers:
     required_seed_ratio: 1.05
     required_seed_days: 0
 
+  - name: revolutiontt
+    urls:
+    - revolutiontt.me
+    required_seed_ratio: 1.05
+    required_seed_days: 0
+
   - name: scenetime
     urls:
     - scenetime.com
     required_seed_ratio: 0
     required_seed_days: 3.5
+
+  - name: skipthecommericals
+    urls:
+    - skipthecommericals.xyz
+    required_seed_ratio: 0
+    required_seed_days: 7.5
+
+  - name: skipthetrailers
+    urls:
+    - skipthetrailers.xyz
+    required_seed_ratio: 0
+    required_seed_days: 7.5
 
   - name: superbits
     urls:
