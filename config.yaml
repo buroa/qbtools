@@ -62,11 +62,23 @@ trackers:
     required_seed_ratio: 1.05
     required_seed_days: 10.5
 
+  - name: cathoderaytube
+    urls:
+      - signal.cathode-ray.tube
+    required_seed_ratio: 1.05
+    required_seed_days: 0
+
   - name: divteam
     urls:
     - divteam.com
     required_seed_ratio: 0
     required_seed_days: 2.5
+
+  - name: digitalcoreclub
+    urls:
+      - digitalcore.club
+    required_seed_ratio: 1.05
+    required_seed_days: 5.5
 
   - name: exoticaz
     urls:
