@@ -130,7 +130,7 @@ def __init__(args, logger):
             elif args.not_working:
                 tags_to_add.append('not-working')
 
-        if args.expired and tracker:
+        if args.expired and tracker and t.state_enum.is_complete:
             if tracker['required_seed_ratio'] != 0 and t.ratio >= tracker['required_seed_ratio']:
                 tags_to_add.append('expired')
             elif tracker['required_seed_days'] != 0 and t.seeding_time >= qbittools.utils.seconds(tracker['required_seed_days']):
