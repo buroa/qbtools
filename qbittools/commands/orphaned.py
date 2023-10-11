@@ -13,7 +13,7 @@ def __init__(args, logger):
     completed_dir_list = completed_dir.split(os.sep)
     exclude_patterns = [i for s in args.exclude_pattern for i in s]
 
-    logger.info(f"Gathering a list of all torrents in qBittorrent...")
+    # Gather list of all torrents in qBittorrent
     qbittorrent_items = set()
     for torrent in client.torrents.info():
         item_path = torrent['content_path']
@@ -27,9 +27,8 @@ def __init__(args, logger):
             qbittorrent_items.add(item_path)
         if os.path.isdir(item_path):
             qbittorrent_items.add(item_path)
-    logger.info(f"Done gathering {len(qbittorrent_items)} torrents in qBittorrent")
 
-    logger.info(f"Deleting orphaned files on disk not in qBittorrent...")
+    # Delete orphaned files on disk not in qBittorrent
     folders = [folder for folder in os.listdir(completed_dir) if os.path.isdir(os.path.join(completed_dir, folder))]
     for folder in folders:
         folder_path = os.path.join(completed_dir, folder)
@@ -41,11 +40,9 @@ def __init__(args, logger):
                     if not args.dry_run:
                         try:
                             if os.path.isfile(item_path):
-                                logger.info(f"Deleting file {item_path}...")
                                 os.remove(item_path)
                                 logger.info(f"Deleted file {item_path}")
                             elif os.path.isdir(item_path):
-                                logger.info(f"Deleting folder {item_path}...")
                                 shutil.rmtree(item_path)
                                 logger.info(f"Deleted folder {item_path}")
                             else:
@@ -53,12 +50,9 @@ def __init__(args, logger):
                         except Exception as e:
                             logger.error(f"An error occurred: {e}")
                     else:
-                        logger.info(f"The flag --dry-run is set, skipping item {item_path}...")
-
+                        logger.info(f"Skipping {item_path} because --dry-run was specified")
             else:
-                logger.info(f"Skipping {item_path} because it matches an exclude pattern...")
-    #TODO: Add more stats like total reclaimed data, total items deleted, etc.
-    logger.info(f"Done deleting orphaned files on disk not in qBittorrent")
+                logger.info(f"Skipping {item_path} because it matches an exclude pattern")
 
 def add_arguments(subparser):
     """
@@ -71,9 +65,6 @@ def add_arguments(subparser):
         qbittools.py orphaned --exclude-pattern "*_unpackerred" --exclude-pattern "*/manual/*" --dry-run
     """
     parser = subparser.add_parser('orphaned')
-
     parser.add_argument('--exclude-pattern', nargs='*', action='append', metavar='mypattern', default=[], help='Exclude pattern, can be repeated multiple times', required=False)
-
     parser.add_argument('--dry-run', action='store_true', help='Do not delete any data on disk', default=False, required=False)
-
     qbittools.add_default_args(parser)

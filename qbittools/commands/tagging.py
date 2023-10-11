@@ -54,6 +54,8 @@ DHT_MATCHES = [
 ]
 
 def __init__(args, logger):
+    logger.info(f"Tagging torrents in qBittorrent...")
+
     client = qbittools.qbit_client(args)
     trackers = qbittools.get_config(args, "trackers", [])
 
@@ -71,7 +73,7 @@ def __init__(args, logger):
     if len(exclude_tags):
         filtered_torrents = list(filter(lambda x: any(y not in x.tags for y in exclude_tags), filtered_torrents))
 
-    logger.info(f"Gathering items to tag in qBittorrent...")
+    # Gather items to tag in qBittorrent
     for t in filtered_torrents:
         tags_to_add = []
 
@@ -154,9 +156,7 @@ def __init__(args, logger):
             if args.size:
                 tag_sizes[tag] += t.size
 
-    #TODO: Add more stats like total torrents, total items to tag, etc.
-    logger.info(f"Done gathering items to tag in qBittorrent")
-
+    # Remove old tags
     default_tags = list(filter(lambda tag: any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS), client.torrents_tags()))
     if default_tags:
         hashes = list(map(lambda t: t.hash, filtered_torrents))
@@ -170,8 +170,7 @@ def __init__(args, logger):
     for hash_list in tag_hashes.values():
         unique_hashes.update(hash_list)
 
-    logger.info(f'Applying {len(tag_hashes)} various tags to {len(unique_hashes)} unique torrents...')
-
+    # Apply tags
     for tag in tag_hashes:
         if args.size:
             size = qbittools.utils.format_bytes(tag_sizes[tag])
@@ -179,7 +178,7 @@ def __init__(args, logger):
         else:
             client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
 
-    logger.info(f'Done applying {len(tag_hashes)} various tags to {len(unique_hashes)} unique torrents')
+    logger.info(f'Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags')
 
 def add_arguments(subparser):
     """
@@ -192,10 +191,8 @@ def add_arguments(subparser):
         qbittools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
     parser = subparser.add_parser('tagging')
-
     parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude all torrent with this category, can be repeated multiple times', required=False)
     parser.add_argument('--exclude-tag', nargs='*', action='append', metavar='mytag', default=[], help='Exclude all torrents with this tag, can be repeated multiple times', required=False)
-
     parser.add_argument('--added-on', action='store_true', help='Tag torrents with added date (last 24h, 7 days, 30 days, etc)')
     parser.add_argument('--domains', action='store_true', help='Tag torrents with tracker domains')
     parser.add_argument('--duplicates', action='store_true', help='Tag torrents with the same content path')
@@ -207,5 +204,4 @@ def add_arguments(subparser):
     parser.add_argument('--size', action='store_true', help='Add size of tagged torrents to created tags')
     parser.add_argument('--tracker-down', action='store_true', help='Tag torrents with temporarily down trackers')
     parser.add_argument('--unregistered', action='store_true', help='Tag torrents with unregistered tracker status message')
-
     qbittools.add_default_args(parser)

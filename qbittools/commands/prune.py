@@ -15,9 +15,10 @@ def __init__(args, logger):
     if len(exclude_tags):
         filtered_torrents = list(filter(lambda x: not any(y in x.tags for y in exclude_tags), filtered_torrents))
 
-    logger.info(f"Deleting torrents with tags [{' AND '.join(include_tags)}] but does not contain tags [{' OR '.join(exclude_tags)}]...")
+    logger.info(f"Pruning torrents with tags [{' AND '.join(include_tags)}] but does not contain tags [{' OR '.join(exclude_tags)}]...")
+
     for t in filtered_torrents:
-        logger.info(f"Removed torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{qbittools.utils.dhms(t['seeding_time'])}]")
+        logger.info(f"Pruned torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{qbittools.utils.dhms(t['seeding_time'])}]")
         if not args.dry_run:
             t.delete(delete_files=args.with_data)
 
@@ -34,12 +35,9 @@ def add_arguments(subparser):
         qbittools.py prune --include-tag expired --include-tag added:30d --exclude-tag site:oink --exclude-tag site:whatcd --dry-run
     """
     parser = subparser.add_parser('prune')
-
     parser.add_argument('--include-tag', nargs='*', action='append', metavar='mytag', default=[], help='Include torrents containing all of these tags, can be repeated multiple times', required=True)
     parser.add_argument('--exclude-tag', nargs='*', action='append', metavar='mytag', default=[], help='Exclude torrents containing any of these tags, can be repeated multiple times', required=False)
     parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude torrents in this category, can be repeated multiple times', required=False)
-
     parser.add_argument('--dry-run', action='store_true', help='Do not delete torrents', default=False, required=False)
     parser.add_argument('--with-data', action='store_true', help='Delete torrents with data', default=False, required=False)
-
     qbittools.add_default_args(parser)

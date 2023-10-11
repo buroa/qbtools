@@ -54,7 +54,7 @@ def __init__(args, logger):
                 logger.info(f"[{t.name}] is not working, active for {t.time_active}s, reannouncing...")
                 t.reannounce()
 
-    logger.info("Started reannounce process")
+    logger.info("Starting reannounce process...")
 
     while True:
         iterations += 1
@@ -71,8 +71,6 @@ def __init__(args, logger):
 
 def add_arguments(subparser):
     parser = subparser.add_parser("reannounce")
-
     parser.add_argument("--pause-resume", action="store_true", help="Pause+resume torrents that are invalid.")
     parser.add_argument("--process-seeding", action="store_true", help="Include seeding torrents for reannouncements.")
-
     qbittools.add_default_args(parser)
