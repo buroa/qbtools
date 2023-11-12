@@ -106,9 +106,9 @@ $ qbittools reannounce
 
 #### Orphaned
 
-Find files no longer associated with any torrent, but still present in download folders (default download folder and folders from all categories). This command will remove orphaned files if you pass the `--confirm` flag.
+Find files no longer associated with any torrent, but still present in download folders (default download folder and folders from all categories). This command will remove orphaned files unless you pass the `--dry-run` flag.
 
-This command is very opinionated on a certian directory structure so use with caution and make sure you run it without the `--confirm` flag to make sure it won't delete anything unintentional.
+This command is very opinionated on a certian directory structure so use with caution and make sure you run it with the `--dry-run` flag to make sure it won't delete anything unintentional.
 
 This is how I have my paths laid out where `/downloads/qbittorrent/complete` is the default save path in qBittorrent and each folder under it is a category. `Default Torrent Management Mode: Automatic`, `When Torrent Category changed: Relocate`, `When Default Save Path changed: Relocate affected torrents` and `When Category Save Path changed: Relocate affected torrents` is also set. Also make sure you use an incomplete directory that is outside the `/downloads/qbittorrent/complete` directory.
 
