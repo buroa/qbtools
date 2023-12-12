@@ -10,49 +10,64 @@ def __init__(args, logger):
     client = qbittools.qbit_client(args)
 
     completed_dir = client.application.preferences.save_path
-    completed_dir_list = completed_dir.split(os.sep)
+    categories = [
+        os.path.join(completed_dir, category.savePath)
+        for (_, category) in client.torrent_categories.categories.items()
+    ]
     exclude_patterns = [i for s in args.exclude_pattern for i in s]
 
-    # Gather list of all torrents in qBittorrent
+    def delete(item_path):
+        if args.dry_run:
+            logger.info(f"Skipping {item_path} because --dry-run was specified")
+            return
+
+        try:
+            if os.path.isfile(item_path):
+                os.remove(item_path)
+                logger.info(f"Deleted file {item_path}")
+            elif os.path.isdir(item_path):
+                shutil.rmtree(item_path)
+                logger.info(f"Deleted folder {item_path}")
+            else:
+                logger.debug(f"{item_path} does not exist")
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+
+    def cleanup_dir(folder_path, owned_files):
+        """
+        Clean up files and folders within `folder_path` that are not owned by qbittorrent
+        :param folder_path: parent folder where we are cleaning up
+        :param owned_files: files and folders that should not be deleted
+        :return:
+        """
+        for item in os.listdir(folder_path):
+            item_path = os.path.join(folder_path, item)
+            if item_path in owned_files:
+                continue
+            if any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in exclude_patterns):
+                logger.info(f"Skipping {item_path} because it matches an exclude pattern")
+                continue
+
+            if os.path.isfile(item_path):
+                delete(item_path)
+            elif os.path.isdir(item_path):
+                owned_subfiles = set(filter(lambda x: x.startswith(item_path), owned_files))
+                if len(owned_subfiles) == 0 and item_path not in categories:
+                    delete(item_path)
+                else:
+                    cleanup_dir(item_path, owned_subfiles)
+
+    # Gather list of all paths owned by qBittorrent
     qbittorrent_items = set()
     for torrent in client.torrents.info():
-        item_path = torrent['content_path']
-        if os.path.isfile(item_path):
-            # Account for the fact that an item's data may be in a subdirectory of the completed/$category directory
-            # e.g. completed/$category/$name/$name.mkv
-            torrent_path_list = item_path.split(os.sep)
-            merged_list = [value for value in torrent_path_list if value not in completed_dir_list]
-            if len(merged_list) > 2:
-                item_path = os.path.dirname(item_path)
-            qbittorrent_items.add(item_path)
-        if os.path.isdir(item_path):
-            qbittorrent_items.add(item_path)
+        # arbitrary cut-off to prevent traversing excessively large torrents
+        if len(torrent.files) > 100:
+            qbittorrent_items.add(torrent.content_path)
+        else:
+            qbittorrent_items.update([os.path.join(torrent.save_path, file.name) for file in torrent.files])
 
-    # Delete orphaned files on disk not in qBittorrent
-    folders = [folder for folder in os.listdir(completed_dir) if os.path.isdir(os.path.join(completed_dir, folder))]
-    for folder in folders:
-        folder_path = os.path.join(completed_dir, folder)
-        contents = os.listdir(folder_path)
-        for item in contents:
-            item_path = os.path.join(folder_path, item)
-            if not any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in exclude_patterns):
-                if item_path not in qbittorrent_items:
-                    if not args.dry_run:
-                        try:
-                            if os.path.isfile(item_path):
-                                os.remove(item_path)
-                                logger.info(f"Deleted file {item_path}")
-                            elif os.path.isdir(item_path):
-                                shutil.rmtree(item_path)
-                                logger.info(f"Deleted folder {item_path}")
-                            else:
-                                logger.debug(f"{item_path} does not exist")
-                        except Exception as e:
-                            logger.error(f"An error occurred: {e}")
-                    else:
-                        logger.info(f"Skipping {item_path} because --dry-run was specified")
-            else:
-                logger.info(f"Skipping {item_path} because it matches an exclude pattern")
+    # Delete orphaned files on disk not owned by qBittorrent
+    cleanup_dir(completed_dir, qbittorrent_items)
 
 def add_arguments(subparser):
     """
