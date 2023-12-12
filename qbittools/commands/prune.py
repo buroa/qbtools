@@ -1,3 +1,5 @@
+from fnmatch import fnmatch
+
 import qbittools
 
 def __init__(args, logger):
@@ -7,13 +9,13 @@ def __init__(args, logger):
     if len(args.include_category) > 0:
         includes = [i for s in args.include_category for i in s]
         categories = list(filter(
-            lambda c: c in includes,
+            lambda c: any(fnmatch(c, p) for p in includes),
             categories
         ))
     if len(args.exclude_category) > 0:
         excludes = [i for s in args.exclude_category for i in s]
         categories = list(filter(
-            lambda c: c not in excludes,
+            lambda c: not any(fnmatch(c, p) for p in excludes),
             categories
         ))
 
@@ -52,8 +54,8 @@ def add_arguments(subparser):
     parser = subparser.add_parser('prune')
     parser.add_argument('--include-tag', nargs='*', action='append', metavar='mytag', default=[], help='Include torrents containing all of these tags, can be repeated multiple times', required=True)
     parser.add_argument('--exclude-tag', nargs='*', action='append', metavar='mytag', default=[], help='Exclude torrents containing any of these tags, can be repeated multiple times', required=False)
-    parser.add_argument('--include-category', nargs='*', action='append', metavar='mycategory', default=[], help='Include torrents in this category, can be repeated multiple times. If not specified, all categories are included', required=False)
-    parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude torrents in this category, can be repeated multiple times', required=False)
+    parser.add_argument('--include-category', nargs='*', action='append', metavar='mycategory', default=[], help='Include torrents only from category that matches this pattern, can be repeated multiple times. If not specified, all categories are included', required=False)
+    parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude torrents from category that matches this pattern, can be repeated multiple times', required=False)
     parser.add_argument('--dry-run', action='store_true', help='Do not delete torrents', default=False, required=False)
     parser.add_argument('--with-data', action='store_true', help='Delete torrents with data', default=False, required=False)
     qbittools.add_default_args(parser)
