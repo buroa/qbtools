@@ -9,6 +9,7 @@ on:
 
 jobs:
   build:
+    if: ${{ github.event.pull_request.head.repo.full_name == 'buroa/qbtools' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
