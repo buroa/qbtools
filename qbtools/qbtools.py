@@ -12,7 +12,7 @@ import commands.orphaned, \
 logger = logging.getLogger(__name__)
 
 def add_default_args(parser):
-    parser.add_argument("-c", "--config", metavar="/app/config.yaml", default="/app/config.yaml", required=False)
+    parser.add_argument("-c", "--config", metavar="/config/config.yaml", default="/config/config.yaml", required=False)
     parser.add_argument("-s", "--server", metavar="127.0.0.1", help="host", required=False)
     parser.add_argument("-p", "--port", metavar="12345", help="port", required=False)
     parser.add_argument("-U", "--username", metavar="username", required=False)
