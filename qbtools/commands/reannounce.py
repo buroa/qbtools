@@ -1,8 +1,8 @@
 import time
-import qbittools
+import qbtools
 
 def __init__(args, logger):
-    client = qbittools.qbit_client(args)
+    client = qbtools.qbit_client(args)
 
     iterations = 0
     timeout = 5
@@ -73,4 +73,4 @@ def add_arguments(subparser):
     parser = subparser.add_parser("reannounce")
     parser.add_argument("--pause-resume", action="store_true", help="Pause+resume torrents that are invalid.")
     parser.add_argument("--process-seeding", action="store_true", help="Include seeding torrents for reannouncements.")
-    qbittools.add_default_args(parser)
+    qbtools.add_default_args(parser)

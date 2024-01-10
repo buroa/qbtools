@@ -8,12 +8,12 @@ RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt \
 
 FROM base as app
 WORKDIR /app
-COPY qbittools/ .
+COPY qbtools/ .
 COPY config.yaml .
-RUN python3 -m compileall qbittools.py commands/
+RUN python3 -m compileall qbtools.py commands/
 
 FROM base as final
 WORKDIR /app
 COPY --from=pip /install /usr/local
 COPY --from=app /app .
-ENTRYPOINT ["python3", "qbittools.py"]
+ENTRYPOINT ["python3", "qbtools.py"]

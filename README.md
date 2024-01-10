@@ -4,7 +4,7 @@ This is an opinionated fork of the upstream project at https://gitlab.com/AlexKM
 
 ## Description
 
-qbittools is a feature rich CLI for the management of torrents in qBittorrent.
+qbtools is a feature rich CLI for the management of torrents in qBittorrent.
 
 ## Table of contents
 
@@ -29,23 +29,23 @@ qbittools is a feature rich CLI for the management of torrents in qBittorrent.
 Run a container with access to host network:
 
 ```bash
-docker run -it --rm --network host github.com/buroa/qbittools tagging --unregistered
+docker run -it --rm --network host github.com/buroa/qbtools tagging --unregistered
 ```
 
 ### Building
 
 ```bash
 # clone the repository
-git clone https://github.com/buroa/qbittools.git && cd qbittools
+git clone https://github.com/buroa/qbtools.git && cd qbtools
 # build the image
-docker build -t qbittools:latest --pull .
+docker build -t qbtools:latest --pull .
 # run a container with the resulting binary and access to host network
-docker run -it --rm --network host qbittools reannounce -p 12345
+docker run -it --rm --network host qbtools reannounce -p 12345
 ```
 
 ## Configuration
 
-You have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qBittools to retrieve it in plaintext.
+You have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qbtools to retrieve it in plaintext.
 
 You also can specify host, port and username manually without a configuration file with `-s`, `-p` and `-U` flags accordingly.
 
@@ -58,8 +58,8 @@ There is also a `config.yaml` file which can be overrideen to add your own index
 All commands have extensive help with all available options.
 
 ```bash
-$ qbittools export -h
-usage: qbittools.py reannounce [-h] [--pause-resume] [--process-seeding]
+$ qbtools export -h
+usage: qbtools.py reannounce [-h] [--pause-resume] [--process-seeding]
                                [-c /app/config.yaml] [-p 12345] [-s 127.0.0.1] [-U username]
                                [-P password]
 
@@ -83,7 +83,7 @@ options:
 Create useful tags to group torrents by tracker domains, not working trackers, unregistered torrents and duplicates
 
 ```bash
-$ qbittools tagging --duplicates --unregistered --not-working --added-on --trackers
+$ qbtools tagging --duplicates --unregistered --not-working --added-on --trackers
 ```
 
 #### Reannounce
@@ -91,7 +91,7 @@ $ qbittools tagging --duplicates --unregistered --not-working --added-on --track
 Automatic reannounce on problematic trackers
 
 ```bash
-$ qbittools reannounce
+$ qbtools reannounce
 07:40:40 PM --------------------------
 07:40:40 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is not working, active for 1s, reannouncing...
 07:41:20 PM --------------------------
@@ -129,5 +129,5 @@ This is how I have my paths laid out where `/downloads/qbittorrent/complete` is 
 ```
 
 ```bash
-$ qbittools orphaned --ignore-pattern "*_unpackerred" --ignore-pattern "*/manual/*"
+$ qbtools orphaned --ignore-pattern "*_unpackerred" --ignore-pattern "*/manual/*"
 ```

@@ -19,7 +19,6 @@ jobs:
         with:
           images: |
             ghcr.io/${{ github.repository }}
-            ghcr.io/buroa/qbittools
           flavor: |
             latest=true
             prefix=v

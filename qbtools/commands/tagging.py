@@ -2,7 +2,7 @@ import tldextract
 import collections
 from datetime import datetime
 
-import qbittools
+import qbtools
 
 DEFAULT_TAGS = [
     'activity:',
@@ -56,8 +56,8 @@ DHT_MATCHES = [
 def __init__(args, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
 
-    client = qbittools.qbit_client(args)
-    trackers = qbittools.get_config(args, "trackers", [])
+    client = qbtools.qbit_client(args)
+    trackers = qbtools.get_config(args, "trackers", [])
 
     extractTLD = tldextract.TLDExtract(cache_dir=None)
     today = datetime.today()
@@ -80,7 +80,7 @@ def __init__(args, logger):
         # TODO: Optimize - this slows down the script a lot
         filtered_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, t.trackers))
         domain = extractTLD(sorted(filtered_trackers, key=lambda x: x.url)[0].url).registered_domain
-        tracker = qbittools.utils.filter_tracker_by_domain(domain, trackers)
+        tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
 
         if args.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
@@ -135,7 +135,7 @@ def __init__(args, logger):
         if args.expired and tracker and t.state_enum.is_complete:
             if tracker['required_seed_ratio'] != 0 and t.ratio >= tracker['required_seed_ratio']:
                 tags_to_add.append('expired')
-            elif tracker['required_seed_days'] != 0 and t.seeding_time >= qbittools.utils.seconds(tracker['required_seed_days']):
+            elif tracker['required_seed_days'] != 0 and t.seeding_time >= qbtools.utils.seconds(tracker['required_seed_days']):
                 tags_to_add.append('expired')
 
         if args.duplicates:
@@ -148,7 +148,7 @@ def __init__(args, logger):
 
             content_paths.append((t.hash, t.content_path, t.size))
 
-        if args.not_linked and not qbittools.utils.is_linked(t.content_path):
+        if args.not_linked and not qbtools.utils.is_linked(t.content_path):
             tags_to_add.append('not-linked')
 
         for tag in tags_to_add:
@@ -173,7 +173,7 @@ def __init__(args, logger):
     # Apply tags
     for tag in tag_hashes:
         if args.size:
-            size = qbittools.utils.format_bytes(tag_sizes[tag])
+            size = qbtools.utils.format_bytes(tag_sizes[tag])
             client.torrents_add_tags(tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag])
         else:
             client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
@@ -185,10 +185,10 @@ def add_arguments(subparser):
     Description:
         Tag torrents. This command can be used to tag torrents with various tags, such as torrents that have not been active for a while, torrents that have not been working for a while, torrents that have expired an ratio or seeding time, torrents that have the same content path, etc.
     Usage:
-        qbittools.py tagging --help
+        qbtools.py tagging --help
     Example:
         # Tag torrents
-        qbittools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
+        qbtools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
     parser = subparser.add_parser('tagging')
     parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude all torrent with this category, can be repeated multiple times', required=False)
@@ -204,4 +204,4 @@ def add_arguments(subparser):
     parser.add_argument('--size', action='store_true', help='Add size of tagged torrents to created tags')
     parser.add_argument('--tracker-down', action='store_true', help='Tag torrents with temporarily down trackers')
     parser.add_argument('--unregistered', action='store_true', help='Tag torrents with unregistered tracker status message')
-    qbittools.add_default_args(parser)
+    qbtools.add_default_args(parser)

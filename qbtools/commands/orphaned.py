@@ -2,12 +2,12 @@ import os
 import shutil
 from fnmatch import fnmatch
 
-import qbittools
+import qbtools
 
 def __init__(args, logger):
     logger.info(f"Checking for orphaned files on disk not in qBittorrent...")
 
-    client = qbittools.qbit_client(args)
+    client = qbtools.qbit_client(args)
 
     completed_dir = client.application.preferences.save_path
     categories = [
@@ -74,12 +74,12 @@ def add_arguments(subparser):
     Description:
         Search for files on disk that are not in qBittorrent and delete them. Pair this with the prune command to delete torrents that are not in qBittorrent.
     Usage:
-        qbittools.py orphaned --help
+        qbtools.py orphaned --help
     Example:
         # Delete all files in the completed directory that are not in qBittorrent and don't match the exclude patterns
-        qbittools.py orphaned --exclude-pattern "*_unpackerred" --exclude-pattern "*/manual/*" --dry-run
+        qbtools.py orphaned --exclude-pattern "*_unpackerred" --exclude-pattern "*/manual/*" --dry-run
     """
     parser = subparser.add_parser('orphaned')
     parser.add_argument('--exclude-pattern', nargs='*', action='append', metavar='mypattern', default=[], help='Exclude pattern, can be repeated multiple times', required=False)
     parser.add_argument('--dry-run', action='store_true', help='Do not delete any data on disk', default=False, required=False)
-    qbittools.add_default_args(parser)
+    qbtools.add_default_args(parser)
