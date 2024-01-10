@@ -9,7 +9,6 @@ RUN pip install --no-cache-dir --prefix=/install -r /requirements.txt \
 FROM base as app
 WORKDIR /app
 COPY qbtools/ .
-COPY config.yaml .
 RUN python3 -m compileall qbtools.py commands/
 
 FROM base as final
