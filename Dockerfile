@@ -1,4 +1,4 @@
-FROM python:3.12.1-alpine3.19 as base
+FROM python:3.12.2-alpine3.19 as base
 
 FROM base as pip
 WORKDIR /install
