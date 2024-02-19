@@ -123,8 +123,8 @@ def __init__(args, logger):
 
         working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
         if (args.unregistered or args.tracker_down or args.not_working) and not working:
-            unregistered_matched = any(z.msg.lower().startswith(x.lower()) for x in UNREGISTERED_MATCHES for z in filtered_trackers)
-            maintenance_matched = any(z.msg.lower().startswith(x.lower()) for x in MAINTENANCE_MATCHES for z in filtered_trackers)
+            unregistered_matched = any(x.lower() in z.msg.lower() for x in UNREGISTERED_MATCHES for z in filtered_trackers)
+            maintenance_matched = any(x.lower() in z.msg.lower() for x in MAINTENANCE_MATCHES for z in filtered_trackers)
             if args.unregistered and unregistered_matched:
                 tags_to_add.append('unregistered')
             elif args.tracker_down and maintenance_matched:
