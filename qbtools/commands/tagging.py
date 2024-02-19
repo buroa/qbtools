@@ -39,7 +39,8 @@ UNREGISTERED_MATCHES = [
     'trumped',
     'torrent existiert nicht',
     'other',
-    'i\'m sorry dave, i can\'t do that' # weird stuff from racingforme
+    'i\'m sorry dave, i can\'t do that', # weird stuff from racingforme
+    '002: invalid infohash'
 ]
 
 MAINTENANCE_MATCHES = [
