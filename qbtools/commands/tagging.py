@@ -80,6 +80,10 @@ def __init__(args, logger):
 
         # TODO: Optimize - this slows down the script a lot
         filtered_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, t.trackers))
+        if len(filtered_trackers) == 0:
+            # ignore trackerless torrents
+            continue
+
         domain = extractTLD(sorted(filtered_trackers, key=lambda x: x.url)[0].url).registered_domain
         tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
 
