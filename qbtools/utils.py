@@ -9,7 +9,7 @@ def format_bytes(size):
     return f"{formatted} {power_labels[n]}"
 
 
-def filter_tracker_by_domain(domain, trackers = []):
+def filter_tracker_by_domain(domain, trackers=[]):
     for tracker in trackers:
         if any(domain in url for url in tracker["urls"]):
             return tracker

@@ -5,54 +5,48 @@ from datetime import datetime
 import qbtools
 
 DEFAULT_TAGS = [
-    'activity:',
-    'added:',
-    'dupe',
-    'expired',
-    'not-linked',
-    'not-working',
-    'unregistered',
-    'tracker-down',
-    'domain:',
-    'site:',
+    "activity:",
+    "added:",
+    "dupe",
+    "expired",
+    "not-linked",
+    "not-working",
+    "unregistered",
+    "tracker-down",
+    "domain:",
+    "site:",
 ]
 
 UNREGISTERED_MATCHES = [
-    'unregistered',
-    'not authorized',
-    'not registered',
-    'not found',
-    'not exist',
-    'unknown',
-    'uploaded',
-    'upgraded',
-    'season pack',
-    'packs are available',
-    'pack is available',
-    'internal available',
-    'season pack out',
-    'dead',
-    'dupe',
-    'complete season uploaded',
-    'problem with',
-    'specifically banned',
-    'trumped',
-    'torrent existiert nicht',
-    'other',
-    'i\'m sorry dave, i can\'t do that', # weird stuff from racingforme
-    '002: invalid infohash'
+    "unregistered",
+    "not authorized",
+    "not registered",
+    "not found",
+    "not exist",
+    "unknown",
+    "uploaded",
+    "upgraded",
+    "season pack",
+    "packs are available",
+    "pack is available",
+    "internal available",
+    "season pack out",
+    "dead",
+    "dupe",
+    "complete season uploaded",
+    "problem with",
+    "specifically banned",
+    "trumped",
+    "torrent existiert nicht",
+    "other",
+    "i'm sorry dave, i can't do that",  # weird stuff from racingforme
+    "002: invalid infohash",
 ]
 
-MAINTENANCE_MATCHES = [
-    'tracker is down',
-    'maintenance'
-]
+MAINTENANCE_MATCHES = ["tracker is down", "maintenance"]
 
-DHT_MATCHES = [
-    '** [DHT] **',
-    '** [PeX] **',
-    '** [LSD] **'
-]
+DHT_MATCHES = ["** [DHT] **", "** [PeX] **", "** [LSD] **"]
+
 
 def __init__(args, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
@@ -70,9 +64,15 @@ def __init__(args, logger):
     exclude_categories = [i for s in args.exclude_category for i in s]
     exclude_tags = [i for s in args.exclude_tag for i in s]
     if len(exclude_categories):
-        filtered_torrents = list(filter(lambda x: x.category not in exclude_categories, filtered_torrents))
+        filtered_torrents = list(
+            filter(lambda x: x.category not in exclude_categories, filtered_torrents)
+        )
     if len(exclude_tags):
-        filtered_torrents = list(filter(lambda x: any(y not in x.tags for y in exclude_tags), filtered_torrents))
+        filtered_torrents = list(
+            filter(
+                lambda x: any(y not in x.tags for y in exclude_tags), filtered_torrents
+            )
+        )
 
     # Gather items to tag in qBittorrent
     for t in filtered_torrents:
@@ -80,11 +80,11 @@ def __init__(args, logger):
 
         # TODO: Optimize - this slows down the script a lot
         filtered_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, t.trackers))
-        if len(filtered_trackers) == 0:
-            # ignore trackerless torrents
+        if not filtered_trackers:
             continue
-
-        domain = extractTLD(sorted(filtered_trackers, key=lambda x: x.url)[0].url).registered_domain
+        domain = extractTLD(
+            sorted(filtered_trackers, key=lambda x: x.url)[0].url
+        ).registered_domain
         tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
 
         if args.added_on:
@@ -92,30 +92,30 @@ def __init__(args, logger):
             diff = today - added_on
 
             if diff.days == 0:
-                tags_to_add.append('added:24h')
+                tags_to_add.append("added:24h")
             elif diff.days <= 7:
-                tags_to_add.append('added:7d')
+                tags_to_add.append("added:7d")
             elif diff.days <= 29:
-                tags_to_add.append('added:30d')
+                tags_to_add.append("added:30d")
             elif diff.days > 29:
-                tags_to_add.append('added:>30d')
+                tags_to_add.append("added:>30d")
 
         if args.last_activity:
             last_activity = datetime.fromtimestamp(t.last_activity)
             diff = datetime.today() - last_activity
 
             if t.last_activity == -1:
-                tags_to_add.append('activity:never')
+                tags_to_add.append("activity:never")
             elif diff.days == 0:
-                tags_to_add.append('activity:24h')
+                tags_to_add.append("activity:24h")
             elif diff.days <= 7:
-                tags_to_add.append('activity:7d')
+                tags_to_add.append("activity:7d")
             elif diff.days <= 30:
-                tags_to_add.append('activity:30d')
+                tags_to_add.append("activity:30d")
             elif diff.days <= 179:
-                tags_to_add.append('activity:180d')
+                tags_to_add.append("activity:180d")
             elif diff.days > 179:
-                tags_to_add.append('activity:>180d')
+                tags_to_add.append("activity:>180d")
 
         if args.sites:
             if tracker:
@@ -128,33 +128,52 @@ def __init__(args, logger):
 
         working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
         if (args.unregistered or args.tracker_down or args.not_working) and not working:
-            unregistered_matched = any(z.msg.lower().startswith(x.lower()) for x in UNREGISTERED_MATCHES for z in filtered_trackers)
-            maintenance_matched = any(z.msg.lower().startswith(x.lower()) for x in MAINTENANCE_MATCHES for z in filtered_trackers)
+            unregistered_matched = any(
+                z.msg.lower().startswith(x.lower())
+                for x in UNREGISTERED_MATCHES
+                for z in filtered_trackers
+            )
+            maintenance_matched = any(
+                z.msg.lower().startswith(x.lower())
+                for x in MAINTENANCE_MATCHES
+                for z in filtered_trackers
+            )
             if args.unregistered and unregistered_matched:
-                tags_to_add.append('unregistered')
+                tags_to_add.append("unregistered")
             elif args.tracker_down and maintenance_matched:
-                tags_to_add.append('tracker-down')
+                tags_to_add.append("tracker-down")
             elif args.not_working:
-                tags_to_add.append('not-working')
+                tags_to_add.append("not-working")
 
         if args.expired and tracker and t.state_enum.is_complete:
-            if tracker['required_seed_ratio'] != 0 and t.ratio >= tracker['required_seed_ratio']:
-                tags_to_add.append('expired')
-            elif tracker['required_seed_days'] != 0 and t.seeding_time >= qbtools.utils.seconds(tracker['required_seed_days']):
-                tags_to_add.append('expired')
+            if (
+                tracker["required_seed_ratio"] != 0
+                and t.ratio >= tracker["required_seed_ratio"]
+            ):
+                tags_to_add.append("expired")
+            elif tracker[
+                "required_seed_days"
+            ] != 0 and t.seeding_time >= qbtools.utils.seconds(
+                tracker["required_seed_days"]
+            ):
+                tags_to_add.append("expired")
 
         if args.duplicates:
-            match = [(infohash, path, size) for infohash, path, size in content_paths if path == t.content_path and not t.content_path == t.save_path]
+            match = [
+                (infohash, path, size)
+                for infohash, path, size in content_paths
+                if path == t.content_path and not t.content_path == t.save_path
+            ]
             if match:
-                tags_to_add.append('dupe')
-                tag_hashes['dupe'].append(match[0][0])
+                tags_to_add.append("dupe")
+                tag_hashes["dupe"].append(match[0][0])
                 if args.size:
-                    tag_sizes['dupe'] += match[0][2]
+                    tag_sizes["dupe"] += match[0][2]
 
             content_paths.append((t.hash, t.content_path, t.size))
 
         if args.not_linked and not qbtools.utils.is_linked(t.content_path):
-            tags_to_add.append('not-linked')
+            tags_to_add.append("not-linked")
 
         for tag in tags_to_add:
             tag_hashes[tag].append(t.hash)
@@ -162,14 +181,27 @@ def __init__(args, logger):
                 tag_sizes[tag] += t.size
 
     # Remove old tags
-    default_tags = list(filter(lambda tag: any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS), client.torrents_tags()))
+    default_tags = list(
+        filter(
+            lambda tag: any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
+            client.torrents_tags(),
+        )
+    )
     if default_tags:
         hashes = list(map(lambda t: t.hash, filtered_torrents))
         client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
-        empty_tags = list(filter(lambda tag: len(list(filter(lambda t: tag in t.tags, client.torrents.info()))) == 0, default_tags))
-        logger.info(f'Removing {len(empty_tags)} old tags from qBittorrent...')
+        empty_tags = list(
+            filter(
+                lambda tag: len(
+                    list(filter(lambda t: tag in t.tags, client.torrents.info()))
+                )
+                == 0,
+                default_tags,
+            )
+        )
+        logger.info(f"Removing {len(empty_tags)} old tags from qBittorrent...")
         client.torrents_delete_tags(tags=empty_tags)
-        logger.info(f'Done removing {len(empty_tags)} old tags from qBittorrent')
+        logger.info(f"Done removing {len(empty_tags)} old tags from qBittorrent")
 
     unique_hashes = set()
     for hash_list in tag_hashes.values():
@@ -179,11 +211,16 @@ def __init__(args, logger):
     for tag in tag_hashes:
         if args.size:
             size = qbtools.utils.format_bytes(tag_sizes[tag])
-            client.torrents_add_tags(tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag])
+            client.torrents_add_tags(
+                tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag]
+            )
         else:
             client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
 
-    logger.info(f'Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags')
+    logger.info(
+        f"Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags"
+    )
+
 
 def add_arguments(subparser):
     """
@@ -195,18 +232,74 @@ def add_arguments(subparser):
         # Tag torrents
         qbtools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
-    parser = subparser.add_parser('tagging')
-    parser.add_argument('--exclude-category', nargs='*', action='append', metavar='mycategory', default=[], help='Exclude all torrent with this category, can be repeated multiple times', required=False)
-    parser.add_argument('--exclude-tag', nargs='*', action='append', metavar='mytag', default=[], help='Exclude all torrents with this tag, can be repeated multiple times', required=False)
-    parser.add_argument('--added-on', action='store_true', help='Tag torrents with added date (last 24h, 7 days, 30 days, etc)')
-    parser.add_argument('--domains', action='store_true', help='Tag torrents with tracker domains')
-    parser.add_argument('--duplicates', action='store_true', help='Tag torrents with the same content path')
-    parser.add_argument('--expired', action='store_true', help='Tag torrents that have expired an ratio or seeding time, use with filtering by category/tag')
-    parser.add_argument('--last-activity', action='store_true', help='Tag torrents with last activity date (last 24h, 7 days, 30 days, etc)')
-    parser.add_argument('--not-linked', action='store_true', help='Tag torrents with files without hardlinks or symlinks, use with filtering by category/tag')
-    parser.add_argument('--not-working', action='store_true', help='Tag torrents with not working tracker status')
-    parser.add_argument('--sites', action='store_true', help='Tag torrents with known site names')
-    parser.add_argument('--size', action='store_true', help='Add size of tagged torrents to created tags')
-    parser.add_argument('--tracker-down', action='store_true', help='Tag torrents with temporarily down trackers')
-    parser.add_argument('--unregistered', action='store_true', help='Tag torrents with unregistered tracker status message')
+    parser = subparser.add_parser("tagging")
+    parser.add_argument(
+        "--exclude-category",
+        nargs="*",
+        action="append",
+        metavar="mycategory",
+        default=[],
+        help="Exclude all torrent with this category, can be repeated multiple times",
+        required=False,
+    )
+    parser.add_argument(
+        "--exclude-tag",
+        nargs="*",
+        action="append",
+        metavar="mytag",
+        default=[],
+        help="Exclude all torrents with this tag, can be repeated multiple times",
+        required=False,
+    )
+    parser.add_argument(
+        "--added-on",
+        action="store_true",
+        help="Tag torrents with added date (last 24h, 7 days, 30 days, etc)",
+    )
+    parser.add_argument(
+        "--domains", action="store_true", help="Tag torrents with tracker domains"
+    )
+    parser.add_argument(
+        "--duplicates",
+        action="store_true",
+        help="Tag torrents with the same content path",
+    )
+    parser.add_argument(
+        "--expired",
+        action="store_true",
+        help="Tag torrents that have expired an ratio or seeding time, use with filtering by category/tag",
+    )
+    parser.add_argument(
+        "--last-activity",
+        action="store_true",
+        help="Tag torrents with last activity date (last 24h, 7 days, 30 days, etc)",
+    )
+    parser.add_argument(
+        "--not-linked",
+        action="store_true",
+        help="Tag torrents with files without hardlinks or symlinks, use with filtering by category/tag",
+    )
+    parser.add_argument(
+        "--not-working",
+        action="store_true",
+        help="Tag torrents with not working tracker status",
+    )
+    parser.add_argument(
+        "--sites", action="store_true", help="Tag torrents with known site names"
+    )
+    parser.add_argument(
+        "--size",
+        action="store_true",
+        help="Add size of tagged torrents to created tags",
+    )
+    parser.add_argument(
+        "--tracker-down",
+        action="store_true",
+        help="Tag torrents with temporarily down trackers",
+    )
+    parser.add_argument(
+        "--unregistered",
+        action="store_true",
+        help="Tag torrents with unregistered tracker status message",
+    )
     qbtools.add_default_args(parser)

@@ -4,6 +4,7 @@ from fnmatch import fnmatch
 
 import qbtools
 
+
 def __init__(args, logger):
     logger.info(f"Checking for orphaned files on disk not in qBittorrent...")
 
@@ -44,14 +45,21 @@ def __init__(args, logger):
             item_path = os.path.join(folder_path, item)
             if item_path in owned_files:
                 continue
-            if any(fnmatch(item, pattern) or fnmatch(item_path, pattern) for pattern in exclude_patterns):
-                logger.info(f"Skipping {item_path} because it matches an exclude pattern")
+            if any(
+                fnmatch(item, pattern) or fnmatch(item_path, pattern)
+                for pattern in exclude_patterns
+            ):
+                logger.info(
+                    f"Skipping {item_path} because it matches an exclude pattern"
+                )
                 continue
 
             if os.path.isfile(item_path):
                 delete(item_path)
             elif os.path.isdir(item_path):
-                owned_subfiles = set(filter(lambda x: x.startswith(item_path), owned_files))
+                owned_subfiles = set(
+                    filter(lambda x: x.startswith(item_path), owned_files)
+                )
                 if len(owned_subfiles) == 0 and item_path not in categories:
                     delete(item_path)
                 else:
@@ -64,10 +72,13 @@ def __init__(args, logger):
         if len(torrent.files) > 100:
             qbittorrent_items.add(torrent.content_path)
         else:
-            qbittorrent_items.update([os.path.join(torrent.save_path, file.name) for file in torrent.files])
+            qbittorrent_items.update(
+                [os.path.join(torrent.save_path, file.name) for file in torrent.files]
+            )
 
     # Delete orphaned files on disk not owned by qBittorrent
     cleanup_dir(completed_dir, qbittorrent_items)
+
 
 def add_arguments(subparser):
     """
@@ -79,7 +90,21 @@ def add_arguments(subparser):
         # Delete all files in the completed directory that are not in qBittorrent and don't match the exclude patterns
         qbtools.py orphaned --exclude-pattern "*_unpackerred" --exclude-pattern "*/manual/*" --dry-run
     """
-    parser = subparser.add_parser('orphaned')
-    parser.add_argument('--exclude-pattern', nargs='*', action='append', metavar='mypattern', default=[], help='Exclude pattern, can be repeated multiple times', required=False)
-    parser.add_argument('--dry-run', action='store_true', help='Do not delete any data on disk', default=False, required=False)
+    parser = subparser.add_parser("orphaned")
+    parser.add_argument(
+        "--exclude-pattern",
+        nargs="*",
+        action="append",
+        metavar="mypattern",
+        default=[],
+        help="Exclude pattern, can be repeated multiple times",
+        required=False,
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Do not delete any data on disk",
+        default=False,
+        required=False,
+    )
     qbtools.add_default_args(parser)
