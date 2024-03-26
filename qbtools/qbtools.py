@@ -4,19 +4,26 @@ import argparse, logging, yaml, sys
 import qbittorrentapi
 import utils
 
-import commands.orphaned, \
-       commands.prune, \
-       commands.reannounce, \
-       commands.tagging
+import commands.orphaned, commands.prune, commands.reannounce, commands.tagging
 
 logger = logging.getLogger(__name__)
 
+
 def add_default_args(parser):
-    parser.add_argument("-c", "--config", metavar="/config/config.yaml", default="/config/config.yaml", required=False)
-    parser.add_argument("-s", "--server", metavar="127.0.0.1", help="host", required=False)
+    parser.add_argument(
+        "-c",
+        "--config",
+        metavar="/config/config.yaml",
+        default="/config/config.yaml",
+        required=False,
+    )
+    parser.add_argument(
+        "-s", "--server", metavar="127.0.0.1", help="host", required=False
+    )
     parser.add_argument("-p", "--port", metavar="12345", help="port", required=False)
     parser.add_argument("-U", "--username", metavar="username", required=False)
     parser.add_argument("-P", "--password", metavar="password", required=False)
+
 
 def qbit_client(args):
     if args.server is None or args.port is None:
@@ -36,7 +43,8 @@ def qbit_client(args):
 
     return client
 
-def get_config(args, key = None, default = None):
+
+def get_config(args, key=None, default=None):
     config = {}
 
     with open(args.config, "r") as stream:
@@ -50,8 +58,9 @@ def get_config(args, key = None, default = None):
 
     return config
 
+
 def main():
-    logging.getLogger("filelock").setLevel(logging.ERROR) # supress lock messages
+    logging.getLogger("filelock").setLevel(logging.ERROR)  # supress lock messages
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,
@@ -74,6 +83,7 @@ def main():
 
     mod = getattr(globals()["commands"], args.command)
     cmd = getattr(mod, "__init__")(args, logger)
+
 
 if __name__ == "__main__":
     main()
