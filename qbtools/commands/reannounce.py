@@ -5,96 +5,62 @@ import qbtools
 def __init__(args, logger):
     client = qbtools.qbit_client(args)
 
-    iterations = 0
-    timeout = 5
+    max_tries = 18
+    max_age = 3600
+    interval = 5
+    retries = {}
 
-    def process_downloading():
-        torrents = client.torrents.info(status_filter="downloading", sort="time_active")
+    def process_torrents(status):
+        torrents = client.torrents.info(status_filter=status, sort="time_active")
+        torrents_retries = retries.get(status, {})
+
+        if not torrents:
+            torrents_retries.clear()
 
         for t in torrents:
             invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
-            working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
-            expired = t.time_active > 60 * 60
-
-            if expired and (not working or t.num_seeds == 0) and t.progress == 0:
-                logger.warning(
-                    f"[{t.name}] is inactive for too long, not reannouncing..."
-                )
-
-            elif (invalid or not working) and t.time_active < 60:
-                if invalid and args.pause_resume:
-                    logger.warning(
-                        f"[{t.name}] is invalid, active for {t.time_active}s, pausing/resuming..."
-                    )
-                    t.pause()
-                    t.resume()
-
-                logger.info(
-                    f"[{t.name}] is not working, active for {t.time_active}s, reannouncing..."
-                )
-                t.reannounce()
-
-            elif t.num_seeds == 0 and t.progress == 0:
-                if t.time_active < 120 or (
-                    t.time_active >= 120 and iterations % 2 == 0
-                ):
-                    logger.info(
-                        f"[{t.name}] has no seeds, active for {t.time_active}s, reannouncing..."
-                    )
-                    t.reannounce()
-                else:
-                    wait = (2 - iterations % 2) * timeout
-                    logger.info(
-                        f"[{t.name}] has no seeds, active for {t.time_active}s, waiting {wait}..."
-                    )
-
-    def process_seeding():
-        torrents = client.torrents.info(status_filter="seeding", sort="time_active")
-
-        for t in torrents:
-            if t.time_active > 300:
+            if not invalid:
                 continue
 
-            invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
-            working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+            if t.time_active > max_age:
+                logger.debug("Torrent %s has been active for %s seconds - not reannouncing", t.name, t.time_active)
+                continue
 
-            if invalid or not working:
-                if invalid and args.pause_resume:
-                    logger.warning(
-                        f"[{t.name}] is invalid, active for {t.time_active}s, pausing/resuming..."
-                    )
-                    t.pause()
-                    t.resume()
+            peers = t.num_seeds + t.num_leechs
+            if peers > 0:
+                logger.debug("Torrent %s already has %d peer(s) - not reannouncing", t.name, peers)
+                continue
 
-                logger.info(
-                    f"[{t.name}] is not working, active for {t.time_active}s, reannouncing..."
-                )
-                t.reannounce()
+            torrent_retries = torrents_retries.get(t.hash, 0)
+            if torrent_retries >= max_tries:
+                logger.debug("Torrent %s has reached %s reannounce tries - not reannouncing", t.name, retries)
+                continue
 
-    logger.info("Starting reannounce process...")
+            logger.info("Reannouncing torrent %s", t.name)
+            t.reannounce()
+            torrents_retries[t.hash] = torrent_retries + 1
+
+        retries[status] = torrents_retries
 
     while True:
-        iterations += 1
-        if iterations == 11:
-            iterations = 1
-
         try:
-            process_downloading()
+            process_torrents(status="downloading")
             if args.process_seeding:
-                process_seeding()
+                process_torrents(status="uploading")
         except Exception as e:
             logger.error(e)
 
-        time.sleep(timeout)
+        time.sleep(interval)
 
 
 def add_arguments(subparser):
+    """
+    Description:
+        Reannounce torrents that have invalid trackers.
+    Usage:
+        qbtools.py reannounce --help
+    """
     parser = subparser.add_parser("reannounce")
-    parser.add_argument(
-        "--pause-resume",
-        action="store_true",
-        help="Pause+resume torrents that are invalid.",
-    )
     parser.add_argument(
         "--process-seeding",
         action="store_true",
