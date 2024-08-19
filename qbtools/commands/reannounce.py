@@ -42,11 +42,13 @@ def __init__(args, logger):
 
         retries[status] = torrents_retries
 
+    logger.info("Starting reannounce process...")
+
     while True:
         try:
-            process_torrents(status="downloading")
+            process_torrents(status="stalled_downloading")
             if args.process_seeding:
-                process_torrents(status="uploading")
+                process_torrents(status="stalled_uploading")
         except Exception as e:
             logger.error(e)
 
