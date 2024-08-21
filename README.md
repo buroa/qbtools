@@ -59,13 +59,12 @@ All commands have extensive help with all available options.
 
 ```bash
 $ qbtools export -h
-usage: qbtools.py reannounce [-h] [--pause-resume] [--process-seeding]
+usage: qbtools.py reannounce [-h] [--process-seeding]
                                [-c /app/config.yaml] [-p 12345] [-s 127.0.0.1] [-U username]
                                [-P password]
 
 options:
   -h, --help            show this help message and exit
-  --pause-resume        Will pause/resume torrents that are invalid.
   --process-seeding     Will also process seeding torrents for reannouncements.
   -c /app/config.yaml, --config /app/config.yaml
   -p 12345, --port 12345
