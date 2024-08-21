@@ -40,8 +40,7 @@ def __init__(args, logger):
             t.reannounce()
             torrents_retries[t.hash] = torrent_retries + 1
 
-        if torrents:
-            retries[status] = torrents_retries
+        retries[status] = torrents_retries
 
     logger.info("Starting reannounce process...")
 
