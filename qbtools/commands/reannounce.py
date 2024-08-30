@@ -1,5 +1,6 @@
 import time
 import qbtools
+from qbittorrentapi import TrackerStatus
 
 
 def __init__(args, logger):
@@ -21,7 +22,7 @@ def __init__(args, logger):
             torrents_retries.clear()
 
         for t in torrents:
-            working = any([s.status == 2 for s in t.trackers])
+            working = any([s.status == TrackerStatus.WORKING for s in t.trackers])
             if working:
                 continue
 

@@ -1,8 +1,7 @@
 import os
 import shutil
-from fnmatch import fnmatch
-
 import qbtools
+from fnmatch import fnmatch
 
 
 def __init__(args, logger):

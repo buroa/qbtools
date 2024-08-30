@@ -1,8 +1,8 @@
+import qbtools
 import tldextract
 import collections
 from datetime import datetime
 
-import qbtools
 
 DEFAULT_TAGS = [
     "activity:",
