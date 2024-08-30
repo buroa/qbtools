@@ -42,10 +42,19 @@ UNREGISTERED_MATCHES = [
     "002: invalid infohash",
 ]
 
-MAINTENANCE_MATCHES = ["tracker is down", "maintenance"]
+MAINTENANCE_MATCHES = [
+    "down",
+    "maintenance",
+    "unreachable",
+    "bad gateway",
+    "unavailable",
+]
 
-DHT_MATCHES = ["** [DHT] **", "** [PeX] **", "** [LSD] **"]
-
+DHT_MATCHES = {
+    "** [DHT] **",
+    "** [PeX] **",
+    "** [LSD] **"
+}
 
 def __init__(args, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
@@ -77,14 +86,13 @@ def __init__(args, logger):
     for t in filtered_torrents:
         tags_to_add = []
 
-        # TODO: Optimize - this slows down the script a lot
-        filtered_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, t.trackers))
-        if not filtered_trackers:
-            continue
-        domain = extractTLD(
-            sorted(filtered_trackers, key=lambda x: x.url)[0].url
-        ).registered_domain
-        tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
+        for t in trackers:
+            filtered_trackers = (s for s in t.trackers if s.url not in DHT_MATCHES)
+            first_filtered_tracker = next(filtered_trackers, None)
+            if not first_filtered_tracker:
+                continue
+            domain = extractTLD(first_filtered_tracker.url).registered_domain
+            tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
 
         if args.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
