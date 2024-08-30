@@ -39,7 +39,6 @@ UNREGISTERED_MATCHES = [
     "trumped",
     "torrent existiert nicht",
     "other",
-    "i'm sorry dave, i can't do that",  # weird stuff from racingforme
     "002: invalid infohash",
 ]
 
@@ -95,10 +94,12 @@ def __init__(args, logger):
                 tags_to_add.append("added:24h")
             elif diff.days <= 7:
                 tags_to_add.append("added:7d")
-            elif diff.days <= 29:
+            elif diff.days <= 30:
                 tags_to_add.append("added:30d")
-            elif diff.days > 29:
-                tags_to_add.append("added:>30d")
+            elif diff.days <= 180:
+                tags_to_add.append("added:180d")
+            elif diff.days > 180:
+                tags_to_add.append("added:>180d")
 
         if args.last_activity:
             last_activity = datetime.fromtimestamp(t.last_activity)
@@ -112,9 +113,9 @@ def __init__(args, logger):
                 tags_to_add.append("activity:7d")
             elif diff.days <= 30:
                 tags_to_add.append("activity:30d")
-            elif diff.days <= 179:
+            elif diff.days <= 180:
                 tags_to_add.append("activity:180d")
-            elif diff.days > 179:
+            elif diff.days > 180:
                 tags_to_add.append("activity:>180d")
 
         if args.sites:
