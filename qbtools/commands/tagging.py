@@ -124,7 +124,7 @@ def __init__(args, logger):
         if args.domains:
             tags_to_add.append(f"domain:{domain}")
 
-        working = len(list(filter(lambda s: s.status == 2, t.trackers))) > 0
+        working = any([s.status == 2 for s in t.trackers])
         if (args.unregistered or args.tracker_down or args.not_working) and not working:
             unregistered_matched = any(
                 z.msg.lower().startswith(x.lower())

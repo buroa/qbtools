@@ -21,8 +21,8 @@ def __init__(args, logger):
             torrents_retries.clear()
 
         for t in torrents:
-            not_working = list(filter(lambda s: s.status == 4, t.trackers))
-            if not not_working:
+            working = any([s.status == 2 for s in t.trackers])
+            if working:
                 continue
 
             peers = t.num_seeds + t.num_leechs
