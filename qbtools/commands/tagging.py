@@ -75,7 +75,7 @@ def __init__(args, logger):
     for t in filtered_torrents:
         tags_to_add = []
 
-        filtered_trackers = list(filter(lambda s: not s.status == 0, t.trackers))
+        filtered_trackers = list(filter(lambda s: not s.tier == -1, t.trackers))
         if not filtered_trackers:
             continue
         domain = extractTLD(
