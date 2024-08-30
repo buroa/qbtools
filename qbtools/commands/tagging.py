@@ -44,8 +44,6 @@ UNREGISTERED_MATCHES = [
 
 MAINTENANCE_MATCHES = ["tracker is down", "maintenance"]
 
-DHT_MATCHES = ["** [DHT] **", "** [PeX] **", "** [LSD] **"]
-
 
 def __init__(args, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
@@ -62,11 +60,11 @@ def __init__(args, logger):
     filtered_torrents = client.torrents.info()
     exclude_categories = [i for s in args.exclude_category for i in s]
     exclude_tags = [i for s in args.exclude_tag for i in s]
-    if len(exclude_categories):
+    if exclude_categories:
         filtered_torrents = list(
             filter(lambda x: x.category not in exclude_categories, filtered_torrents)
         )
-    if len(exclude_tags):
+    if exclude_tags:
         filtered_torrents = list(
             filter(
                 lambda x: any(y not in x.tags for y in exclude_tags), filtered_torrents
@@ -77,8 +75,7 @@ def __init__(args, logger):
     for t in filtered_torrents:
         tags_to_add = []
 
-        # TODO: Optimize - this slows down the script a lot
-        filtered_trackers = list(filter(lambda s: not s.url in DHT_MATCHES, t.trackers))
+        filtered_trackers = list(filter(lambda s: not s.status == 0, t.trackers))
         if not filtered_trackers:
             continue
         domain = extractTLD(

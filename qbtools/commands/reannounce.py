@@ -21,21 +21,21 @@ def __init__(args, logger):
             torrents_retries.clear()
 
         for t in torrents:
-            invalid_trackers = list(filter(lambda s: s.status == 4, t.trackers))
-            if not invalid_trackers:
+            not_working = list(filter(lambda s: s.status == 4, t.trackers))
+            if not not_working:
                 continue
 
             peers = t.num_seeds + t.num_leechs
-            if peers > 0:
-                logger.debug("Torrent %s already has %d peer(s) - not reannouncing", t.name, peers)
+            if peers:
+                logger.debug("Torrent %s (%s) has %d peer(s) - not reannouncing", t.name, t.hash, peers)
                 continue
 
             torrent_retries = torrents_retries.get(t.hash, 0)
             if torrent_retries >= max_tries:
-                logger.debug("Torrent %s has reached %s reannounce tries - not reannouncing", t.name, retries)
+                logger.debug("Torrent %s (%s) has reached %s reannounce tries - not reannouncing", t.name, t.hash, retries)
                 continue
 
-            logger.info("Reannouncing torrent %s (%s)", t.name, t.hash)
+            logger.info("Reannouncing torrent %s (%s) %s/%s ...", t.name, t.hash, torrent_retries, max_tries)
             t.reannounce()
             torrents_retries[t.hash] = torrent_retries + 1
 

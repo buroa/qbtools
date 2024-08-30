@@ -7,18 +7,18 @@ def __init__(args, logger):
     client = qbtools.qbit_client(args)
 
     categories = list(client.torrent_categories.categories.keys())
-    if len(args.include_category) > 0:
+    if args.include_category:
         includes = [i for s in args.include_category for i in s]
         categories = list(
             filter(lambda c: any(fnmatch(c, p) for p in includes), categories)
         )
-    if len(args.exclude_category) > 0:
+    if args.exclude_category:
         excludes = [i for s in args.exclude_category for i in s]
         categories = list(
             filter(lambda c: not any(fnmatch(c, p) for p in excludes), categories)
         )
 
-    if len(categories) == 0:
+    if not categories:
         logger.info(
             f"No torrents can be pruned since no categories were included based on selectors"
         )
@@ -29,12 +29,12 @@ def __init__(args, logger):
     )
 
     include_tags = [i for s in args.include_tag for i in s]
-    if len(include_tags):
+    if include_tags:
         filtered_torrents = list(
             filter(lambda x: all(y in x.tags for y in include_tags), filtered_torrents)
         )
     exclude_tags = [i for s in args.exclude_tag for i in s]
-    if len(exclude_tags):
+    if exclude_tags:
         filtered_torrents = list(
             filter(
                 lambda x: not any(y in x.tags for y in exclude_tags), filtered_torrents
