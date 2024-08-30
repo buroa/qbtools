@@ -2,6 +2,7 @@ import qbtools
 import tldextract
 import collections
 from datetime import datetime
+from qbittorrentapi import TrackerStatus
 
 
 DEFAULT_TAGS = [
@@ -124,7 +125,7 @@ def __init__(args, logger):
         if args.domains:
             tags_to_add.append(f"domain:{domain}")
 
-        working = any([s.status == 2 for s in t.trackers])
+        working = any([s.status == TrackerStatus.WORKING for s in t.trackers])
         if (args.unregistered or args.tracker_down or args.not_working) and not working:
             unregistered_matched = any(
                 z.msg.lower().startswith(x.lower())
