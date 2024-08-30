@@ -14,16 +14,15 @@ def __init__(args, logger):
         torrents = client.torrents.info(status_filter=status, sort="time_active")
         torrents_retries = retries.get(status, {})
 
+        if torrents:
+            torrents = list(filter(lambda t: t.time_active <= max_age, torrents))
+
         if not torrents:
             torrents_retries.clear()
 
         for t in torrents:
-            invalid = len(list(filter(lambda s: s.status == 4, t.trackers))) > 0
-            if not invalid:
-                continue
-
-            if t.time_active > max_age:
-                logger.debug("Torrent %s has been active for %s seconds - not reannouncing", t.name, t.time_active)
+            invalid_trackers = list(filter(lambda s: s.status == 4, t.trackers))
+            if not invalid_trackers:
                 continue
 
             peers = t.num_seeds + t.num_leechs
