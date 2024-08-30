@@ -42,19 +42,9 @@ UNREGISTERED_MATCHES = [
     "002: invalid infohash",
 ]
 
-MAINTENANCE_MATCHES = [
-    "down",
-    "maintenance",
-    "unreachable",
-    "bad gateway",
-    "unavailable",
-]
+MAINTENANCE_MATCHES = ["tracker is down", "maintenance"]
 
-DHT_MATCHES = {
-    "** [DHT] **",
-    "** [PeX] **",
-    "** [LSD] **"
-}
+DHT_MATCHES = {"** [DHT] **", "** [PeX] **", "** [LSD] **"}
 
 def __init__(args, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
