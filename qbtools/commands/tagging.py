@@ -1,6 +1,7 @@
 import qbtools
 import tldextract
 import collections
+
 from datetime import datetime
 from qbittorrentapi import TrackerStatus
 
@@ -19,31 +20,33 @@ DEFAULT_TAGS = [
 ]
 
 UNREGISTERED_MATCHES = [
-    "unregistered",
-    "not authorized",
-    "not registered",
-    "not found",
-    "not exist",
-    "unknown",
-    "uploaded",
-    "upgraded",
-    "season pack",
-    "packs are available",
-    "pack is available",
-    "internal available",
-    "season pack out",
-    "dead",
-    "dupe",
-    "complete season uploaded",
-    "problem with",
-    "specifically banned",
-    "trumped",
-    "torrent existiert nicht",
-    "other",
-    "002: invalid infohash",
+    "UNREGISTERED",
+    "TORRENT NOT FOUND",
+    "TORRENT IS NOT",
+    "NOT REGISTERED",
+    "NOT EXIST",
+    "UNKNOWN TORRENT",
+    "TRUMP",
+    "RETITLED",
+    "TRUNCATED",
+    "INFOHASH NOT FOUND", # blutopia
+    "TORRENT HAS BEEN DELETED", # blutopia
+    "DEAD",
+    "DUPE",
+    "COMPLETE SEASON UPLOADED",
+    "PROBLEM",
+    "SPECIFICALLY BANNED",
+    "OTHER",
+    "NUKED",
+    "INVALID INFOHASH",
 ]
 
-MAINTENANCE_MATCHES = ["tracker is down", "maintenance"]
+MAINTENANCE_MATCHES = [
+    "DOWN",
+    "UNREACHABLE",
+    "BAD GATEWAY",
+    "TRACKER UNAVILABLE",
+]
 
 
 def __init__(args, logger):
@@ -57,14 +60,15 @@ def __init__(args, logger):
     tag_hashes = collections.defaultdict(list)
     tag_sizes = collections.defaultdict(int)
     content_paths = []
-
     filtered_torrents = client.torrents.info()
+
     exclude_categories = [i for s in args.exclude_category for i in s]
-    exclude_tags = [i for s in args.exclude_tag for i in s]
     if exclude_categories:
         filtered_torrents = list(
             filter(lambda x: x.category not in exclude_categories, filtered_torrents)
         )
+
+    exclude_tags = [i for s in args.exclude_tag for i in s]
     if exclude_tags:
         filtered_torrents = list(
             filter(
@@ -76,7 +80,11 @@ def __init__(args, logger):
     for t in filtered_torrents:
         tags_to_add = []
 
-        filtered_trackers = list(filter(lambda s: not s.tier == -1, t.trackers))
+        filtered_trackers = (
+            list(filter(lambda s: not s.tier == -1, t.trackers))
+            if t.properties.is_private
+            else t.trackers
+        )
         if not filtered_trackers:
             continue
         domain = extractTLD(
@@ -125,18 +133,19 @@ def __init__(args, logger):
         if args.domains:
             tags_to_add.append(f"domain:{domain}")
 
-        working = any([s.status == TrackerStatus.WORKING for s in t.trackers])
+        working = any([s.status == TrackerStatus.WORKING for s in filtered_trackers])
         if (args.unregistered or args.tracker_down or args.not_working) and not working:
-            unregistered_matched = any(
-                z.msg.lower().startswith(x.lower())
-                for x in UNREGISTERED_MATCHES
-                for z in filtered_trackers
+            unregistered_matched = (
+                any(x in z.msg.upper() for x in UNREGISTERED_MATCHES for z in filtered_trackers) 
+                if args.unregistered 
+                else False
             )
-            maintenance_matched = any(
-                z.msg.lower().startswith(x.lower())
-                for x in MAINTENANCE_MATCHES
-                for z in filtered_trackers
+            maintenance_matched = (
+                any(x in z.msg.upper() for x in MAINTENANCE_MATCHES for z in filtered_trackers) 
+                if args.tracker_down 
+                else False
             )
+
             if args.unregistered and unregistered_matched:
                 tags_to_add.append("unregistered")
             elif args.tracker_down and maintenance_matched:

@@ -36,9 +36,9 @@ def __init__(args, logger):
                 logger.debug("Torrent %s (%s) has reached %s reannounce tries - not reannouncing", t.name, t.hash, retries)
                 continue
 
-            logger.info("Reannouncing torrent %s (%s) %s/%s ...", t.name, t.hash, torrent_retries, max_tries)
             t.reannounce()
             torrents_retries[t.hash] = torrent_retries + 1
+            logger.info("Reannounced torrent %s (%s) %s/%s", t.name, t.hash, torrent_retries, max_tries)
 
         retries[status] = torrents_retries
 
