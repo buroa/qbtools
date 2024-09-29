@@ -22,6 +22,7 @@ UNREGISTERED_MATCHES = [
     "unregistered",
     "not authorized",
     "not registered",
+    "torrent not registered",
     "not found",
     "not exist",
     "unknown",
