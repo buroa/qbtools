@@ -134,21 +134,10 @@ def __init__(args, logger):
             tags_to_add.append(f"domain:{domain}")
 
         working = any([s.status == TrackerStatus.WORKING for s in filtered_trackers])
-        if (args.unregistered or args.tracker_down or args.not_working) and not working:
-            unregistered_matched = (
-                any(x in z.msg.upper() for x in UNREGISTERED_MATCHES for z in filtered_trackers) 
-                if args.unregistered 
-                else False
-            )
-            maintenance_matched = (
-                any(x in z.msg.upper() for x in MAINTENANCE_MATCHES for z in filtered_trackers) 
-                if args.tracker_down 
-                else False
-            )
-
-            if args.unregistered and unregistered_matched:
+        if not working:
+            if args.unregistered and any(x in z.msg.upper() for z in filtered_trackers for x in UNREGISTERED_MATCHES):
                 tags_to_add.append("unregistered")
-            elif args.tracker_down and maintenance_matched:
+            elif args.tracker_down and any(x in z.msg.upper() for z in filtered_trackers for x in MAINTENANCE_MATCHES):
                 tags_to_add.append("tracker-down")
             elif args.not_working:
                 tags_to_add.append("not-working")
