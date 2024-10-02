@@ -48,7 +48,7 @@ MAINTENANCE_MATCHES = [
 ]
 
 
-def __init__(args, logger):
+def __init__(app, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
 
     extractTLD = tldextract.TLDExtract(cache_dir=None)
@@ -57,16 +57,16 @@ def __init__(args, logger):
     tag_sizes = collections.defaultdict(int)
     content_paths = []
 
-    filtered_torrents = args.client.torrents.info()
-    trackers = args.config.get("trackers", [])
+    filtered_torrents = app.client.torrents.info()
+    trackers = app.config.get("trackers", [])
 
-    exclude_categories = [i for s in args.exclude_category for i in s]
+    exclude_categories = [i for s in app.exclude_category for i in s]
     if exclude_categories:
         filtered_torrents = list(
             filter(lambda x: x.category not in exclude_categories, filtered_torrents)
         )
 
-    exclude_tags = [i for s in args.exclude_tag for i in s]
+    exclude_tags = [i for s in app.exclude_tag for i in s]
     if exclude_tags:
         filtered_torrents = list(
             filter(
@@ -90,7 +90,7 @@ def __init__(args, logger):
         ).registered_domain
         tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
 
-        if args.added_on:
+        if app.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
             diff = today - added_on
 
@@ -105,7 +105,7 @@ def __init__(args, logger):
             elif diff.days > 180:
                 tags_to_add.append("added:>180d")
 
-        if args.last_activity:
+        if app.last_activity:
             last_activity = datetime.fromtimestamp(t.last_activity)
             diff = datetime.today() - last_activity
 
@@ -122,26 +122,26 @@ def __init__(args, logger):
             elif diff.days > 180:
                 tags_to_add.append("activity:>180d")
 
-        if args.sites:
+        if app.sites:
             if tracker:
                 tags_to_add.append(f"site:{tracker['name']}")
             else:
                 tags_to_add.append(f"site:unmapped")
 
-        if args.domains:
+        if app.domains:
             tags_to_add.append(f"domain:{domain}")
 
-        if args.unregistered or args.tracker_down or args.not_working:
+        if app.unregistered or app.tracker_down or app.not_working:
             if not any(s.status == TrackerStatus.WORKING for s in filtered_trackers):
                 tracker_messages = [z.msg.upper() for z in filtered_trackers]
-                if args.unregistered and any(x in msg for msg in tracker_messages for x in UNREGISTERED_MATCHES):
+                if app.unregistered and any(x in msg for msg in tracker_messages for x in UNREGISTERED_MATCHES):
                     tags_to_add.append("unregistered")
-                elif args.tracker_down and any(x in msg for msg in tracker_messages for x in MAINTENANCE_MATCHES):
+                elif app.tracker_down and any(x in msg for msg in tracker_messages for x in MAINTENANCE_MATCHES):
                     tags_to_add.append("tracker-down")
-                elif args.not_working:
+                elif app.not_working:
                     tags_to_add.append("not-working")
 
-        if args.expired and tracker and t.state_enum.is_complete:
+        if app.expired and tracker and t.state_enum.is_complete:
             if (
                 tracker["required_seed_ratio"] != 0
                 and t.ratio >= tracker["required_seed_ratio"]
@@ -154,7 +154,7 @@ def __init__(args, logger):
             ):
                 tags_to_add.append("expired")
 
-        if args.duplicates:
+        if app.duplicates:
             match = [
                 (infohash, path, size)
                 for infohash, path, size in content_paths
@@ -163,40 +163,40 @@ def __init__(args, logger):
             if match:
                 tags_to_add.append("dupe")
                 tag_hashes["dupe"].append(match[0][0])
-                if args.size:
+                if app.size:
                     tag_sizes["dupe"] += match[0][2]
 
             content_paths.append((t.hash, t.content_path, t.size))
 
-        if args.not_linked and not qbtools.utils.is_linked(t.content_path):
+        if app.not_linked and not qbtools.utils.is_linked(t.content_path):
             tags_to_add.append("not-linked")
 
         for tag in tags_to_add:
             tag_hashes[tag].append(t.hash)
-            if args.size:
+            if app.size:
                 tag_sizes[tag] += t.size
 
     # Remove old tags
     default_tags = list(
         filter(
             lambda tag: any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
-            args.client.torrents_tags(),
+            app.client.torrents_tags(),
         )
     )
     if default_tags:
         hashes = list(map(lambda t: t.hash, filtered_torrents))
-        args.client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
+        app.client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
         empty_tags = list(
             filter(
                 lambda tag: len(
-                    list(filter(lambda t: tag in t.tags, args.client.torrents.info()))
+                    list(filter(lambda t: tag in t.tags, app.client.torrents.info()))
                 )
                 == 0,
                 default_tags,
             )
         )
         logger.info(f"Removing {len(empty_tags)} old tags from qBittorrent...")
-        args.client.torrents_delete_tags(tags=empty_tags)
+        app.client.torrents_delete_tags(tags=empty_tags)
         logger.info(f"Done removing {len(empty_tags)} old tags from qBittorrent")
 
     unique_hashes = set()
@@ -205,13 +205,13 @@ def __init__(args, logger):
 
     # Apply tags
     for tag in tag_hashes:
-        if args.size:
+        if app.size:
             size = qbtools.utils.format_bytes(tag_sizes[tag])
-            args.client.torrents_add_tags(
+            app.client.torrents_add_tags(
                 tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag]
             )
         else:
-            args.client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
+            app.client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
 
     logger.info(
         f"Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags"

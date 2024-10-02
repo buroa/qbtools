@@ -3,94 +3,125 @@
 import os
 import importlib
 import qbittorrentapi
-import argparse, logging, yaml, sys
+import argparse
+import logging
+import yaml
+import sys
 
 logger = logging.getLogger(__name__)
 
-
 def add_default_args(parser):
     parser.add_argument(
-        "-c",
-        "--config",
-        metavar="/config/config.yaml",
+        "-c", "--config",
         default="/config/config.yaml",
-        required=False,
+        help="Path to configuration file"
     )
     parser.add_argument(
-        "-s", "--server", metavar="127.0.0.1", help="host", required=False
+        "-s", "--server",
+        help="qBittorrent server address"
     )
-    parser.add_argument("-p", "--port", metavar="12345", help="port", required=False)
-    parser.add_argument("-U", "--username", metavar="username", required=False)
-    parser.add_argument("-P", "--password", metavar="password", required=False)
+    parser.add_argument(
+        "-p", "--port",
+        help="qBittorrent server port"
+    )
+    parser.add_argument(
+        "-U", "--username",
+        help="Username for qBittorrent"
+    )
+    parser.add_argument(
+        "-P", "--password",
+        help="Password for qBittorrent"
+    )
 
-
-def qbit_client(args):
-    if args.server is None or args.port is None:
-        logger.error("Please specify a server and port to connect to.")
+def qbit_client(app):
+    if not app.server or not app.port:
+        logger.error("Server and port must be specified.")
         sys.exit(1)
 
     client = qbittorrentapi.Client(
-        host=f"{args.server}:{args.port}",
-        username=args.username,
-        password=args.password,
+        host=f"{app.server}:{app.port}",
+        username=app.username,
+        password=app.password,
     )
 
     try:
         client.auth_log_in()
     except qbittorrentapi.LoginFailed as e:
-        logger.error(e)
+        logger.error(f"Login failed: {e}")
+        sys.exit(1)
 
     return client
 
-
-def get_config(args, key=None, default=None):
-    config = {}
-
+def get_config(app, key=None, default=None):
     try:
-        with open(args.config, "r") as stream:
+        with open(app.config, "r") as stream:
             config = yaml.safe_load(stream)
-    except Exception as e:
-        logger.debug(e) # ignore error
+    except FileNotFoundError:
+        logger.warning(f"Configuration file not found: {app.config}")
+        config = {}
+    except yaml.YAMLError as e:
+        logger.error(f"Error parsing configuration file: {e}")
+        sys.exit(1)
 
-    if key:
-        config = config.get(key, default)
-
-    return config
-
+    return config.get(key, default) if key else config
 
 def main():
-    logging.getLogger("filelock").setLevel(logging.ERROR)  # supress lock messages
+    # Configure logging
+    logging.getLogger("filelock").setLevel(logging.ERROR)  # Suppress lock messages
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,
-        format="%(asctime)s %(levelname)s:%(message)s",
+        format="%(asctime)s %(levelname)s: %(message)s",
         datefmt="%I:%M:%S %p",
     )
 
-    parser = argparse.ArgumentParser()
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(description="qBittorrent API Client")
+    add_default_args(parser)
     subparsers = parser.add_subparsers(dest="command")
 
-    for cmd in os.listdir("commands"):
+    # Dynamically load command modules
+    commands_dir = "commands"
+    if not os.path.isdir(commands_dir):
+        logger.error(f"Commands directory not found: {commands_dir}")
+        sys.exit(1)
+
+    for cmd in os.listdir(commands_dir):
         if cmd.endswith(".py"):
             name = cmd[:-3]
-            mod = importlib.import_module(f"commands.{name}")
-            mod.add_arguments(subparsers)
-            globals()[name] = mod
+            try:
+                mod = importlib.import_module(f"commands.{name}")
+                mod.add_arguments(subparsers)
+            except ImportError as e:
+                logger.error(f"Error loading module '{name}': {e}")
+                sys.exit(1)
 
-    args = parser.parse_args()
+    app = parser.parse_args()
 
-    if args.command is None:
+    # If no command is specified, display help
+    if not app.command:
         parser.print_help()
-        sys.exit()
+        sys.exit(1)
 
-    args.client = qbit_client(args)
-    args.config = get_config(args)
+    # Initialize qBittorrent client
+    app.client = qbit_client(app)
 
-    mod = globals().get(args.command)
-    mod.__init__(args, logger)
+    # Load configuration
+    app.config = get_config(app)
 
-    args.client.auth_log_out()
+    # Execute the specified command
+    mod = globals().get(app.command)
+    if not mod:
+        logger.error(f"Command not found: {app.command}")
+        sys.exit(1)
 
+    try:
+        mod.__init__(app, logger)
+    except Exception as e:
+        logger.error(f"Error executing command '{app.command}': {e}")
+        sys.exit(1)
+    finally:
+        app.client.auth_log_out()
 
 if __name__ == "__main__":
     main()
