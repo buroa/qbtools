@@ -10,6 +10,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+
 def add_default_args(parser):
     parser.add_argument(
         "-c", "--config",
@@ -33,9 +34,26 @@ def add_default_args(parser):
         help="Password for qBittorrent"
     )
 
+
+def load_commands(subparsers):
+    for cmd in os.listdir(f"{os.path.dirname(__file__)}/commands"):
+        if cmd.startswith("__") or not cmd.endswith(".py"):
+            continue
+
+        name = cmd[:-3]
+        try:
+            mod = importlib.import_module(f"commands.{name}")
+            mod.add_arguments(subparsers)
+        except ImportError:
+            logger.error(f"Error loading module: {name}", exc_info=True)
+            sys.exit(1)
+        else:
+            globals()[name] = mod
+
+
 def qbit_client(app):
     if not app.server or not app.port:
-        logger.error("Server and port must be specified.")
+        logger.error("Server and port must be specified")
         sys.exit(1)
 
     client = qbittorrentapi.Client(
@@ -46,27 +64,31 @@ def qbit_client(app):
 
     try:
         client.auth_log_in()
-    except qbittorrentapi.LoginFailed as e:
-        logger.error(f"Login failed: {e}")
+    except qbittorrentapi.APIConnectionError:
+        logger.error("Error connecting to qBittorrent", exc_info=True)
         sys.exit(1)
+    except qbittorrentapi.LoginFailed:
+        logger.error("Login failed to qBittorrent", exc_info=True)
+        sys.exit(1)
+    else:
+        return client
 
-    return client
 
-def get_config(app, key=None, default=None):
+def get_config(app):
     try:
         with open(app.config, "r") as stream:
             config = yaml.safe_load(stream)
     except FileNotFoundError:
-        logger.warning(f"Configuration file not found: {app.config}")
-        config = {}
-    except yaml.YAMLError as e:
-        logger.error(f"Error parsing configuration file: {e}")
+        logger.error(f"Configuration file not found: {app.config}", exc_info=True)
         sys.exit(1)
+    except yaml.YAMLError:
+        logger.error(f"Error parsing configuration file: {app.config}", exc_info=True)
+        sys.exit(1)
+    else:
+        return config
 
-    return config.get(key, default) if key else config
 
 def main():
-    # Configure logging
     logging.getLogger("filelock").setLevel(logging.ERROR)  # Suppress lock messages
     logging.basicConfig(
         stream=sys.stdout,
@@ -75,50 +97,25 @@ def main():
         datefmt="%I:%M:%S %p",
     )
 
-    # Parse command-line arguments
     parser = argparse.ArgumentParser(description="qBittorrent API Client")
     add_default_args(parser)
     subparsers = parser.add_subparsers(dest="command")
-
-    # Dynamically load command modules
-    commands_dir = "commands"
-    if not os.path.isdir(commands_dir):
-        logger.error(f"Commands directory not found: {commands_dir}")
-        sys.exit(1)
-
-    for cmd in os.listdir(commands_dir):
-        if cmd.endswith(".py"):
-            name = cmd[:-3]
-            try:
-                mod = importlib.import_module(f"commands.{name}")
-                mod.add_arguments(subparsers)
-            except ImportError as e:
-                logger.error(f"Error loading module '{name}': {e}")
-                sys.exit(1)
+    load_commands(subparsers) # Load all commands
 
     app = parser.parse_args()
 
-    # If no command is specified, display help
     if not app.command:
         parser.print_help()
         sys.exit(1)
 
-    # Initialize qBittorrent client
     app.client = qbit_client(app)
-
-    # Load configuration
     app.config = get_config(app)
 
-    # Execute the specified command
-    mod = globals().get(app.command)
-    if not mod:
-        logger.error(f"Command not found: {app.command}")
-        sys.exit(1)
-
     try:
+        mod = globals()[app.command]
         mod.__init__(app, logger)
-    except Exception as e:
-        logger.error(f"Error executing command '{app.command}': {e}")
+    except Exception:
+        logger.error(f"Error executing command: {app.command}", exc_info=True)
         sys.exit(1)
     finally:
         app.client.auth_log_out()

@@ -15,4 +15,5 @@ FROM base as final
 WORKDIR /app
 COPY --from=pip /install /usr/local
 COPY --from=app /app .
+COPY config.yaml /config/config.yaml
 ENTRYPOINT ["python3", "qbtools.py"]
