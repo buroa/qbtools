@@ -218,6 +218,7 @@ def __init__(args, logger):
     logger.info(
         f"Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags"
     )
+    client.auth_log_out()
 
 
 def add_arguments(subparser):

@@ -77,6 +77,7 @@ def __init__(args, logger):
 
     # Delete orphaned files on disk not owned by qBittorrent
     cleanup_dir(completed_dir, qbittorrent_items)
+    client.auth_log_out()
 
 
 def add_arguments(subparser):

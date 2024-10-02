@@ -52,6 +52,7 @@ def __init__(args, logger):
             t.delete(delete_files=args.with_data)
 
     logger.info(f"Deleted {len(filtered_torrents)} torrents")
+    client.auth_log_out()
 
 
 def add_arguments(subparser):
