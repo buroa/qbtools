@@ -1,3 +1,7 @@
+import os
+import argparse
+
+
 def format_bytes(size):
     power = 2**10
     n = 0
@@ -35,3 +39,16 @@ def dhms(total_seconds: int) -> str:
     days = total_hours // 24
     hours = total_hours % 24
     return f"{days}d{hours}h{minutes}m{seconds}s"
+
+
+class EnvDefault(argparse.Action):
+    def __init__(self, envvar, required=True, default=None, **kwargs):
+        if envvar:
+            if envvar in os.environ:
+                default = os.environ[envvar]
+        if required and default:
+            required = False
+        super(EnvDefault, self).__init__(default=default, required=required, **kwargs)
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, values)
