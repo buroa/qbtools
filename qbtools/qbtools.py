@@ -10,6 +10,7 @@ import sys
 
 logger = logging.getLogger(__name__)
 
+
 def add_default_args(parser):
     parser.add_argument(
         "-c", "--config",
@@ -52,7 +53,7 @@ def load_commands(subparsers):
 
 def qbit_client(app):
     if not app.server or not app.port:
-        logger.error("Server and port must be specified.")
+        logger.error("Server and port must be specified")
         sys.exit(1)
 
     client = qbittorrentapi.Client(
@@ -63,25 +64,28 @@ def qbit_client(app):
 
     try:
         client.auth_log_in()
-    except qbittorrentapi.LoginFailed:
-        logger.error("Login failed", exc_info=True)
+    except qbittorrentapi.APIConnectionError:
+        logger.error("Error connecting to qBittorrent", exc_info=True)
         sys.exit(1)
-
-    return client
+    except qbittorrentapi.LoginFailed:
+        logger.error("Login failed to qBittorrent", exc_info=True)
+        sys.exit(1)
+    else:
+        return client
 
 
 def get_config(app):
-    config = {}
-
     try:
         with open(app.config, "r") as stream:
             config = yaml.safe_load(stream)
     except FileNotFoundError:
-        logger.debug("Configuration file not found", exc_info=True) # Not an error
+        logger.error(f"Configuration file not found: {app.config}", exc_info=True)
+        sys.exit(1)
     except yaml.YAMLError:
-        logger.error("Error parsing configuration file", exc_info=True)
-
-    return config
+        logger.error(f"Error parsing configuration file: {app.config}", exc_info=True)
+        sys.exit(1)
+    else:
+        return config
 
 
 def main():
@@ -113,7 +117,7 @@ def main():
     except Exception:
         logger.error(f"Error executing command: {app.command}", exc_info=True)
         sys.exit(1)
-    else:
+    finally:
         app.client.auth_log_out()
 
 if __name__ == "__main__":
