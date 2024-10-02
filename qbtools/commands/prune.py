@@ -53,7 +53,7 @@ def __init__(app, logger):
     logger.info(f"Deleted {len(filtered_torrents)} torrents")
 
 
-def add_arguments(subparser):
+def add_arguments(command, subparser):
     """
     Description:
         Prune torrents that have matching tags. Pair this with the tagging command to tag torrents.
@@ -63,7 +63,7 @@ def add_arguments(subparser):
         # Delete torrents with the tag 'expired' and 'added:30d', however if the torrent also has the tags 'site:oink' or 'site:whatcd' exclude it from being deleted
         qbtools.py prune --include-tag expired --include-tag added:30d --exclude-tag site:oink --exclude-tag site:whatcd --dry-run
     """
-    parser = subparser.add_parser("prune")
+    parser = subparser.add_parser(command)
     parser.add_argument(
         "--include-tag",
         nargs="*",

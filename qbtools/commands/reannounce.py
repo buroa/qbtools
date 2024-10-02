@@ -70,14 +70,14 @@ def __init__(app, logger):
         time.sleep(interval)
 
 
-def add_arguments(subparser):
+def add_arguments(command, subparser):
     """
     Description:
         Reannounce torrents that have invalid trackers.
     Usage:
         qbtools.py reannounce --help
     """
-    parser = subparser.add_parser("reannounce")
+    parser = subparser.add_parser(command)
     parser.add_argument(
         "--process-seeding",
         action="store_true",

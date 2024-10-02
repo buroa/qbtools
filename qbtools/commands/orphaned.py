@@ -77,7 +77,7 @@ def __init__(app, logger):
     cleanup_dir(completed_dir, qbittorrent_items)
 
 
-def add_arguments(subparser):
+def add_arguments(command, subparser):
     """
     Description:
         Search for files on disk that are not in qBittorrent and delete them. Pair this with the prune command to delete torrents that are not in qBittorrent.
@@ -87,7 +87,7 @@ def add_arguments(subparser):
         # Delete all files in the completed directory that are not in qBittorrent and don't match the exclude patterns
         qbtools.py orphaned --exclude-pattern "*_unpackerred" --exclude-pattern "*/manual/*" --dry-run
     """
-    parser = subparser.add_parser("orphaned")
+    parser = subparser.add_parser(command)
     parser.add_argument(
         "--exclude-pattern",
         nargs="*",

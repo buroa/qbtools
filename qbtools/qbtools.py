@@ -59,7 +59,7 @@ def load_commands(subparsers):
     def load_command(command):
         try:
             mod = importlib.import_module(f"{directory}.{command}")
-            mod.add_arguments(subparsers)
+            mod.add_arguments(command, subparsers)
             subparser = subparsers.choices.get(command)
             if subparser:
                 add_default_args(subparser)

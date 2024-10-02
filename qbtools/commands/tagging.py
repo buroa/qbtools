@@ -221,7 +221,7 @@ def __init__(app, logger):
     )
 
 
-def add_arguments(subparser):
+def add_arguments(command, subparser):
     """
     Description:
         Tag torrents. This command can be used to tag torrents with various tags, such as torrents that have not been active for a while, torrents that have not been working for a while, torrents that have expired an ratio or seeding time, torrents that have the same content path, etc.
@@ -231,7 +231,7 @@ def add_arguments(subparser):
         # Tag torrents
         qbtools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
-    parser = subparser.add_parser("tagging")
+    parser = subparser.add_parser(command)
     parser.add_argument(
         "--exclude-category",
         nargs="*",
