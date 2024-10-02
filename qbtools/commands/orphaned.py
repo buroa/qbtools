@@ -4,18 +4,18 @@ import qbtools
 from fnmatch import fnmatch
 
 
-def __init__(args, logger):
+def __init__(app, logger):
     logger.info(f"Checking for orphaned files on disk not in qBittorrent...")
 
-    completed_dir = args.client.application.preferences.save_path
+    completed_dir = app.client.application.preferences.save_path
     categories = [
         os.path.join(completed_dir, category.savePath)
-        for (_, category) in args.client.torrent_categories.categories.items()
+        for (_, category) in app.client.torrent_categories.categories.items()
     ]
-    exclude_patterns = [i for s in args.exclude_pattern for i in s]
+    exclude_patterns = [i for s in app.exclude_pattern for i in s]
 
     def delete(item_path):
-        if args.dry_run:
+        if app.dry_run:
             logger.info(f"Skipping {item_path} because --dry-run was specified")
             return
 
@@ -64,7 +64,7 @@ def __init__(args, logger):
 
     # Gather list of all paths owned by qBittorrent
     qbittorrent_items = set()
-    for torrent in args.client.torrents.info():
+    for torrent in app.client.torrents.info():
         # arbitrary cut-off to prevent traversing excessively large torrents
         if len(torrent.files) > 100:
             qbittorrent_items.add(torrent.content_path)

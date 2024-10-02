@@ -3,7 +3,7 @@ import qbtools
 from qbittorrentapi import TrackerStatus
 
 
-def __init__(args, logger):
+def __init__(app, logger):
     logger.info("Starting reannounce process...")
 
     max_tries = 18
@@ -12,7 +12,7 @@ def __init__(args, logger):
     retries = {}
 
     def process_torrents(status):
-        torrents = args.client.torrents.info(status_filter=status, sort="time_active")
+        torrents = app.client.torrents.info(status_filter=status, sort="time_active")
         torrents_retries = retries.get(status, {})
 
         if torrents:
@@ -45,7 +45,7 @@ def __init__(args, logger):
     while True:
         try:
             process_torrents(status="stalled_downloading")
-            if args.process_seeding:
+            if app.process_seeding:
                 process_torrents(status="stalled_uploading")
         except Exception as e:
             logger.error(e)

@@ -2,16 +2,16 @@ import qbtools
 from fnmatch import fnmatch
 
 
-def __init__(args, logger):
-    categories = list(args.client.torrent_categories.categories.keys())
+def __init__(app, logger):
+    categories = list(app.client.torrent_categories.categories.keys())
 
-    if args.include_category:
-        includes = [i for s in args.include_category for i in s]
+    if app.include_category:
+        includes = [i for s in app.include_category for i in s]
         categories = list(
             filter(lambda c: any(fnmatch(c, p) for p in includes), categories)
         )
-    if args.exclude_category:
-        excludes = [i for s in args.exclude_category for i in s]
+    if app.exclude_category:
+        excludes = [i for s in app.exclude_category for i in s]
         categories = list(
             filter(lambda c: not any(fnmatch(c, p) for p in excludes), categories)
         )
@@ -21,17 +21,17 @@ def __init__(args, logger):
             f"No torrents can be pruned since no categories were included based on selectors"
         )
 
-    filtered_torrents = args.client.torrents.info()
+    filtered_torrents = app.client.torrents.info()
     filtered_torrents = list(
         filter(lambda x: x.category in categories, filtered_torrents)
     )
 
-    include_tags = [i for s in args.include_tag for i in s]
+    include_tags = [i for s in app.include_tag for i in s]
     if include_tags:
         filtered_torrents = list(
             filter(lambda x: all(y in x.tags for y in include_tags), filtered_torrents)
         )
-    exclude_tags = [i for s in args.exclude_tag for i in s]
+    exclude_tags = [i for s in app.exclude_tag for i in s]
     if exclude_tags:
         filtered_torrents = list(
             filter(
@@ -47,8 +47,8 @@ def __init__(args, logger):
         logger.info(
             f"Pruned torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{qbtools.utils.dhms(t['seeding_time'])}]"
         )
-        if not args.dry_run:
-            t.delete(delete_files=args.with_data)
+        if not app.dry_run:
+            t.delete(delete_files=app.with_data)
 
     logger.info(f"Deleted {len(filtered_torrents)} torrents")
 

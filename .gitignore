@@ -1,3 +1,6 @@
+.private/
+.task/
+.venv/
 dist
 build
 __pycache__
