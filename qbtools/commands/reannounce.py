@@ -1,4 +1,6 @@
 import time
+
+from qbtools import utils
 from qbittorrentapi import TrackerStatus
 
 
@@ -65,4 +67,3 @@ def add_arguments(subparser):
         action="store_true",
         help="Include seeding torrents for reannouncements.",
     )
-    return parser

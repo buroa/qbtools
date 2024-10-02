@@ -1,4 +1,4 @@
-import qbtools
+from qbtools import utils
 from fnmatch import fnmatch
 
 
@@ -45,7 +45,7 @@ def __init__(app, logger):
 
     for t in filtered_torrents:
         logger.info(
-            f"Pruned torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{qbtools.utils.dhms(t['seeding_time'])}]"
+            f"Pruned torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{utils.dhms(t['seeding_time'])}]"
         )
         if not app.dry_run:
             t.delete(delete_files=app.with_data)
@@ -114,4 +114,3 @@ def add_arguments(subparser):
         default=False,
         required=False,
     )
-    return parser

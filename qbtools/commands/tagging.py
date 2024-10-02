@@ -1,6 +1,7 @@
-import qbtools
 import tldextract
 import collections
+
+from qbtools import utils
 from datetime import datetime
 from qbittorrentapi import TrackerStatus
 
@@ -88,7 +89,7 @@ def __init__(app, logger):
         domain = extractTLD(
             sorted(filtered_trackers, key=lambda x: x.url)[0].url
         ).registered_domain
-        tracker = qbtools.utils.filter_tracker_by_domain(domain, trackers)
+        tracker = utils.filter_tracker_by_domain(domain, trackers)
 
         if app.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
@@ -149,7 +150,7 @@ def __init__(app, logger):
                 tags_to_add.append("expired")
             elif tracker[
                 "required_seed_days"
-            ] != 0 and t.seeding_time >= qbtools.utils.seconds(
+            ] != 0 and t.seeding_time >= utils.seconds(
                 tracker["required_seed_days"]
             ):
                 tags_to_add.append("expired")
@@ -168,7 +169,7 @@ def __init__(app, logger):
 
             content_paths.append((t.hash, t.content_path, t.size))
 
-        if app.not_linked and not qbtools.utils.is_linked(t.content_path):
+        if app.not_linked and not utils.is_linked(t.content_path):
             tags_to_add.append("not-linked")
 
         for tag in tags_to_add:
@@ -206,7 +207,7 @@ def __init__(app, logger):
     # Apply tags
     for tag in tag_hashes:
         if app.size:
-            size = qbtools.utils.format_bytes(tag_sizes[tag])
+            size = utils.format_bytes(tag_sizes[tag])
             app.client.torrents_add_tags(
                 tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag]
             )
@@ -228,6 +229,7 @@ def add_arguments(subparser):
         # Tag torrents
         qbtools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
+    print(__name__)
     parser = subparser.add_parser("tagging")
     parser.add_argument(
         "--exclude-category",
@@ -298,4 +300,3 @@ def add_arguments(subparser):
         action="store_true",
         help="Tag torrents with unregistered tracker status message",
     )
-    return parser

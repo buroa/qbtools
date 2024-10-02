@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import utils
 import importlib
 import qbittorrentapi
 import argparse
@@ -38,20 +39,23 @@ def add_default_args(parser):
 
 
 def load_commands(subparsers):
-    for cmd in os.listdir(f"{os.path.dirname(__file__)}/commands"):
-        if cmd.startswith("__") or not cmd.endswith(".py"):
-            continue
-
-        name = cmd[:-3]
+    def load_command(name):
         try:
             mod = importlib.import_module(f"commands.{name}")
-            parser = mod.add_arguments(subparsers)
-            add_default_args(parser)
+            mod.add_arguments(subparsers)
+            subparser = subparsers.choices.get(name)
+            if subparser:
+                add_default_args(subparser)
         except ImportError:
             logger.error(f"Error loading module: {name}", exc_info=True)
             sys.exit(1)
         else:
             globals()[name] = mod
+
+    for cmd in os.listdir(f"{os.path.dirname(__file__)}/commands"):
+        if cmd.startswith("__") or not cmd.endswith(".py"):
+            continue
+        load_command(cmd[:-3])
 
 
 def qbit_client(app):

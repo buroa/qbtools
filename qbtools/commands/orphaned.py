@@ -1,5 +1,6 @@
 import os
 import shutil
+
 from fnmatch import fnmatch
 
 
@@ -103,4 +104,3 @@ def add_arguments(subparser):
         default=False,
         required=False,
     )
-    return parser
