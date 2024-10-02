@@ -19,11 +19,13 @@ def add_default_args(parser):
     )
     parser.add_argument(
         "-s", "--server",
-        help="qBittorrent server address"
+        help="qBittorrent server address",
+        required=True
     )
     parser.add_argument(
         "-p", "--port",
-        help="qBittorrent server port"
+        help="qBittorrent server port",
+        required=True
     )
     parser.add_argument(
         "-U", "--username",
@@ -43,7 +45,8 @@ def load_commands(subparsers):
         name = cmd[:-3]
         try:
             mod = importlib.import_module(f"commands.{name}")
-            mod.add_arguments(subparsers)
+            parser = mod.add_arguments(subparsers)
+            add_default_args(parser)
         except ImportError:
             logger.error(f"Error loading module: {name}", exc_info=True)
             sys.exit(1)
@@ -52,10 +55,6 @@ def load_commands(subparsers):
 
 
 def qbit_client(app):
-    if not app.server or not app.port:
-        logger.error("Server and port must be specified")
-        sys.exit(1)
-
     client = qbittorrentapi.Client(
         host=f"{app.server}:{app.port}",
         username=app.username,
@@ -98,7 +97,6 @@ def main():
     )
 
     parser = argparse.ArgumentParser(description="qBittorrent API Client")
-    add_default_args(parser)
     subparsers = parser.add_subparsers(dest="command")
     load_commands(subparsers) # Load all commands
 

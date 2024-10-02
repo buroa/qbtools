@@ -298,4 +298,4 @@ def add_arguments(subparser):
         action="store_true",
         help="Tag torrents with unregistered tracker status message",
     )
-    qbtools.add_default_args(parser)
+    return parser
