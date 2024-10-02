@@ -1,6 +1,5 @@
 import os
 import shutil
-import qbtools
 from fnmatch import fnmatch
 
 
@@ -104,4 +103,4 @@ def add_arguments(subparser):
         default=False,
         required=False,
     )
-    qbtools.add_default_args(parser)
+    return parser
