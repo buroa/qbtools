@@ -46,11 +46,11 @@ def qbit_client(args):
 def get_config(args, key=None, default=None):
     config = {}
 
-    with open(args.config, "r") as stream:
-        try:
+    try:
+        with open(args.config, "r") as stream:
             config = yaml.safe_load(stream)
-        except yaml.YAMLError as e:
-            logger.error(e)
+    except Exception as e:
+        logger.debug(e) # ignore error
 
     if key:
         config = config.get(key, default)
