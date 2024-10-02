@@ -1,7 +1,6 @@
 import qbtools
 import tldextract
 import collections
-
 from datetime import datetime
 from qbittorrentapi import TrackerStatus
 
@@ -52,15 +51,14 @@ MAINTENANCE_MATCHES = [
 def __init__(args, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
 
-    client = qbtools.qbit_client(args)
-    trackers = qbtools.get_config(args, "trackers", [])
-
     extractTLD = tldextract.TLDExtract(cache_dir=None)
     today = datetime.today()
     tag_hashes = collections.defaultdict(list)
     tag_sizes = collections.defaultdict(int)
     content_paths = []
-    filtered_torrents = client.torrents.info()
+
+    filtered_torrents = args.client.torrents.info()
+    trackers = args.config.get("trackers", [])
 
     exclude_categories = [i for s in args.exclude_category for i in s]
     if exclude_categories:
@@ -182,23 +180,23 @@ def __init__(args, logger):
     default_tags = list(
         filter(
             lambda tag: any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
-            client.torrents_tags(),
+            args.client.torrents_tags(),
         )
     )
     if default_tags:
         hashes = list(map(lambda t: t.hash, filtered_torrents))
-        client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
+        args.client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
         empty_tags = list(
             filter(
                 lambda tag: len(
-                    list(filter(lambda t: tag in t.tags, client.torrents.info()))
+                    list(filter(lambda t: tag in t.tags, args.client.torrents.info()))
                 )
                 == 0,
                 default_tags,
             )
         )
         logger.info(f"Removing {len(empty_tags)} old tags from qBittorrent...")
-        client.torrents_delete_tags(tags=empty_tags)
+        args.client.torrents_delete_tags(tags=empty_tags)
         logger.info(f"Done removing {len(empty_tags)} old tags from qBittorrent")
 
     unique_hashes = set()
@@ -209,16 +207,15 @@ def __init__(args, logger):
     for tag in tag_hashes:
         if args.size:
             size = qbtools.utils.format_bytes(tag_sizes[tag])
-            client.torrents_add_tags(
+            args.client.torrents_add_tags(
                 tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag]
             )
         else:
-            client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
+            args.client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
 
     logger.info(
         f"Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags"
     )
-    client.auth_log_out()
 
 
 def add_arguments(subparser):

@@ -4,7 +4,7 @@ from qbittorrentapi import TrackerStatus
 
 
 def __init__(args, logger):
-    client = qbtools.qbit_client(args)
+    logger.info("Starting reannounce process...")
 
     max_tries = 18
     max_age = 3600
@@ -12,7 +12,7 @@ def __init__(args, logger):
     retries = {}
 
     def process_torrents(status):
-        torrents = client.torrents.info(status_filter=status, sort="time_active")
+        torrents = args.client.torrents.info(status_filter=status, sort="time_active")
         torrents_retries = retries.get(status, {})
 
         if torrents:
@@ -41,8 +41,6 @@ def __init__(args, logger):
             logger.info("Reannounced torrent %s (%s) %s/%s", t.name, t.hash, torrent_retries, max_tries)
 
         retries[status] = torrents_retries
-
-    logger.info("Starting reannounce process...")
 
     while True:
         try:

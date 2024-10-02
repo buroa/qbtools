@@ -3,9 +3,8 @@ from fnmatch import fnmatch
 
 
 def __init__(args, logger):
-    client = qbtools.qbit_client(args)
+    categories = list(args.client.torrent_categories.categories.keys())
 
-    categories = list(client.torrent_categories.categories.keys())
     if args.include_category:
         includes = [i for s in args.include_category for i in s]
         categories = list(
@@ -22,7 +21,7 @@ def __init__(args, logger):
             f"No torrents can be pruned since no categories were included based on selectors"
         )
 
-    filtered_torrents = client.torrents.info()
+    filtered_torrents = args.client.torrents.info()
     filtered_torrents = list(
         filter(lambda x: x.category in categories, filtered_torrents)
     )
@@ -52,7 +51,6 @@ def __init__(args, logger):
             t.delete(delete_files=args.with_data)
 
     logger.info(f"Deleted {len(filtered_torrents)} torrents")
-    client.auth_log_out()
 
 
 def add_arguments(subparser):
