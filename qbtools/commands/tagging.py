@@ -29,8 +29,8 @@ UNREGISTERED_MATCHES = [
     "TRUMP",
     "RETITLED",
     "TRUNCATED",
-    "INFOHASH NOT FOUND", # blutopia
-    "TORRENT HAS BEEN DELETED", # blutopia
+    "INFOHASH NOT FOUND",  # blutopia
+    "TORRENT HAS BEEN DELETED",  # blutopia
     "DEAD",
     "DUPE",
     "COMPLETE SEASON UPLOADED",
@@ -135,9 +135,13 @@ def __init__(app, logger):
         if app.unregistered or app.tracker_down or app.not_working:
             if not any(s.status == TrackerStatus.WORKING for s in filtered_trackers):
                 tracker_messages = [z.msg.upper() for z in filtered_trackers]
-                if app.unregistered and any(x in msg for msg in tracker_messages for x in UNREGISTERED_MATCHES):
+                if app.unregistered and any(
+                    x in msg for msg in tracker_messages for x in UNREGISTERED_MATCHES
+                ):
                     tags_to_add.append("unregistered")
-                elif app.tracker_down and any(x in msg for msg in tracker_messages for x in MAINTENANCE_MATCHES):
+                elif app.tracker_down and any(
+                    x in msg for msg in tracker_messages for x in MAINTENANCE_MATCHES
+                ):
                     tags_to_add.append("tracker-down")
                 elif app.not_working:
                     tags_to_add.append("not-working")
@@ -148,9 +152,7 @@ def __init__(app, logger):
                 and t.ratio >= tracker["required_seed_ratio"]
             ):
                 tags_to_add.append("expired")
-            elif tracker[
-                "required_seed_days"
-            ] != 0 and t.seeding_time >= utils.seconds(
+            elif tracker["required_seed_days"] != 0 and t.seeding_time >= utils.seconds(
                 tracker["required_seed_days"]
             ):
                 tags_to_add.append("expired")
@@ -229,7 +231,6 @@ def add_arguments(subparser):
         # Tag torrents
         qbtools.py tagging --exclude-category manual --added-on --expired --last-activity --sites --unregistered
     """
-    print(__name__)
     parser = subparser.add_parser("tagging")
     parser.add_argument(
         "--exclude-category",
