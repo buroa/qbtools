@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import argparse, logging, yaml, sys
+import os
+import importlib
 import qbittorrentapi
-import utils
-
-import commands.orphaned, commands.prune, commands.reannounce, commands.tagging
+import argparse, logging, yaml, sys
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +70,12 @@ def main():
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
 
-    for cmd in ["orphaned", "prune", "reannounce", "tagging"]:
-        mod = getattr(globals()["commands"], cmd)
-        getattr(mod, "add_arguments")(subparsers)
+    for cmd in os.listdir("commands"):
+        if cmd.endswith(".py"):
+            name = cmd[:-3]
+            mod = importlib.import_module(f"commands.{name}")
+            mod.add_arguments(subparsers)
+            globals()[name] = mod
 
     args = parser.parse_args()
 
@@ -81,8 +83,13 @@ def main():
         parser.print_help()
         sys.exit()
 
-    mod = getattr(globals()["commands"], args.command)
-    cmd = getattr(mod, "__init__")(args, logger)
+    args.client = qbit_client(args)
+    args.config = get_config(args)
+
+    mod = globals().get(args.command)
+    mod.__init__(args, logger)
+
+    args.client.auth_log_out()
 
 
 if __name__ == "__main__":

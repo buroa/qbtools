@@ -7,12 +7,10 @@ from fnmatch import fnmatch
 def __init__(args, logger):
     logger.info(f"Checking for orphaned files on disk not in qBittorrent...")
 
-    client = qbtools.qbit_client(args)
-
-    completed_dir = client.application.preferences.save_path
+    completed_dir = args.client.application.preferences.save_path
     categories = [
         os.path.join(completed_dir, category.savePath)
-        for (_, category) in client.torrent_categories.categories.items()
+        for (_, category) in args.client.torrent_categories.categories.items()
     ]
     exclude_patterns = [i for s in args.exclude_pattern for i in s]
 
@@ -66,7 +64,7 @@ def __init__(args, logger):
 
     # Gather list of all paths owned by qBittorrent
     qbittorrent_items = set()
-    for torrent in client.torrents.info():
+    for torrent in args.client.torrents.info():
         # arbitrary cut-off to prevent traversing excessively large torrents
         if len(torrent.files) > 100:
             qbittorrent_items.add(torrent.content_path)
@@ -77,7 +75,6 @@ def __init__(args, logger):
 
     # Delete orphaned files on disk not owned by qBittorrent
     cleanup_dir(completed_dir, qbittorrent_items)
-    client.auth_log_out()
 
 
 def add_arguments(subparser):
