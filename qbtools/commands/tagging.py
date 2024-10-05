@@ -179,6 +179,9 @@ def __init__(app, logger):
             if app.size:
                 tag_sizes[tag] += t.size
 
+    # TODO: Seeing how long it took
+    logger.info(f"Found {len(tag_hashes)} tags to apply to torrents in qBittorrent")
+
     # Remove old tags
     default_tags = list(
         filter(
