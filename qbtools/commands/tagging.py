@@ -227,12 +227,12 @@ def add_arguments(command, subparser):
     parser.add_argument(
         "--expired",
         action="store_true",
-        help="Tag torrents that have expired an ratio or seeding time, use with filtering by category/tag",
+        help="Tag torrents that have an expired ratio or seeding time (defined in config.yaml)",
     )
     parser.add_argument(
         "--last-activity",
         action="store_true",
-        help="Tag torrents with last activity date (last 24h, 7 days, 30 days, etc)",
+        help="Tag torrents with last activity date (last 1d, 7 days, 30 days, etc)",
     )
     parser.add_argument(
         "--not-linked",
@@ -245,7 +245,7 @@ def add_arguments(command, subparser):
         help="Tag torrents with not working tracker status",
     )
     parser.add_argument(
-        "--sites", action="store_true", help="Tag torrents with site names defined in config.yaml"
+        "--sites", action="store_true", help="Tag torrents with site names (defined in config.yaml)"
     )
     parser.add_argument(
         "--tracker-down",
