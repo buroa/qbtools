@@ -245,7 +245,7 @@ def add_arguments(command, subparser):
         help="Tag torrents with not working tracker status",
     )
     parser.add_argument(
-        "--sites", action="store_true", help="Tag torrents with known site names"
+        "--sites", action="store_true", help="Tag torrents with site names (tracker URL from config.yaml)"
     )
     parser.add_argument(
         "--tracker-down",
