@@ -14,7 +14,6 @@ DEFAULT_TAGS = [
     "not-working",
     "unregistered",
     "tracker-down",
-    "domain:",
     "site:",
 ]
 
@@ -89,8 +88,7 @@ def __init__(app, logger):
                 continue
             url = filtered[0].url
 
-        domain = extractTLD(url).registered_domain
-        tracker = trackers.get(domain)
+        tracker = trackers.get(extractTLD(url).registered_domain)
 
         if app.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
@@ -127,9 +125,6 @@ def __init__(app, logger):
                 tags_to_add.append(f"site:{tracker['name']}")
             else:
                 tags_to_add.append(f"site:unmapped")
-
-        if app.domains:
-            tags_to_add.append(f"domain:{domain}")
 
         if (app.unregistered or app.tracker_down or app.not_working) and filtered:
             tracker_messages = [z.msg.upper() for z in filtered]
@@ -223,9 +218,6 @@ def add_arguments(command, subparser):
         "--added-on",
         action="store_true",
         help="Tag torrents with added date (last 24h, 7 days, 30 days, etc)",
-    )
-    parser.add_argument(
-        "--domains", action="store_true", help="Tag torrents with tracker domains"
     )
     parser.add_argument(
         "--duplicates",
