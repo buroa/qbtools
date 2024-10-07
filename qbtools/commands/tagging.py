@@ -102,7 +102,7 @@ def __init__(app, logger):
             diff = today - added_on
 
             if diff.days == 0:
-                tags_to_add.append("added:24h")
+                tags_to_add.append("added:1d")
             elif diff.days <= 7:
                 tags_to_add.append("added:7d")
             elif diff.days <= 30:
@@ -116,10 +116,8 @@ def __init__(app, logger):
             last_activity = datetime.fromtimestamp(t.last_activity)
             diff = datetime.today() - last_activity
 
-            if t.last_activity == -1:
-                tags_to_add.append("activity:never")
-            elif diff.days == 0:
-                tags_to_add.append("activity:24h")
+            if diff.days == 0:
+                tags_to_add.append("activity:1d")
             elif diff.days <= 7:
                 tags_to_add.append("activity:7d")
             elif diff.days <= 30:
