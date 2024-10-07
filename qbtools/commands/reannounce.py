@@ -1,8 +1,5 @@
 import time
 
-from qbtools import utils
-from qbittorrentapi import TrackerStatus
-
 
 def __init__(app, logger):
     logger.info("Starting reannounce process...")
@@ -23,8 +20,7 @@ def __init__(app, logger):
             torrents_retries.clear()
 
         for t in torrents:
-            working = any([s.status == TrackerStatus.WORKING for s in t.trackers])
-            if working:
+            if t.tracker:
                 continue
 
             peers = t.num_seeds + t.num_leechs
