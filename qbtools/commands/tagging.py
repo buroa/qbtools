@@ -3,7 +3,6 @@ import collections
 
 from qbtools import utils
 from datetime import datetime
-from qbittorrentapi import TrackerStatus
 
 
 DEFAULT_TAGS = [
@@ -51,13 +50,11 @@ MAINTENANCE_MATCHES = [
 def __init__(app, logger):
     logger.info(f"Tagging torrents in qBittorrent...")
 
-    extractTLD = tldextract.TLDExtract(cache_dir=None)
-    today = datetime.today()
-    tag_hashes = collections.defaultdict(list)
-    tag_sizes = collections.defaultdict(int)
+    tags = collections.defaultdict(list)
     content_paths = []
 
-    torrents = app.client.torrents.info()
+    today = datetime.today()
+    extractTLD = tldextract.TLDExtract(cache_dir=None)
 
     trackers = app.config.get("trackers", [])
     trackers = {y: x for x in trackers for y in x["urls"]}
@@ -79,22 +76,20 @@ def __init__(app, logger):
             )
         )
 
-    # Gather items to tag in qBittorrent
+    torrents = app.client.torrents.info()
+
     for t in torrents:
         tags_to_add = []
+        filtered = []
 
-        filtered_trackers = (
-            list(filter(lambda s: not s.tier == -1, t.trackers))
-            if t.properties.is_private
-            else t.trackers
-        )
+        url = t.tracker
+        if not url:
+            filtered = [s for s in t.trackers if s.tier >= 0] # Expensive
+            if not filtered:
+                continue
+            url = filtered[0].url
 
-        if not filtered_trackers:
-            continue
-        else:
-            filtered_trackers = sorted(filtered_trackers, key=lambda x: x.url)
-
-        domain = extractTLD(filtered_trackers[0].url).registered_domain
+        domain = extractTLD(url).registered_domain
         tracker = trackers.get(domain)
 
         if app.added_on:
@@ -136,19 +131,18 @@ def __init__(app, logger):
         if app.domains:
             tags_to_add.append(f"domain:{domain}")
 
-        if app.unregistered or app.tracker_down or app.not_working:
-            if not any(s.status == TrackerStatus.WORKING for s in filtered_trackers):
-                tracker_messages = [z.msg.upper() for z in filtered_trackers]
-                if app.unregistered and any(
-                    x in msg for msg in tracker_messages for x in unregistered_matches
-                ):
-                    tags_to_add.append("unregistered")
-                elif app.tracker_down and any(
-                    x in msg for msg in tracker_messages for x in maintenance_matches
-                ):
-                    tags_to_add.append("tracker-down")
-                elif app.not_working:
-                    tags_to_add.append("not-working")
+        if (app.unregistered or app.tracker_down or app.not_working) and filtered:
+            tracker_messages = [z.msg.upper() for z in filtered]
+            if app.unregistered and any(
+                x in msg for msg in tracker_messages for x in unregistered_matches
+            ):
+                tags_to_add.append("unregistered")
+            elif app.tracker_down and any(
+                x in msg for msg in tracker_messages for x in maintenance_matches
+            ):
+                tags_to_add.append("tracker-down")
+            elif app.not_working:
+                tags_to_add.append("not-working")
 
         if app.expired and tracker and t.state_enum.is_complete:
             if (
@@ -162,66 +156,38 @@ def __init__(app, logger):
                 tags_to_add.append("expired")
 
         if app.duplicates:
-            match = [
-                (infohash, path, size)
-                for infohash, path, size in content_paths
-                if path == t.content_path and not t.content_path == t.save_path
-            ]
-            if match:
+            if t.content_path in content_paths and not t.content_path == t.save_path:
                 tags_to_add.append("dupe")
-                tag_hashes["dupe"].append(match[0][0])
-                if app.size:
-                    tag_sizes["dupe"] += match[0][2]
-
-            content_paths.append((t.hash, t.content_path, t.size))
+            content_paths.append(t.content_path)
 
         if app.not_linked and not utils.is_linked(t.content_path):
             tags_to_add.append("not-linked")
 
         for tag in tags_to_add:
-            tag_hashes[tag].append(t.hash)
-            if app.size:
-                tag_sizes[tag] += t.size
+            tags[tag].append(t)
 
-    # Remove old tags
-    default_tags = list(
+    empty_tags = list(
         filter(
-            lambda tag: any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
-            app.client.torrents_tags(),
+            lambda tag: tag not in tags and any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
+            app.client.torrents_tags()
         )
     )
-    if default_tags:
-        hashes = list(map(lambda t: t.hash, torrents))
-        app.client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
-        empty_tags = list(
-            filter(
-                lambda tag: len(
-                    list(filter(lambda t: tag in t.tags, app.client.torrents.info()))
-                )
-                == 0,
-                default_tags,
-            )
-        )
+    if empty_tags:
         app.client.torrents_delete_tags(tags=empty_tags)
         logger.info(f"Removed {len(empty_tags)} old tags from qBittorrent")
 
-    unique_hashes = set()
-    for hash_list in tag_hashes.values():
-        unique_hashes.update(hash_list)
+    for tag, tagged in tags.items():
+        old_torrents = [t.hash for t in torrents if tag in t.tags and not t in tagged]
+        if old_torrents:
+            app.client.torrents_remove_tags(tags=tag, torrent_hashes=old_torrents)
+            logger.info(f"Untagged {len(old_torrents)} old torrents with tag: {tag}")
 
-    # Apply tags
-    for tag in tag_hashes:
-        if app.size:
-            size = utils.format_bytes(tag_sizes[tag])
-            app.client.torrents_add_tags(
-                tags=f"{tag} [{size}]", torrent_hashes=tag_hashes[tag]
-            )
-        else:
-            app.client.torrents_add_tags(tags=tag, torrent_hashes=tag_hashes[tag])
+        new_torrents = [t.hash for t in tagged if not tag in t.tags]
+        if new_torrents:
+            app.client.torrents_add_tags(tags=tag, torrent_hashes=new_torrents)
+            logger.info(f"Tagged {len(new_torrents)} new torrents with tag: {tag}")
 
-    logger.info(
-        f"Completed tagging {len(unique_hashes)} torrents with {len(tag_hashes)} tags"
-    )
+    logger.info("Finished tagging torrents in qBittorrent")
 
 
 def add_arguments(command, subparser):
@@ -288,11 +254,6 @@ def add_arguments(command, subparser):
     )
     parser.add_argument(
         "--sites", action="store_true", help="Tag torrents with known site names"
-    )
-    parser.add_argument(
-        "--size",
-        action="store_true",
-        help="Add size of tagged torrents to created tags",
     )
     parser.add_argument(
         "--tracker-down",
