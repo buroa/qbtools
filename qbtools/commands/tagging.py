@@ -28,7 +28,6 @@ UNREGISTERED_MATCHES = [
     "UNKNOWN TORRENT",
     "TRUMP",
     "RETITLED",
-    "TRUNCATED",
     "INFOHASH NOT FOUND",  # blutopia
     "TORRENT HAS BEEN DELETED",  # blutopia
     "DEAD",
@@ -59,7 +58,10 @@ def __init__(app, logger):
     content_paths = []
 
     filtered_torrents = app.client.torrents.info()
+
     trackers = app.config.get("trackers", [])
+    unregistered_matches = app.config.get("unregistered_matches", UNREGISTERED_MATCHES)
+    maintenance_matches = app.config.get("maintenance_matches", MAINTENANCE_MATCHES)
 
     exclude_categories = [i for s in app.exclude_category for i in s]
     if exclude_categories:
@@ -136,11 +138,11 @@ def __init__(app, logger):
             if not any(s.status == TrackerStatus.WORKING for s in filtered_trackers):
                 tracker_messages = [z.msg.upper() for z in filtered_trackers]
                 if app.unregistered and any(
-                    x in msg for msg in tracker_messages for x in UNREGISTERED_MATCHES
+                    x in msg for msg in tracker_messages for x in unregistered_matches
                 ):
                     tags_to_add.append("unregistered")
                 elif app.tracker_down and any(
-                    x in msg for msg in tracker_messages for x in MAINTENANCE_MATCHES
+                    x in msg for msg in tracker_messages for x in maintenance_matches
                 ):
                     tags_to_add.append("tracker-down")
                 elif app.not_working:
