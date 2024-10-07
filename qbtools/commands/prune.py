@@ -10,6 +10,7 @@ def __init__(app, logger):
         categories = list(
             filter(lambda c: any(fnmatch(c, p) for p in includes), categories)
         )
+
     if app.exclude_category:
         excludes = [i for s in app.exclude_category for i in s]
         categories = list(
@@ -21,21 +22,21 @@ def __init__(app, logger):
             f"No torrents can be pruned since no categories were included based on selectors"
         )
 
-    filtered_torrents = app.client.torrents.info()
-    filtered_torrents = list(
-        filter(lambda x: x.category in categories, filtered_torrents)
+    torrents = app.client.torrents.info()
+    torrents = list(
+        filter(lambda x: x.category in categories, torrents)
     )
 
     include_tags = [i for s in app.include_tag for i in s]
     if include_tags:
-        filtered_torrents = list(
-            filter(lambda x: all(y in x.tags for y in include_tags), filtered_torrents)
+        torrents = list(
+            filter(lambda x: all(y in x.tags for y in include_tags), torrents)
         )
     exclude_tags = [i for s in app.exclude_tag for i in s]
     if exclude_tags:
-        filtered_torrents = list(
+        torrents = list(
             filter(
-                lambda x: not any(y in x.tags for y in exclude_tags), filtered_torrents
+                lambda x: not any(y in x.tags for y in exclude_tags), torrents
             )
         )
 
@@ -43,14 +44,14 @@ def __init__(app, logger):
         f"Pruning torrents with tags [{' AND '.join(include_tags)}] but does not contain tags [{' OR '.join(exclude_tags)}]..."
     )
 
-    for t in filtered_torrents:
+    for t in torrents:
         logger.info(
             f"Pruned torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{utils.dhms(t['seeding_time'])}]"
         )
         if not app.dry_run:
             t.delete(delete_files=app.with_data)
 
-    logger.info(f"Deleted {len(filtered_torrents)} torrents")
+    logger.info(f"Deleted {len(torrents)} torrents")
 
 
 def add_arguments(command, subparser):

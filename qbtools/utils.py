@@ -13,12 +13,6 @@ def format_bytes(size):
     return f"{formatted} {power_labels[n]}"
 
 
-def filter_tracker_by_domain(domain, trackers=[]):
-    for tracker in trackers:
-        if any(domain in url for url in tracker["urls"]):
-            return tracker
-
-
 def seconds(days: int) -> int:
     seconds_in_a_day = 86400
     seconds = days * seconds_in_a_day
