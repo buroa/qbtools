@@ -57,28 +57,30 @@ def __init__(app, logger):
     tag_sizes = collections.defaultdict(int)
     content_paths = []
 
-    filtered_torrents = app.client.torrents.info()
+    torrents = app.client.torrents.info()
 
     trackers = app.config.get("trackers", [])
+    trackers = {y: x for x in trackers for y in x["urls"]}
+
     unregistered_matches = app.config.get("unregistered_matches", UNREGISTERED_MATCHES)
     maintenance_matches = app.config.get("maintenance_matches", MAINTENANCE_MATCHES)
 
     exclude_categories = [i for s in app.exclude_category for i in s]
     if exclude_categories:
-        filtered_torrents = list(
-            filter(lambda x: x.category not in exclude_categories, filtered_torrents)
+        torrents = list(
+            filter(lambda x: x.category not in exclude_categories, torrents)
         )
 
     exclude_tags = [i for s in app.exclude_tag for i in s]
     if exclude_tags:
-        filtered_torrents = list(
+        torrents = list(
             filter(
-                lambda x: any(y not in x.tags for y in exclude_tags), filtered_torrents
+                lambda x: any(y not in x.tags for y in exclude_tags), torrents
             )
         )
 
     # Gather items to tag in qBittorrent
-    for t in filtered_torrents:
+    for t in torrents:
         tags_to_add = []
 
         filtered_trackers = (
@@ -86,12 +88,14 @@ def __init__(app, logger):
             if t.properties.is_private
             else t.trackers
         )
+
         if not filtered_trackers:
             continue
-        domain = extractTLD(
-            sorted(filtered_trackers, key=lambda x: x.url)[0].url
-        ).registered_domain
-        tracker = utils.filter_tracker_by_domain(domain, trackers)
+        else:
+            filtered_trackers = sorted(filtered_trackers, key=lambda x: x.url)
+
+        domain = extractTLD(filtered_trackers[0].url).registered_domain
+        tracker = trackers.get(domain)
 
         if app.added_on:
             added_on = datetime.fromtimestamp(t.added_on)
@@ -189,7 +193,7 @@ def __init__(app, logger):
         )
     )
     if default_tags:
-        hashes = list(map(lambda t: t.hash, filtered_torrents))
+        hashes = list(map(lambda t: t.hash, torrents))
         app.client.torrents_remove_tags(tags=default_tags, torrent_hashes=hashes)
         empty_tags = list(
             filter(
@@ -200,9 +204,8 @@ def __init__(app, logger):
                 default_tags,
             )
         )
-        logger.info(f"Removing {len(empty_tags)} old tags from qBittorrent...")
         app.client.torrents_delete_tags(tags=empty_tags)
-        logger.info(f"Done removing {len(empty_tags)} old tags from qBittorrent")
+        logger.info(f"Removed {len(empty_tags)} old tags from qBittorrent")
 
     unique_hashes = set()
     for hash_list in tag_hashes.values():

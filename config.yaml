@@ -8,5 +8,5 @@ trackers: {}
 #     - bgp.technology
 #     - empirehost.me
 #     - stackoverflow.tech
-#     required_seed_ratio: 1.05
+#    required_seed_ratio: 1.05
 #    required_seed_days: 14.5
