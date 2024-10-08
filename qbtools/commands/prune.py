@@ -19,34 +19,34 @@ def __init__(app, logger):
 
     if not categories:
         logger.info(
-            f"No torrents can be pruned since no categories were included based on selectors"
+            "No torrents can be pruned since no categories were included based on selectors"
         )
 
     torrents = app.client.torrents.info()
-    torrents = list(
-        filter(lambda x: x.category in categories, torrents)
-    )
+    torrents = list(filter(lambda x: x.category in categories, torrents))
 
     include_tags = [i for s in app.include_tag for i in s]
     if include_tags:
         torrents = list(
             filter(lambda x: all(y in x.tags for y in include_tags), torrents)
         )
+
     exclude_tags = [i for s in app.exclude_tag for i in s]
     if exclude_tags:
         torrents = list(
-            filter(
-                lambda x: not any(y in x.tags for y in exclude_tags), torrents
-            )
+            filter(lambda x: not any(y in x.tags for y in exclude_tags), torrents)
         )
 
     logger.info(
-        f"Pruning torrents with tags [{' AND '.join(include_tags)}] but does not contain tags [{' OR '.join(exclude_tags)}]..."
+        f"Pruning torrents with tags [{' AND '.join(include_tags)}] "
+        f"but does not contain tags [{' OR '.join(exclude_tags)}]..."
     )
 
     for t in torrents:
         logger.info(
-            f"Pruned torrent {t['name']} with category [{t.category}] and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] and seeding time [{utils.dhms(t['seeding_time'])}]"
+            f"Pruned torrent {t['name']} with category [{t.category}] "
+            f"and tags [{t.tags}] and ratio [{round(t['ratio'], 2)}] "
+            f"and seeding time [{utils.dhms(t['seeding_time'])}]"
         )
         if not app.dry_run:
             t.delete(delete_files=app.with_data)

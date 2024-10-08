@@ -47,19 +47,12 @@ MAINTENANCE_MATCHES = [
 
 
 def __init__(app, logger):
-    logger.info(f"Tagging torrents in qBittorrent...")
-
-    tags = collections.defaultdict(list)
-    content_paths = []
+    logger.info("Tagging torrents in qBittorrent...")
 
     today = datetime.today()
-    extractTLD = tldextract.TLDExtract(cache_dir=None)
-
+    torrents = app.client.torrents.info()
     trackers = app.config.get("trackers", [])
     trackers = {y: x for x in trackers for y in x["urls"]}
-
-    unregistered_matches = app.config.get("unregistered_matches", UNREGISTERED_MATCHES)
-    maintenance_matches = app.config.get("maintenance_matches", MAINTENANCE_MATCHES)
 
     exclude_categories = [i for s in app.exclude_category for i in s]
     if exclude_categories:
@@ -70,12 +63,12 @@ def __init__(app, logger):
     exclude_tags = [i for s in app.exclude_tag for i in s]
     if exclude_tags:
         torrents = list(
-            filter(
-                lambda x: any(y not in x.tags for y in exclude_tags), torrents
-            )
+            filter(lambda x: any(y not in x.tags for y in exclude_tags), torrents)
         )
 
-    torrents = app.client.torrents.info()
+    extractTLD = tldextract.TLDExtract(cache_dir=None)
+    tags = collections.defaultdict(list)
+    paths = []
 
     for t in torrents:
         tags_to_add = []
@@ -83,7 +76,7 @@ def __init__(app, logger):
 
         url = t.tracker
         if not url:
-            filtered = [s for s in t.trackers if s.tier >= 0] # Expensive
+            filtered = [s for s in t.trackers if s.tier >= 0]  # Expensive
             if not filtered:
                 continue
             url = filtered[0].url
@@ -92,7 +85,7 @@ def __init__(app, logger):
 
         if app.added_on:
             tags_to_add.append(calculate_date_tags("added", t.added_on, today))
-        
+
         if app.last_activity:
             tags_to_add.append(calculate_date_tags("activity", t.last_activity, today))
 
@@ -103,13 +96,13 @@ def __init__(app, logger):
                 tags_to_add.append(f"site:unmapped")
 
         if (app.unregistered or app.tracker_down or app.not_working) and filtered:
-            tracker_messages = [z.msg.upper() for z in filtered]
+            messages = [z.msg.upper() for z in filtered]
             if app.unregistered and any(
-                x in msg for msg in tracker_messages for x in unregistered_matches
+                match in msg for msg in messages for match in UNREGISTERED_MATCHES
             ):
                 tags_to_add.append("unregistered")
             elif app.tracker_down and any(
-                x in msg for msg in tracker_messages for x in maintenance_matches
+                match in msg for msg in messages for match in MAINTENANCE_MATCHES
             ):
                 tags_to_add.append("tracker-down")
             elif app.not_working:
@@ -117,19 +110,20 @@ def __init__(app, logger):
 
         if app.expired and tracker and t.state_enum.is_complete:
             if (
-                tracker["required_seed_ratio"] != 0
+                tracker["required_seed_ratio"]
                 and t.ratio >= tracker["required_seed_ratio"]
             ):
                 tags_to_add.append("expired")
-            elif tracker["required_seed_days"] != 0 and t.seeding_time >= utils.seconds(
+            elif tracker["required_seed_days"] and t.seeding_time >= utils.seconds(
                 tracker["required_seed_days"]
             ):
                 tags_to_add.append("expired")
 
         if app.duplicates:
-            if t.content_path in content_paths and not t.content_path == t.save_path:
+            if t.content_path in paths and not t.content_path == t.save_path:
                 tags_to_add.append("dupe")
-            content_paths.append(t.content_path)
+            else:
+                paths.append(t.content_path)
 
         if app.not_linked and not utils.is_linked(t.content_path):
             tags_to_add.append("not-linked")
@@ -139,8 +133,9 @@ def __init__(app, logger):
 
     empty_tags = list(
         filter(
-            lambda tag: tag not in tags and any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
-            app.client.torrents_tags()
+            lambda tag: tag not in tags
+            and any(tag.lower().startswith(x.lower()) for x in DEFAULT_TAGS),
+            app.client.torrents_tags(),
         )
     )
     if empty_tags:
@@ -235,7 +230,9 @@ def add_arguments(command, subparser):
         help="Tag torrents with not working tracker status",
     )
     parser.add_argument(
-        "--sites", action="store_true", help="Tag torrents with site names (defined in config.yaml)"
+        "--sites",
+        action="store_true",
+        help="Tag torrents with site names (defined in config.yaml)",
     )
     parser.add_argument(
         "--tracker-down",
