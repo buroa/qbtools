@@ -5,7 +5,7 @@ from fnmatch import fnmatch
 
 
 def __init__(app, logger):
-    logger.info(f"Checking for orphaned files on disk not in qBittorrent...")
+    logger.info("Checking for orphaned files on disk not in qBittorrent...")
 
     completed_dir = app.client.application.preferences.save_path
     categories = [
@@ -57,7 +57,7 @@ def __init__(app, logger):
                 owned_subfiles = set(
                     filter(lambda x: x.startswith(item_path), owned_files)
                 )
-                if len(owned_subfiles) == 0 and item_path not in categories:
+                if not owned_subfiles and item_path not in categories:
                     delete(item_path)
                 else:
                     cleanup_dir(item_path, owned_subfiles)

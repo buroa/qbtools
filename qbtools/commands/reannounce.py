@@ -26,31 +26,21 @@ def __init__(app, logger):
             peers = t.num_seeds + t.num_leechs
             if peers:
                 logger.debug(
-                    "Torrent %s (%s) has %d peer(s) - not reannouncing",
-                    t.name,
-                    t.hash,
-                    peers,
+                    f"Torrent {t.name} ({t.hash}) has {peers} peer(s) - not reannouncing"
                 )
                 continue
 
             torrent_retries = torrents_retries.get(t.hash, 0)
             if torrent_retries >= max_tries:
                 logger.debug(
-                    "Torrent %s (%s) has reached %s reannounce tries - not reannouncing",
-                    t.name,
-                    t.hash,
-                    retries,
+                    f"Torrent {t.name} ({t.hash}) has reached {retries} reannounce tries - not reannouncing",
                 )
                 continue
 
             t.reannounce()
             torrents_retries[t.hash] = torrent_retries + 1
             logger.info(
-                "Reannounced torrent %s (%s) %s/%s",
-                t.name,
-                t.hash,
-                torrent_retries,
-                max_tries,
+                f"Reannounced torrent {t.name} ({t.hash}) {torrent_retries}/{max_tries}",
             )
 
         retries[status] = torrents_retries
