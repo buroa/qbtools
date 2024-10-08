@@ -1,4 +1,4 @@
-FROM docker.io/library/python:3.12-alpine AS base
+FROM docker.io/library/python:3.13-alpine AS base
 
 FROM base AS pip
 WORKDIR /install
