@@ -14,7 +14,6 @@ DEFAULT_TAGS = [
     "not-working",
     "unregistered",
     "tracker-down",
-    "domain:",
     "site:",
 ]
 
@@ -89,47 +88,19 @@ def __init__(app, logger):
                 continue
             url = filtered[0].url
 
-        domain = extractTLD(url).registered_domain
-        tracker = trackers.get(domain)
+        tracker = trackers.get(extractTLD(url).registered_domain)
 
         if app.added_on:
-            added_on = datetime.fromtimestamp(t.added_on)
-            diff = today - added_on
-
-            if diff.days == 0:
-                tags_to_add.append("added:1d")
-            elif diff.days <= 7:
-                tags_to_add.append("added:7d")
-            elif diff.days <= 30:
-                tags_to_add.append("added:30d")
-            elif diff.days <= 180:
-                tags_to_add.append("added:180d")
-            elif diff.days > 180:
-                tags_to_add.append("added:>180d")
-
+            tags_to_add.append(calculate_date_tags("added", t.added_on, today))
+        
         if app.last_activity:
-            last_activity = datetime.fromtimestamp(t.last_activity)
-            diff = datetime.today() - last_activity
-
-            if diff.days == 0:
-                tags_to_add.append("activity:1d")
-            elif diff.days <= 7:
-                tags_to_add.append("activity:7d")
-            elif diff.days <= 30:
-                tags_to_add.append("activity:30d")
-            elif diff.days <= 180:
-                tags_to_add.append("activity:180d")
-            elif diff.days > 180:
-                tags_to_add.append("activity:>180d")
+            tags_to_add.append(calculate_date_tags("activity", t.last_activity, today))
 
         if app.sites:
             if tracker:
                 tags_to_add.append(f"site:{tracker['name']}")
             else:
                 tags_to_add.append(f"site:unmapped")
-
-        if app.domains:
-            tags_to_add.append(f"domain:{domain}")
 
         if (app.unregistered or app.tracker_down or app.not_working) and filtered:
             tracker_messages = [z.msg.upper() for z in filtered]
@@ -190,6 +161,20 @@ def __init__(app, logger):
     logger.info("Finished tagging torrents in qBittorrent")
 
 
+def calculate_date_tags(prefix, timestamp, today):
+    diff = today - datetime.fromtimestamp(timestamp)
+    if diff.days == 0:
+        return f"{prefix}:1d"
+    elif diff.days <= 7:
+        return f"{prefix}:7d"
+    elif diff.days <= 30:
+        return f"{prefix}:30d"
+    elif diff.days <= 180:
+        return f"{prefix}:180d"
+    else:
+        return f"{prefix}:>180d"
+
+
 def add_arguments(command, subparser):
     """
     Description:
@@ -225,9 +210,6 @@ def add_arguments(command, subparser):
         help="Tag torrents with added date (last 24h, 7 days, 30 days, etc)",
     )
     parser.add_argument(
-        "--domains", action="store_true", help="Tag torrents with tracker domains"
-    )
-    parser.add_argument(
         "--duplicates",
         action="store_true",
         help="Tag torrents with the same content path",
@@ -235,12 +217,12 @@ def add_arguments(command, subparser):
     parser.add_argument(
         "--expired",
         action="store_true",
-        help="Tag torrents that have expired an ratio or seeding time, use with filtering by category/tag",
+        help="Tag torrents that have an expired ratio or seeding time (defined in config.yaml)",
     )
     parser.add_argument(
         "--last-activity",
         action="store_true",
-        help="Tag torrents with last activity date (last 24h, 7 days, 30 days, etc)",
+        help="Tag torrents with last activity date (last 1d, 7 days, 30 days, etc)",
     )
     parser.add_argument(
         "--not-linked",
@@ -253,7 +235,7 @@ def add_arguments(command, subparser):
         help="Tag torrents with not working tracker status",
     )
     parser.add_argument(
-        "--sites", action="store_true", help="Tag torrents with known site names"
+        "--sites", action="store_true", help="Tag torrents with site names (defined in config.yaml)"
     )
     parser.add_argument(
         "--tracker-down",
