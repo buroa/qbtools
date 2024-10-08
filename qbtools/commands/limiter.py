@@ -11,8 +11,8 @@ def __init__(app, logger):
         qbittorrent_queue, qbittorrent_current_limit = qbittorrent_data(app)
         sabnzbd_queue, sabnzbd_current_limit = sabnzbd_data(app)
 
-        logger.info(f"qBittorrent: {qbittorrent_queue} item(s) @ {qbittorrent_current_limit} MB/s")
-        logger.info(f"SabNZBD: {sabnzbd_queue} item(s) @ max {sabnzbd_current_limit} MB/s")
+        logger.debug(f"qBittorrent: {qbittorrent_queue} item(s) @ {qbittorrent_current_limit} MB/s")
+        logger.debug(f"SabNZBD: {sabnzbd_queue} item(s) @ max {sabnzbd_current_limit} MB/s")
 
         percentage = app.limit_percent if qbittorrent_queue > 0 and sabnzbd_queue > 0 else app.max_percent
 
