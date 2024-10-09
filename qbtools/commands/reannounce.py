@@ -35,7 +35,7 @@ def __init__(app, logger):
                 continue
 
             t.reannounce()
-            torrents_retries[t.hash] = torrent_retries + 1
+            torrents_retries[t.hash] = torrent_retries = torrent_retries + 1
             logger.info(
                 f"Reannounced torrent {t.name} ({t.hash}) {torrent_retries}/{app.max_retries}",
             )
