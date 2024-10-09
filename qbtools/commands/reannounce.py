@@ -4,9 +4,6 @@ import time
 def __init__(app, logger):
     logger.info("Starting reannounce process...")
 
-    max_tries = 18
-    max_age = 3600
-    interval = 5
     retries = {}
 
     def process_torrents(status):
@@ -14,7 +11,7 @@ def __init__(app, logger):
         torrents_retries = retries.get(status, {})
 
         if torrents:
-            torrents = list(filter(lambda t: t.time_active <= max_age, torrents))
+            torrents = list(filter(lambda t: t.time_active <= app.max_age, torrents))
 
         if not torrents:
             torrents_retries.clear()
@@ -31,16 +28,16 @@ def __init__(app, logger):
                 continue
 
             torrent_retries = torrents_retries.get(t.hash, 0)
-            if torrent_retries >= max_tries:
+            if torrent_retries >= app.max_retries:
                 logger.debug(
-                    f"Torrent {t.name} ({t.hash}) has reached {retries} reannounce tries - not reannouncing",
+                    f"Torrent {t.name} ({t.hash}) has reached {torrent_retries} reannounce tries - not reannouncing",
                 )
                 continue
 
             t.reannounce()
             torrents_retries[t.hash] = torrent_retries + 1
             logger.info(
-                f"Reannounced torrent {t.name} ({t.hash}) {torrent_retries}/{max_tries}",
+                f"Reannounced torrent {t.name} ({t.hash}) {torrent_retries}/{app.max_retries}",
             )
 
         retries[status] = torrents_retries
@@ -53,7 +50,7 @@ def __init__(app, logger):
         except Exception as e:
             logger.error(e)
 
-        time.sleep(interval)
+        time.sleep(app.interval)
 
 
 def add_arguments(command, subparser):
@@ -65,7 +62,25 @@ def add_arguments(command, subparser):
     """
     parser = subparser.add_parser(command)
     parser.add_argument(
+        "--max-age",
+        type=int,
+        default=3600,
+        help="The maximum age of a torrent in seconds to reannounce.",
+    )
+    parser.add_argument(
+        "--max-retries",
+        type=int,
+        default=18,
+        help="The maximum number of reannounce retries for a torrent.",
+    )
+    parser.add_argument(
+        "--interval",
+        type=int,
+        default=5,
+        help="The interval to process reannouncements in seconds.",
+    )
+    parser.add_argument(
         "--process-seeding",
         action="store_true",
-        help="Include seeding torrents for reannouncements.",
+        help="Process seeding torrents as well.",
     )
