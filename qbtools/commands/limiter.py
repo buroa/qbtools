@@ -10,7 +10,6 @@ def __init__(app, logger):
     logger.info("Starting limiter process...")
 
     app.sabnzbd_host = parse_sabnzbd_host(app)
-    logger.info(app.sabnzbd_host)
 
     def process():
         qbittorrent_queue, qbittorrent_current_limit = qbittorrent_data(app)
