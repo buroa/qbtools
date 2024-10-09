@@ -110,6 +110,7 @@ def get_config(app):
 
 def main():
     logging.getLogger("filelock").setLevel(logging.ERROR)  # Suppress lock messages
+    logging.getLogger("httpx").setLevel(logging.ERROR)  # Suppress httpx messages
     logging.basicConfig(
         stream=sys.stdout,
         level=logging.INFO,

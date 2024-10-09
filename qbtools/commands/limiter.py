@@ -1,13 +1,16 @@
 import time
-import requests
+import httpx
 
+from httpx import URL
 from qbtools import utils
-from decimal import Decimal
 from typing import Optional, Tuple
 
 
 def __init__(app, logger):
     logger.info("Starting limiter process...")
+
+    app.sabnzbd_host = parse_sabnzbd_host(app)
+    logger.info(app.sabnzbd_host)
 
     def process():
         qbittorrent_queue, qbittorrent_current_limit = qbittorrent_data(app)
@@ -29,9 +32,7 @@ def __init__(app, logger):
         limit = int(app.max_line_speed_mbps * percentage)
 
         if qbittorrent_current_limit != limit:
-            app.client.transfer_set_download_limit(
-                limit * 1024 * 1024
-            )
+            app.client.transfer_set_download_limit(limit * 1024 * 1024)
             logger.info(
                 f"qbittorrent download limit set to {limit} MB/s "
                 f"(was {qbittorrent_current_limit} MB/s)..."
@@ -62,6 +63,17 @@ def __init__(app, logger):
         time.sleep(app.interval)
 
 
+def parse_sabnzbd_host(app) -> str:
+    url = app.sabnzbd_host
+    if not URL(url).host:
+        url = (
+            f"http://{app.sabnzbd_host}:{app.sabnzbd_port}"
+            if app.sabnzbd_port
+            else f"http://{app.sabnzbd_host}"
+        )
+    return url
+
+
 def qbittorrent_data(app) -> Tuple[int, int]:
     torrents = len(app.client.torrents.info(status_filter="downloading"))
     download_limit = app.client.transfer_download_limit() / 1024 / 1024
@@ -81,7 +93,7 @@ def sabnzbd_data(app) -> Tuple[int, int]:
 def handle_request(
     url: str, method: str = "GET", data: Optional[dict] = None
 ) -> Optional[dict]:
-    response = requests.post(url, data=data) if method == "POST" else requests.get(url)
+    response = httpx.request(method=method, url=url, data=data)
     response.raise_for_status()
     return response.json() if method == "GET" else None
 
@@ -100,6 +112,13 @@ def add_arguments(command, subparser):
         envvar="SABNZBD_HOST",
         help="The host of the SabNZBD server",
         required=True,
+    )
+    parser.add_argument(
+        "--sabnzbd-port",
+        action=utils.EnvDefault,
+        envvar="SABNZBD_PORT",
+        help="The port of the SabNZBD server",
+        required=False,
     )
     parser.add_argument(
         "--sabnzbd-apikey",
