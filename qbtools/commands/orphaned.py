@@ -14,12 +14,31 @@ def __init__(app, logger):
     ]
     exclude_patterns = [i for s in app.exclude_pattern for i in s]
 
+    total_size_deleted = 0
+
+    def get_size(path):
+        """Calculate the size of a file or directory."""
+        if os.path.isfile(path):
+            return os.path.getsize(path)
+        elif os.path.isdir(path):
+            total = 0
+            for dirpath, _, filenames in os.walk(path):
+                for f in filenames:
+                    fp = os.path.join(dirpath, f)
+                    total += os.path.getsize(fp)
+            return total
+        return 0
+
     def delete(item_path):
+        nonlocal total_size_deleted
+
         if app.dry_run:
             logger.info(f"Skipping {item_path} because --dry-run was specified")
             return
 
         try:
+            item_size = get_size(item_path)  # Get the size of the item before deletion
+
             if os.path.isfile(item_path):
                 os.remove(item_path)
                 logger.info(f"Deleted file {item_path}")
@@ -28,6 +47,10 @@ def __init__(app, logger):
                 logger.info(f"Deleted folder {item_path}")
             else:
                 logger.debug(f"{item_path} does not exist")
+                return
+
+            total_size_deleted += item_size  # Add the size of the deleted item
+
         except Exception as e:
             logger.error(f"An error occurred: {e}")
 
@@ -75,6 +98,9 @@ def __init__(app, logger):
 
     # Delete orphaned files on disk not owned by qBittorrent
     cleanup_dir(completed_dir, qbittorrent_items)
+
+    # Log the total size deleted
+    logger.info(f"Total size deleted: {total_size_deleted / (1024 * 1024 * 1024):.2f} GB")
 
 
 def add_arguments(command, subparser):
