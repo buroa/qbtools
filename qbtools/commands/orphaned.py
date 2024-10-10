@@ -14,8 +14,6 @@ def __init__(app, logger):
     ]
     exclude_patterns = [i for s in app.exclude_pattern for i in s]
 
-    total_size_deleted = 0
-
     def get_size(path):
         """Calculate the size of a file or directory."""
         if os.path.isfile(path):
@@ -30,8 +28,6 @@ def __init__(app, logger):
         return 0
 
     def delete(item_path):
-        nonlocal total_size_deleted
-
         if app.dry_run:
             logger.info(f"Skipping {item_path} because --dry-run was specified")
             return
@@ -49,8 +45,7 @@ def __init__(app, logger):
                 logger.debug(f"{item_path} does not exist")
                 return
 
-            total_size_deleted += item_size  # Add the size of the deleted item
-
+            return item_size
         except Exception as e:
             logger.error(f"An error occurred: {e}")
 
@@ -61,6 +56,8 @@ def __init__(app, logger):
         :param owned_files: files and folders that should not be deleted
         :return:
         """
+        total_size_deleted = 0
+
         for item in os.listdir(folder_path):
             item_path = os.path.join(folder_path, item)
             if item_path in owned_files:
@@ -74,16 +71,23 @@ def __init__(app, logger):
                 )
                 continue
 
+            deleted_size = 0
+
             if os.path.isfile(item_path):
-                delete(item_path)
+                deleted_size = delete(item_path)
             elif os.path.isdir(item_path):
                 owned_subfiles = set(
                     filter(lambda x: x.startswith(item_path), owned_files)
                 )
                 if not owned_subfiles and item_path not in categories:
-                    delete(item_path)
+                    deleted_size = delete(item_path)
                 else:
-                    cleanup_dir(item_path, owned_subfiles)
+                    deleted_size = cleanup_dir(item_path, owned_subfiles)
+
+            if deleted_size:
+                total_size_deleted = total_size_deleted + deleted_size
+
+        return total_size_deleted
 
     # Gather list of all paths owned by qBittorrent
     qbittorrent_items = set()
@@ -97,7 +101,7 @@ def __init__(app, logger):
             )
 
     # Delete orphaned files on disk not owned by qBittorrent
-    cleanup_dir(completed_dir, qbittorrent_items)
+    total_size_deleted = cleanup_dir(completed_dir, qbittorrent_items)
 
     # Log the total size deleted
     logger.info(f"Total size deleted: {total_size_deleted / (1024 * 1024 * 1024):.2f} GB")
