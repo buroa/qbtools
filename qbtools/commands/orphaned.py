@@ -29,7 +29,7 @@ def __init__(app, logger):
 
     def delete(item_path):
         if app.dry_run:
-            logger.info(f"Skipping {os.path.relpath(item_path, start=completed_dir)} because --dry-run was specified")
+            logger.info(f"Skipping ..{os.path.relpath(item_path, start=completed_dir)} because --dry-run was specified")
             return
 
         try:
@@ -37,10 +37,10 @@ def __init__(app, logger):
 
             if os.path.isfile(item_path):
                 os.remove(item_path)
-                logger.info(f"Deleted file {os.path.relpath(item_path, start=completed_dir)}")
+                logger.info(f"Deleted file ..{os.path.relpath(item_path, start=completed_dir)}")
             elif os.path.isdir(item_path):
                 shutil.rmtree(item_path)
-                logger.info(f"Deleted folder {os.path.relpath(item_path, start=completed_dir)}")
+                logger.info(f"Deleted folder ..{os.path.relpath(item_path, start=completed_dir)}")
             else:
                 logger.debug(f"{os.path.relpath(item_path, start=completed_dir)} does not exist")
                 return
