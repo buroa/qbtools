@@ -3,6 +3,7 @@ import collections
 
 from qbtools import utils
 from datetime import datetime
+from qbittorrentapi import TrackerStatus
 
 
 DEFAULT_TAGS = [
@@ -72,14 +73,11 @@ def __init__(app, logger):
 
     for t in torrents:
         tags_to_add = []
-        filtered = []
+        private_trackers = list(filter(lambda s: s.tier >= 0, t.trackers))  # Expensive
 
         url = t.tracker
-        if not url:
-            filtered = [s for s in t.trackers if s.tier >= 0]  # Expensive
-            if not filtered:
-                continue
-            url = filtered[0].url
+        if not url and private_trackers:
+            url = private_trackers[0].url
 
         tracker = trackers.get(extractTLD(url).registered_domain)
 
@@ -95,18 +93,19 @@ def __init__(app, logger):
             else:
                 tags_to_add.append(f"site:unmapped")
 
-        if (app.unregistered or app.tracker_down or app.not_working) and filtered:
-            messages = [z.msg.upper() for z in filtered]
-            if app.unregistered and any(
-                match in msg for msg in messages for match in UNREGISTERED_MATCHES
-            ):
-                tags_to_add.append("unregistered")
-            elif app.tracker_down and any(
-                match in msg for msg in messages for match in MAINTENANCE_MATCHES
-            ):
-                tags_to_add.append("tracker-down")
-            elif app.not_working:
-                tags_to_add.append("not-working")
+        if app.unregistered or app.tracker_down or app.not_working:
+            if not any(s.status is TrackerStatus.WORKING for s in private_trackers):
+                messages = [z.msg.upper() for z in private_trackers]
+                if app.unregistered and any(
+                    match in msg for msg in messages for match in UNREGISTERED_MATCHES
+                ):
+                    tags_to_add.append("unregistered")
+                elif app.tracker_down and any(
+                    match in msg for msg in messages for match in MAINTENANCE_MATCHES
+                ):
+                    tags_to_add.append("tracker-down")
+                elif app.not_working:
+                    tags_to_add.append("not-working")
 
         if app.expired and tracker and t.state_enum.is_complete:
             if (
@@ -146,12 +145,12 @@ def __init__(app, logger):
         old_torrents = [t.hash for t in torrents if tag in t.tags and not t in tagged]
         if old_torrents:
             app.client.torrents_remove_tags(tags=tag, torrent_hashes=old_torrents)
-            logger.info(f"Untagged {len(old_torrents)} old torrents with tag: {tag}")
+            logger.info(f"Untagged {len(old_torrents)} torrents with tag: {tag}")
 
         new_torrents = [t.hash for t in tagged if not tag in t.tags]
         if new_torrents:
             app.client.torrents_add_tags(tags=tag, torrent_hashes=new_torrents)
-            logger.info(f"Tagged {len(new_torrents)} new torrents with tag: {tag}")
+            logger.info(f"Tagged {len(new_torrents)} torrents with tag: {tag}")
 
     logger.info("Finished tagging torrents in qBittorrent")
 

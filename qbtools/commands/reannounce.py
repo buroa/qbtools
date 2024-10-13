@@ -11,15 +11,16 @@ def __init__(app, logger):
         torrents_retries = retries.get(status, {})
 
         if torrents:
-            torrents = list(filter(lambda t: t.time_active <= app.max_age, torrents))
+            torrents = list(
+                filter(
+                    lambda t: not t.tracker and t.time_active <= app.max_age, torrents
+                )
+            )
 
         if not torrents:
             torrents_retries.clear()
 
         for t in torrents:
-            if t.tracker:
-                continue
-
             peers = t.num_seeds + t.num_leechs
             if peers:
                 logger.debug(
