@@ -52,8 +52,8 @@ def __init__(app, logger):
 
     today = datetime.today()
     torrents = app.client.torrents.info()
-    trackers = app.config.get("trackers", [])
-    trackers = {y: x for x in trackers for y in x["urls"]}
+    config = app.config.get("trackers", [])
+    config = {y: x for x in config for y in x["urls"]}
 
     exclude_categories = [i for s in app.exclude_category for i in s]
     if exclude_categories:
@@ -73,13 +73,13 @@ def __init__(app, logger):
 
     for t in torrents:
         tags_to_add = []
-        private_trackers = list(filter(lambda s: s.tier >= 0, t.trackers))  # Expensive
+        trackers = list(filter(lambda s: s.tier >= 0, t.trackers))  # Expensive
 
         url = t.tracker
-        if not url and private_trackers:
-            url = private_trackers[0].url
+        if not url and trackers:
+            url = trackers[0].url
 
-        tracker = trackers.get(extractTLD(url).registered_domain)
+        tracker = config.get(extractTLD(url).registered_domain)
 
         if app.added_on:
             tags_to_add.append(calculate_date_tags("added", t.added_on, today))
@@ -94,8 +94,8 @@ def __init__(app, logger):
                 tags_to_add.append(f"site:unmapped")
 
         if app.unregistered or app.tracker_down or app.not_working:
-            if not any(s.status is TrackerStatus.WORKING for s in private_trackers):
-                messages = [z.msg.upper() for z in private_trackers]
+            if not any(s.status is TrackerStatus.WORKING for s in trackers):
+                messages = [z.msg.upper() for z in trackers]
                 if app.unregistered and any(
                     match in msg for msg in messages for match in UNREGISTERED_MATCHES
                 ):
@@ -130,6 +130,19 @@ def __init__(app, logger):
         for tag in tags_to_add:
             tags[tag].append(t)
 
+    for tag, tagged in sorted(tags.items()):
+        old_hashes = [t.hash for t in torrents if tag in t.tags and not t in tagged]
+        new_hashes = [t.hash for t in tagged if not tag in t.tags]
+
+        if old_hashes:
+            app.client.torrents_remove_tags(tags=tag, torrent_hashes=old_hashes)
+
+        if new_hashes:
+            app.client.torrents_add_tags(tags=tag, torrent_hashes=new_hashes)
+
+        if old_hashes or new_hashes:
+            logger.info(f"{tag} - untagged {len(new_hashes)} old and tagged {len(old_hashes)} new")
+
     empty_tags = list(
         filter(
             lambda tag: tag not in tags
@@ -140,17 +153,6 @@ def __init__(app, logger):
     if empty_tags:
         app.client.torrents_delete_tags(tags=empty_tags)
         logger.info(f"Removed {len(empty_tags)} old tags from qBittorrent")
-
-    for tag, tagged in tags.items():
-        old_torrents = [t.hash for t in torrents if tag in t.tags and not t in tagged]
-        if old_torrents:
-            app.client.torrents_remove_tags(tags=tag, torrent_hashes=old_torrents)
-            logger.info(f"Untagged {len(old_torrents)} torrents with tag: {tag}")
-
-        new_torrents = [t.hash for t in tagged if not tag in t.tags]
-        if new_torrents:
-            app.client.torrents_add_tags(tags=tag, torrent_hashes=new_torrents)
-            logger.info(f"Tagged {len(new_torrents)} torrents with tag: {tag}")
 
     logger.info("Finished tagging torrents in qBittorrent")
 
