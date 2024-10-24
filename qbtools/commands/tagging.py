@@ -141,7 +141,9 @@ def __init__(app, logger):
             app.client.torrents_add_tags(tags=tag, torrent_hashes=new_hashes)
 
         if old_hashes or new_hashes:
-            logger.info(f"{tag} - untagged {len(new_hashes)} old and tagged {len(old_hashes)} new")
+            logger.info(
+                f"{tag} - untagged {len(old_hashes)} old and tagged {len(new_hashes)} new"
+            )
 
     empty_tags = list(
         filter(
