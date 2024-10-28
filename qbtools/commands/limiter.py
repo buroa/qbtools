@@ -15,6 +15,9 @@ def __init__(app, logger):
         qbittorrent_queue, qbittorrent_current_limit = qbittorrent_data(app)
         sabnzbd_queue, sabnzbd_current_limit = sabnzbd_data(app)
 
+        qbittorrent_current_limit = int(qbittorrent_current_limit / 1024 / 1024)
+        sabnzbd_current_limit = int(sabnzbd_current_limit / 1024 / 1024)
+
         logger.debug(
             f"qBittorrent: {qbittorrent_queue} item(s) @ {qbittorrent_current_limit} MB/s"
         )
@@ -45,7 +48,7 @@ def __init__(app, logger):
                     apikey=app.sabnzbd_apikey,
                     mode="config",
                     name="speedlimit",
-                    value=limit,
+                    value=int(percentage * 100),
                 ),
             )
             logger.info(
@@ -75,7 +78,7 @@ def parse_sabnzbd_host(app) -> str:
 
 def qbittorrent_data(app) -> Tuple[int, int]:
     torrents = len(app.client.torrents.info(status_filter="downloading"))
-    download_limit = app.client.transfer_download_limit() / 1024 / 1024
+    download_limit = app.client.transfer_download_limit()
     return torrents, download_limit
 
 
@@ -85,7 +88,7 @@ def sabnzbd_data(app) -> Tuple[int, int]:
     )
     return (
         int(data.get("queue", {}).get("noofslots", 0)) if data else 0,
-        int(data.get("queue", {}).get("speedlimit", 0)) if data else 0,
+        int(data.get("queue", {}).get("speedlimit_abs", 0)) if data else 0,
     )
 
 
