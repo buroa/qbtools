@@ -110,12 +110,11 @@ def __init__(app, logger):
 
         if app.expired and tracker and t.state_enum.is_complete:
             if (
-                tracker["required_seed_ratio"]
+                "required_seed_ratio" in tracker
                 and t.ratio >= tracker["required_seed_ratio"]
-            ):
-                tags_to_add.append("expired")
-            elif tracker["required_seed_days"] and t.seeding_time >= utils.seconds(
-                tracker["required_seed_days"]
+            ) or (
+                "required_seed_days" in tracker
+                and t.seeding_time >= utils.seconds(tracker["required_seed_days"])
             ):
                 tags_to_add.append("expired")
 
