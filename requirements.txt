@@ -1,4 +1,4 @@
-qbittorrent-api==2025.2.0
+qbittorrent-api==2025.4.0
 tldextract==5.2.0
 pyyaml==6.0.2
 httpx==0.28.1
