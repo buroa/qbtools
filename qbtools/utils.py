@@ -1,6 +1,6 @@
 import argparse
 import os
-import pathlib3x as pathlib
+import pathlib
 
 
 def format_bytes(size):
