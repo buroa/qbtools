@@ -98,7 +98,7 @@ def __init__(app, logger):
                 tags_to_add.append(f"site:unmapped")
 
         if app.unregistered or app.tracker_down or app.not_working:
-            if not any(s.status is TrackerStatus.WORKING for s in trackers):
+            if not any(s.status == TrackerStatus.WORKING.value for s in trackers):
                 messages = [z.msg.upper() for z in trackers]
                 if app.unregistered and any(
                     match in msg for msg in messages for match in UNREGISTERED_MATCHES
