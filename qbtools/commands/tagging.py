@@ -76,7 +76,7 @@ def __init__(app, logger):
     for t in torrents:
         tags_to_add = []
 
-        trackers = TrackersList(t.get("trackers", [])) or t.trackers
+        trackers = TrackersList(t.get("trackers")) if "trackers" in t else t.trackers
         trackers = list(filter(lambda s: s.tier >= 0, trackers))
 
         url = t.tracker
