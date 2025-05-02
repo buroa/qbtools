@@ -35,6 +35,17 @@ def dhms(total_seconds: int) -> str:
     return f"{days}d{hours}h{minutes}m{seconds}s"
 
 
+def is_linked(path):
+    path = pathlib.Path(path)
+    if os.path.islink(path):
+        return True
+    if os.path.isfile(path) and os.lstat(path).st_nlink > 1:
+        return True
+    if os.path.isdir(path):
+        linked = [os.path.join(path, x) for path, subdirs, files in os.walk(path) for x in files if os.lstat(os.path.join(path, x)).st_nlink > 1 or os.path.islink(os.path.join(path, x))]
+        return len(linked) > 0
+
+
 class EnvDefault(argparse.Action):
     def __init__(self, envvar, required=True, default=None, **kwargs):
         if envvar:
