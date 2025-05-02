@@ -4,6 +4,7 @@ import collections
 from qbtools import utils
 from datetime import datetime
 from qbittorrentapi import TrackerStatus
+from qbittorrentapi import TrackersList
 
 
 DEFAULT_TAGS = [
@@ -52,9 +53,9 @@ def __init__(app, logger):
     logger.info("Tagging torrents in qBittorrent...")
 
     today = datetime.today()
-    torrents = app.client.torrents.info()
     config = app.config.get("trackers", [])
     config = {y: x for x in config for y in x["urls"]}
+    torrents = app.client.torrents.info(includeTrackers="true")
 
     exclude_categories = [i for s in app.exclude_category for i in s]
     if exclude_categories:
@@ -74,7 +75,9 @@ def __init__(app, logger):
 
     for t in torrents:
         tags_to_add = []
-        trackers = list(filter(lambda s: s.tier >= 0, t.trackers))  # Expensive
+
+        trackers = TrackersList(t.get("trackers")) if "trackers" in t else t.trackers
+        trackers = list(filter(lambda s: s.tier >= 0, trackers))
 
         url = t.tracker
         if not url and trackers:
@@ -95,7 +98,7 @@ def __init__(app, logger):
                 tags_to_add.append(f"site:unmapped")
 
         if app.unregistered or app.tracker_down or app.not_working:
-            if not any(s.status is TrackerStatus.WORKING for s in trackers):
+            if not any(s.status == TrackerStatus.WORKING.value for s in trackers):
                 messages = [z.msg.upper() for z in trackers]
                 if app.unregistered and any(
                     match in msg for msg in messages for match in UNREGISTERED_MATCHES
