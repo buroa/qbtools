@@ -1,5 +1,8 @@
 import time
 
+from qbittorrentapi import TrackersList
+from qbittorrentapi import TrackerStatus
+
 
 def __init__(app, logger):
     logger.info("Starting reannounce process...")
@@ -7,13 +10,28 @@ def __init__(app, logger):
     retries = {}
 
     def process_torrents(status):
-        torrents = app.client.torrents.info(status_filter=status, sort="time_active")
+        torrents = app.client.torrents.info(
+            includeTrackers="true",
+            status_filter=status,
+            sort="time_active",
+        )
         torrents_retries = retries.get(status, {})
 
         if torrents:
             torrents = list(
                 filter(
-                    lambda t: not t.tracker and t.time_active <= app.max_age, torrents
+                    lambda t: (
+                        t.time_active <= app.max_age
+                        and (
+                            not any(
+                                s.status == TrackerStatus.WORKING.value
+                                for s in TrackersList(t.get("trackers"))
+                            )
+                            if "trackers" in t
+                            else not t.tracker
+                        )
+                    ),
+                    torrents,
                 )
             )
 

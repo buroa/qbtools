@@ -3,8 +3,9 @@ import collections
 
 from qbtools import utils
 from datetime import datetime
-from qbittorrentapi import TrackerStatus
+
 from qbittorrentapi import TrackersList
+from qbittorrentapi import TrackerStatus
 
 
 DEFAULT_TAGS = [
