@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"strings"
@@ -23,36 +24,17 @@ const (
 
 var (
 	unregisteredMatches = []string{
-		"UNREGISTERED",
-		"TORRENT NOT FOUND",
-		"TORRENT IS NOT",
-		"NOT REGISTERED",
-		"NOT EXIST",
-		"UNKNOWN TORRENT",
-		"TRUMP",
-		"RETITLED",
-		"INFOHASH NOT FOUND",
-		"TORRENT HAS BEEN DELETED",
-		"DEAD",
-		"DUPE",
-		"COMPLETE SEASON UPLOADED",
-		"PROBLEM",
-		"POSTPONED",
-		"SPECIFICALLY BANNED",
-		"OTHER",
-		"NUKED",
-		"INVALID INFOHASH",
+		"UNREGISTERED", "TORRENT NOT FOUND", "TORRENT IS NOT", "NOT REGISTERED",
+		"NOT EXIST", "UNKNOWN TORRENT", "TRUMP", "RETITLED", "INFOHASH NOT FOUND",
+		"TORRENT HAS BEEN DELETED", "DEAD", "DUPE", "COMPLETE SEASON UPLOADED",
+		"PROBLEM", "POSTPONED", "SPECIFICALLY BANNED", "OTHER", "NUKED", "INVALID INFOHASH",
 	}
 
 	maintenanceMatches = []string{
-		"DOWN",
-		"UNREACHABLE",
-		"BAD GATEWAY",
-		"TRACKER UNAVAILABLE",
+		"DOWN", "UNREACHABLE", "BAD GATEWAY", "TRACKER UNAVAILABLE",
 	}
 )
 
-// taggingOptions holds all the flags for the tagging command
 type taggingOptions struct {
 	excludeCategories []string
 	excludeTags       []string
@@ -67,7 +49,6 @@ type taggingOptions struct {
 	unregistered      bool
 }
 
-// parseTaggingFlags extracts all command flags into a taggingOptions struct
 func parseTaggingFlags(cmd *cobra.Command) (*taggingOptions, error) {
 	opts := &taggingOptions{}
 	var err error
@@ -109,53 +90,45 @@ func parseTaggingFlags(cmd *cobra.Command) (*taggingOptions, error) {
 	return opts, nil
 }
 
-// filterTorrents filters torrents based on exclude categories and tags
 func filterTorrents(torrents []qbittorrent.Torrent, opts *taggingOptions) []qbittorrent.Torrent {
 	filtered := torrents
 
-	// Filter by categories
-	if len(opts.excludeCategories) > 0 {
-		var result []qbittorrent.Torrent
-		for _, torrent := range filtered {
-			excluded := false
-			for _, exc := range opts.excludeCategories {
-				if torrent.Category == exc {
-					excluded = true
-					break
-				}
-			}
-			if !excluded {
-				result = append(result, torrent)
-			}
-		}
-		filtered = result
-	}
+	filtered = filterByExclusions(filtered, opts.excludeCategories, func(torrent qbittorrent.Torrent, exclude string) bool {
+		return torrent.Category == exclude
+	})
 
-	// Filter by tags
-	if len(opts.excludeTags) > 0 {
-		var result []qbittorrent.Torrent
-		for _, torrent := range filtered {
-			excluded := false
-			for _, exc := range opts.excludeTags {
-				if strings.Contains(torrent.Tags, exc) {
-					excluded = true
-					break
-				}
-			}
-			if !excluded {
-				result = append(result, torrent)
-			}
-		}
-		filtered = result
-	}
+	filtered = filterByExclusions(filtered, opts.excludeTags, func(torrent qbittorrent.Torrent, exclude string) bool {
+		return strings.Contains(torrent.Tags, exclude)
+	})
 
 	return filtered
 }
 
-// getTrackerConfig returns the tracker configuration for a given torrent
+func filterByExclusions(torrents []qbittorrent.Torrent, exclusions []string, matchFunc func(qbittorrent.Torrent, string) bool) []qbittorrent.Torrent {
+	if len(exclusions) == 0 {
+		return torrents
+	}
+
+	var result []qbittorrent.Torrent
+	for _, torrent := range torrents {
+		excluded := false
+		for _, exc := range exclusions {
+			if matchFunc(torrent, exc) {
+				excluded = true
+				break
+			}
+		}
+		if !excluded {
+			result = append(result, torrent)
+		}
+	}
+	return result
+}
+
+// getTrackerConfig returns the tracker configuration for a torrent's primary tracker
 func getTrackerConfig(torrent qbittorrent.Torrent, trackerMap map[string]config.TrackerConfig) *config.TrackerConfig {
 	tracker := torrent.Tracker
-	if tracker == "" {
+	if tracker == "" && len(torrent.Trackers) > 0 {
 		tracker = torrent.Trackers[0].Url
 	}
 
@@ -177,7 +150,6 @@ func getTrackerConfig(torrent qbittorrent.Torrent, trackerMap map[string]config.
 	return nil
 }
 
-// checkTrackerMessages checks if any tracker messages contain the given matches
 func checkTrackerMessages(messages []string, matches []string) bool {
 	for _, match := range matches {
 		for _, msg := range messages {
@@ -189,7 +161,7 @@ func checkTrackerMessages(messages []string, matches []string) bool {
 	return false
 }
 
-// getTrackerStatusTags returns tracker status tags for a torrent
+// getTrackerStatusTags determines appropriate status tags based on tracker messages
 func getTrackerStatusTags(torrent qbittorrent.Torrent, opts *taggingOptions) []string {
 	var messages []string
 
@@ -216,30 +188,28 @@ func NewTaggingCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tagging",
 		Short: "Tag torrents with various criteria",
-		Long: `Tag torrents. This command can be used to tag torrents with various tags,
-such as torrents that have not been active for a while, torrents that have not been
-working for a while, torrents that have expired an ratio or seeding time, torrents
-that have the same content path, etc.`,
+		Long: `Tag torrents based on various criteria including activity dates, tracker status,
+duplicate content paths, expired ratios, and site information.`,
 		RunE: runTagging,
 	}
 
-	cmd.Flags().StringSlice("exclude-category", []string{}, "Exclude all torrents with these categories")
-	cmd.Flags().StringSlice("exclude-tag", []string{}, "Exclude all torrents with these tags")
-	cmd.Flags().Bool("added-on", false, "Tag torrents with added date (last 24h, 7 days, 30 days, etc)")
-	cmd.Flags().Bool("duplicates", false, "Tag torrents with the same content path")
-	cmd.Flags().Bool("expired", false, "Tag torrents that have an expired ratio or seeding time")
-	cmd.Flags().Bool("last-activity", false, "Tag torrents with last activity date")
-	cmd.Flags().Bool("not-linked", false, "Tag torrents with files without hardlinks or symlinks")
-	cmd.Flags().Bool("not-working", false, "Tag torrents with not working tracker status")
+	cmd.Flags().StringSlice("exclude-category", []string{}, "Exclude torrents with these categories")
+	cmd.Flags().StringSlice("exclude-tag", []string{}, "Exclude torrents with these tags")
+	cmd.Flags().Bool("added-on", false, "Tag torrents by added date (24h, 7d, 30d, 180d, >180d)")
+	cmd.Flags().Bool("duplicates", false, "Tag torrents with duplicate content paths")
+	cmd.Flags().Bool("expired", false, "Tag torrents that have expired ratio or seeding time")
+	cmd.Flags().Bool("last-activity", false, "Tag torrents by last activity date")
+	cmd.Flags().Bool("not-linked", false, "Tag torrents with files missing hardlinks or symlinks")
+	cmd.Flags().Bool("not-working", false, "Tag torrents with non-working tracker status")
 	cmd.Flags().Bool("sites", false, "Tag torrents with site names")
-	cmd.Flags().Bool("tracker-down", false, "Tag torrents with temporarily down trackers")
-	cmd.Flags().Bool("unregistered", false, "Tag torrents with unregistered tracker status message")
+	cmd.Flags().Bool("tracker-down", false, "Tag torrents with temporarily unavailable trackers")
+	cmd.Flags().Bool("unregistered", false, "Tag torrents with unregistered tracker status")
 
 	return cmd
 }
 
 func runTagging(cmd *cobra.Command, args []string) error {
-	log.Info().Msg("Tagging torrents in qBittorrent...")
+	log.Info().Msg("Starting torrent tagging process")
 
 	client := qbittorrent.NewClient(qbittorrent.Config{
 		Host:     viper.GetString("qbittorrent_host"),
@@ -248,34 +218,41 @@ func runTagging(cmd *cobra.Command, args []string) error {
 	})
 
 	if err := client.Login(); err != nil {
-		return fmt.Errorf("failed to login to qBittorrent: %w", err)
+		return fmt.Errorf("failed to authenticate with qBittorrent: %w", err)
 	}
-
-	ctx := cmd.Context()
 
 	opts, err := parseTaggingFlags(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to parse flags: %w", err)
+		return fmt.Errorf("failed to parse command flags: %w", err)
 	}
 
-	// Get all torrents
 	torrents, err := client.GetTorrents(qbittorrent.TorrentFilterOptions{
 		IncludeTrackers: true,
 	})
 	if err != nil {
-		return fmt.Errorf("failed to get torrents: %w", err)
+		return fmt.Errorf("failed to retrieve torrents: %w", err)
 	}
 
-	// Filter torrents based on exclude options
+	log.Debug().Int("count", len(torrents)).Msg("Retrieved torrents from qBittorrent")
+
 	torrents = filterTorrents(torrents, opts)
 
-	// Get tracker configuration
-	var trackers []config.TrackerConfig
-	if err := viper.UnmarshalKey("trackers", &trackers); err != nil {
-		return fmt.Errorf("failed to unmarshal trackers config: %w", err)
+	log.Debug().Int("count", len(torrents)).Msg("Filtered torrents for processing")
+
+	trackerMap, err := buildTrackerMap()
+	if err != nil {
+		return fmt.Errorf("failed to build tracker configuration map: %w", err)
 	}
 
-	// Build tracker URL mapping
+	return processTorrents(client, cmd.Context(), torrents, trackerMap, opts)
+}
+
+func buildTrackerMap() (map[string]config.TrackerConfig, error) {
+	var trackers []config.TrackerConfig
+	if err := viper.UnmarshalKey("trackers", &trackers); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal tracker configuration: %w", err)
+	}
+
 	trackerMap := make(map[string]config.TrackerConfig)
 	for _, tracker := range trackers {
 		for _, url := range tracker.URLs {
@@ -283,6 +260,10 @@ func runTagging(cmd *cobra.Command, args []string) error {
 		}
 	}
 
+	return trackerMap, nil
+}
+
+func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents []qbittorrent.Torrent, trackerMap map[string]config.TrackerConfig, opts *taggingOptions) error {
 	now := time.Now()
 	paths := make(map[string]bool)
 
@@ -290,34 +271,34 @@ func runTagging(cmd *cobra.Command, args []string) error {
 		var tagsToAdd []string
 		trackerConfig := getTrackerConfig(torrent, trackerMap)
 
-		// Date-based tags
+		// Apply date-based tags
 		if opts.addedOn && torrent.AddedOn > 0 {
-			tag := utils.CalculateDateTags("added", torrent.AddedOn, now)
-			tagsToAdd = append(tagsToAdd, tag)
+			tagsToAdd = append(tagsToAdd, utils.CalculateDateTags("added", torrent.AddedOn, now))
 		}
 
 		if opts.lastActivity && torrent.LastActivity > 0 {
-			tag := utils.CalculateDateTags("activity", torrent.LastActivity, now)
-			tagsToAdd = append(tagsToAdd, tag)
+			tagsToAdd = append(tagsToAdd, utils.CalculateDateTags("activity", torrent.LastActivity, now))
 		}
 
-		// Site tags
+		// Apply site tags
 		if opts.sites {
 			siteTag := "site:unmapped"
 			if trackerConfig != nil {
 				siteTag = fmt.Sprintf("site:%s", trackerConfig.Name)
-			} else {
-				log.Warn().Str("tracker", torrent.Tracker).Msg("No tracker config found for site tag")
+			} else if torrent.Tracker != "" {
+				log.Warn().Str("tracker", torrent.Tracker).Str("hash", torrent.Hash).Msg("No tracker configuration found for torrent")
 			}
 			tagsToAdd = append(tagsToAdd, siteTag)
 		}
 
-		// Tracker status tags
+		// Apply tracker status tags
 		if opts.unregistered || opts.trackerDown || opts.notWorking {
-			tagsToAdd = append(tagsToAdd, getTrackerStatusTags(torrent, opts)...)
+			if statusTags := getTrackerStatusTags(torrent, opts); len(statusTags) > 0 {
+				tagsToAdd = append(tagsToAdd, statusTags...)
+			}
 		}
 
-		// Expired torrents
+		// Apply expiration tags
 		if opts.expired && trackerConfig != nil {
 			if (trackerConfig.Ratio != 0 && torrent.Ratio >= trackerConfig.Ratio) ||
 				(trackerConfig.Days != 0 && torrent.SeedingTime >= utils.SecondsFromDays(trackerConfig.Days)) {
@@ -325,7 +306,7 @@ func runTagging(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// Duplicate content paths
+		// Apply duplicate content path tags
 		if opts.duplicates && torrent.ContentPath != "" {
 			if paths[torrent.ContentPath] && torrent.ContentPath != torrent.SavePath {
 				tagsToAdd = append(tagsToAdd, "dupe")
@@ -334,25 +315,29 @@ func runTagging(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// Not linked files
+		// Apply not-linked tags
 		if opts.notLinked && torrent.ContentPath != "" && !utils.IsLinked(torrent.ContentPath) {
 			tagsToAdd = append(tagsToAdd, "not-linked")
 		}
 
-		// Split on comma and trim spaces
-		currentTags := strings.Split(torrent.Tags, ",")
-		for i := range currentTags {
-			currentTags[i] = strings.TrimSpace(currentTags[i])
-		}
+		// Update tags if they have changed
+		if len(tagsToAdd) > 0 {
+			currentTags := strings.Split(torrent.Tags, ",")
+			for i := range currentTags {
+				currentTags[i] = strings.TrimSpace(currentTags[i])
+			}
 
-		// Check if tagsToAdd are already present
-		if !utils.AreSetsEqual(currentTags, tagsToAdd) {
-			newTags := strings.Join(tagsToAdd, ", ")
-			client.SetTags(ctx, []string{torrent.Hash}, newTags)
-			log.Info().Str("tags", newTags).Str("name", torrent.Name).Str("hash", torrent.Hash).Msg("Updated torrent tags")
+			if !utils.AreSetsEqual(currentTags, tagsToAdd) {
+				newTags := strings.Join(tagsToAdd, ", ")
+				if err := client.SetTags(ctx, []string{torrent.Hash}, newTags); err != nil {
+					log.Error().Err(err).Str("hash", torrent.Hash).Msg("Failed to update torrent tags")
+					continue
+				}
+				log.Info().Str("tags", newTags).Str("hash", torrent.Hash).Msg("Updated torrent tags")
+			}
 		}
 	}
 
-	log.Info().Msg("Finished tagging torrents in qBittorrent")
+	log.Info().Msg("Torrent tagging process completed")
 	return nil
 }

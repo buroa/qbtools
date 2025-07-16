@@ -11,8 +11,8 @@ import (
 func main() {
 	rootCmd := &cobra.Command{
 		Use:   "qbtools",
-		Short: "A feature rich CLI for the management of torrents in qBittorrent",
-		Long:  `qbtools is a feature rich CLI for the management of torrents in qBittorrent.`,
+		Short: "Feature-rich CLI for qBittorrent management",
+		Long:  `qbtools is a feature-rich CLI for the management of torrents in qBittorrent.`,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			logLevel, _ := cmd.Flags().GetString("log-level")
 			logger.Initialize(logLevel)

@@ -22,17 +22,14 @@ func FormatBytes(bytes int64) string {
 	return fmt.Sprintf("%.2f %ciB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 
-// SecondsFromDays converts days to seconds
 func SecondsFromDays(days float64) int64 {
 	return int64(days * 24 * 60 * 60)
 }
 
-// DaysFromSeconds converts seconds to days
 func DaysFromSeconds(seconds int64) float64 {
 	return float64(seconds) / (24 * 60 * 60)
 }
 
-// DHMS converts seconds to days, hours, minutes, seconds format
 func DHMS(totalSeconds int64) string {
 	seconds := totalSeconds % 60
 	totalMinutes := totalSeconds / 60
@@ -43,14 +40,11 @@ func DHMS(totalSeconds int64) string {
 	return fmt.Sprintf("%dd%dh%dm%ds", days, hours, minutes, seconds)
 }
 
-// IsLinked checks if a file or directory is linked (hardlink or symlink)
+// IsLinked checks if a file or directory has hardlinks or symlinks
 func IsLinked(path string) bool {
-	// Check if it's a symlink
 	if isSymlink(path) {
 		return true
 	}
-
-	// Check if it's a hardlink
 	return isHardLinked(path)
 }
 
@@ -68,7 +62,6 @@ func isHardLinked(path string) bool {
 		return false
 	}
 
-	// For files, check if nlink > 1
 	if info.Mode().IsRegular() {
 		stat, ok := info.Sys().(*syscall.Stat_t)
 		if !ok {
@@ -77,7 +70,6 @@ func isHardLinked(path string) bool {
 		return stat.Nlink > 1
 	}
 
-	// For directories, walk through and check if any file is hardlinked
 	if info.IsDir() {
 		hasLinkedFile := false
 		filepath.Walk(path, func(filePath string, fileInfo os.FileInfo, err error) error {
@@ -102,7 +94,7 @@ func isHardLinked(path string) bool {
 	return false
 }
 
-// CalculateDateTags calculates date-based tags
+// CalculateDateTags calculates date-based tags based on time difference
 func CalculateDateTags(prefix string, timestamp int64, now time.Time) string {
 	diff := now.Sub(time.Unix(timestamp, 0))
 	days := int(diff.Hours() / 24)

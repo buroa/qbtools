@@ -3,6 +3,7 @@ package commands
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/autobrr/go-qbittorrent"
@@ -11,7 +12,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// pruneOptions holds all the flags for the prune command
 type pruneOptions struct {
 	includeTags       []string
 	excludeTags       []string
@@ -21,7 +21,6 @@ type pruneOptions struct {
 	withData          bool
 }
 
-// parsePruneFlags extracts all command flags into a pruneOptions struct
 func parsePruneFlags(cmd *cobra.Command) (*pruneOptions, error) {
 	opts := &pruneOptions{}
 	var err error
@@ -48,9 +47,6 @@ func parsePruneFlags(cmd *cobra.Command) (*pruneOptions, error) {
 	return opts, nil
 }
 
-// filterTorrentsByTags filters torrents based on tag requirements
-// If requireAll is true, torrent must have ALL tags (AND logic)
-// If requireAll is false, torrent must NOT have ANY tags (exclude logic)
 func filterTorrentsByTags(torrents []qbittorrent.Torrent, tags []string, requireAll bool) []qbittorrent.Torrent {
 	if len(tags) == 0 {
 		return torrents
@@ -59,7 +55,6 @@ func filterTorrentsByTags(torrents []qbittorrent.Torrent, tags []string, require
 	var filtered []qbittorrent.Torrent
 	for _, torrent := range torrents {
 		if requireAll {
-			// Include logic: torrent must have ALL tags
 			hasAllTags := true
 			for _, tag := range tags {
 				if !strings.Contains(torrent.Tags, tag) {
@@ -71,7 +66,6 @@ func filterTorrentsByTags(torrents []qbittorrent.Torrent, tags []string, require
 				filtered = append(filtered, torrent)
 			}
 		} else {
-			// Exclude logic: torrent must NOT have ANY tags
 			hasExcludeTag := false
 			for _, tag := range tags {
 				if strings.Contains(torrent.Tags, tag) {
@@ -87,9 +81,6 @@ func filterTorrentsByTags(torrents []qbittorrent.Torrent, tags []string, require
 	return filtered
 }
 
-// filterCategoriesByPatterns filters categories based on patterns
-// If include is true, only categories matching patterns are kept
-// If include is false, categories matching patterns are excluded
 func filterCategoriesByPatterns(categories []string, patterns []string, include bool) []string {
 	if len(patterns) == 0 {
 		return categories
@@ -112,22 +103,20 @@ func filterCategoriesByPatterns(categories []string, patterns []string, include 
 	return filtered
 }
 
-// NewPruneCommand creates the prune command
 func NewPruneCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prune",
 		Short: "Prune torrents that have matching tags",
-		Long: `Prune torrents that have matching tags.
-Pair this with the tagging command to tag torrents.`,
-		RunE: runPrune,
+		Long:  `Prune torrents based on tag criteria. Use in combination with the tagging command.`,
+		RunE:  runPrune,
 	}
 
 	cmd.Flags().StringSlice("include-tag", []string{}, "Include torrents containing all of these tags")
 	cmd.Flags().StringSlice("exclude-tag", []string{}, "Exclude torrents containing any of these tags")
-	cmd.Flags().StringSlice("include-category", []string{}, "Include torrents only from categories that match these patterns")
-	cmd.Flags().StringSlice("exclude-category", []string{}, "Exclude torrents from categories that match these patterns")
-	cmd.Flags().Bool("dry-run", false, "Do not delete torrents")
-	cmd.Flags().Bool("with-data", false, "Delete torrents with data")
+	cmd.Flags().StringSlice("include-category", []string{}, "Include torrents only from categories matching these patterns")
+	cmd.Flags().StringSlice("exclude-category", []string{}, "Exclude torrents from categories matching these patterns")
+	cmd.Flags().Bool("dry-run", false, "Preview deletion without actually removing torrents")
+	cmd.Flags().Bool("with-data", false, "Delete torrents along with their data files")
 
 	cmd.MarkFlagRequired("include-tag")
 
@@ -135,89 +124,85 @@ Pair this with the tagging command to tag torrents.`,
 }
 
 func runPrune(cmd *cobra.Command, args []string) error {
+	log.Debug().Msg("Starting torrent pruning process")
+
 	client := qbittorrent.NewClient(qbittorrent.Config{
 		Host:     viper.GetString("qbittorrent_host"),
 		Username: viper.GetString("qbittorrent_username"),
 		Password: viper.GetString("qbittorrent_password"),
 	})
 
-	// Login to the qBittorrent client
 	if err := client.Login(); err != nil {
-		return fmt.Errorf("failed to login to qBittorrent: %w", err)
+		return fmt.Errorf("failed to authenticate with qBittorrent: %w", err)
 	}
 
-	// Parse command flags
 	opts, err := parsePruneFlags(cmd)
 	if err != nil {
-		return fmt.Errorf("failed to parse flags: %w", err)
+		return fmt.Errorf("failed to parse command flags: %w", err)
 	}
 
-	// Get categories
 	categoriesResp, err := client.GetCategories()
 	if err != nil {
-		return fmt.Errorf("failed to get categories: %w", err)
+		return fmt.Errorf("failed to retrieve categories: %w", err)
 	}
 
-	// Pre-allocate slice
 	categories := make([]string, 0, len(categoriesResp))
 	for name := range categoriesResp {
 		categories = append(categories, name)
 	}
 
-	// Filter categories by include/exclude patterns
 	categories = filterCategoriesByPatterns(categories, opts.includeCategories, true)
 	categories = filterCategoriesByPatterns(categories, opts.excludeCategories, false)
 
 	if len(categories) == 0 {
-		log.Info().Msg("No torrents can be pruned since no categories were included based on selectors")
+		log.Info().Msg("No torrents to prune - no categories match the specified criteria")
 		return nil
 	}
 
-	// Get all torrents
 	torrents, err := client.GetTorrents(qbittorrent.TorrentFilterOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to get torrents: %w", err)
+		return fmt.Errorf("failed to retrieve torrents: %w", err)
 	}
 
-	// Filter torrents by categories
 	var filteredTorrents []qbittorrent.Torrent
 	for _, torrent := range torrents {
-		inCategory := false
-		for _, cat := range categories {
-			if torrent.Category == cat {
-				inCategory = true
-				break
-			}
-		}
-		if inCategory {
+		if slices.Contains(categories, torrent.Category) {
 			filteredTorrents = append(filteredTorrents, torrent)
 		}
 	}
 
-	// Filter by include and exclude tags
 	filteredTorrents = filterTorrentsByTags(filteredTorrents, opts.includeTags, true)
 	filteredTorrents = filterTorrentsByTags(filteredTorrents, opts.excludeTags, false)
+
+	if len(filteredTorrents) == 0 {
+		log.Info().Msg("No torrents match the pruning criteria")
+		return nil
+	}
 
 	log.Info().
 		Str("include_tags", strings.Join(opts.includeTags, " AND ")).
 		Str("exclude_tags", strings.Join(opts.excludeTags, " OR ")).
-		Msg("Pruning torrents with tags")
+		Int("count", len(filteredTorrents)).
+		Msg("Torrents selected for pruning")
 
-	// Log torrents to be deleted and collect their hashes
 	var torrentHashes []string
 	for _, torrent := range filteredTorrents {
 		torrentHashes = append(torrentHashes, torrent.Hash)
+		log.Info().Str("hash", torrent.Hash).Str("tags", torrent.Tags).Msg("Torrent selected for deletion")
 	}
 
-	// Delete all torrents in a single batch
-	if !opts.dryRun && len(torrentHashes) > 0 {
-		err := client.DeleteTorrents(torrentHashes, opts.withData)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to delete torrents")
-		}
-		log.Info().Msg("Torrents pruned successfully")
+	if opts.dryRun {
+		return nil
 	}
 
-	log.Info().Int("deleted_count", len(filteredTorrents)).Msg("Deleted torrents")
+	if err := client.DeleteTorrents(torrentHashes, opts.withData); err != nil {
+		return fmt.Errorf("failed to delete torrents: %w", err)
+	}
+
+	log.Info().
+		Int("deleted", len(filteredTorrents)).
+		Bool("with_data", opts.withData).
+		Msg("Torrent pruning completed successfully")
+
 	return nil
 }
