@@ -1,19 +1,35 @@
-FROM docker.io/library/python:3.13-alpine AS base
+# Build stage
+FROM golang:1.24-alpine AS builder
 
-FROM base AS pip
-WORKDIR /install
-COPY requirements.txt /requirements.txt
-RUN pip install --no-cache-dir --prefix=/install --requirement /requirements.txt \
-    && python -c "import compileall; compileall.compile_path(maxlevels=10)"
-
-FROM base AS app
 WORKDIR /app
-COPY qbtools/ .
-RUN python -m compileall qbtools.py commands/
 
-FROM base AS final
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o qbtools .
+
+# Runtime stage
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS requests
+RUN apk --no-cache add ca-certificates
+
 WORKDIR /app
-COPY --from=pip /install /usr/local
-COPY --from=app /app .
+
+# Copy the binary from builder stage
+COPY --from=builder /app/qbtools .
+
+# Copy config file
 COPY config.yaml /config/config.yaml
-ENTRYPOINT ["python3", "qbtools.py"]
+
+# Set the binary as executable
+RUN chmod +x qbtools
+
+ENTRYPOINT ["./qbtools"]

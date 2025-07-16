@@ -1,15 +1,20 @@
-## Upstream
-
-This is an opinionated fork of the upstream project at https://gitlab.com/AlexKM/qbittools.
+# qbtools
 
 ## Description
 
-qbtools is a feature rich CLI for the management of torrents in qBittorrent.
+qbtools is a feature rich CLI for the management of torrents in qBittorrent, written in Go 1.24 using the [github.com/autobrr/go-qbittorrent](https://github.com/autobrr/go-qbittorrent) client.
+
+## Features
+
+- **Tagging**: Automatically tag torrents based on tracker domains, status, duplicates, and age
+- **Reannounce**: Automatically reannounce torrents with problematic trackers
+- **Prune**: Remove torrents based on configurable tag criteria
+- **Configurable**: Support for multiple tracker configurations with custom ratio and seeding requirements
 
 ## Table of contents
 
-- [Upstream](#upstream)
 - [Description](#description)
+- [Features](#features)
 - [Table of contents](#table-of-contents)
 - [Installation](#installation)
   - [Docker image](#docker-image)
@@ -17,10 +22,10 @@ qbtools is a feature rich CLI for the management of torrents in qBittorrent.
 - [Configuration](#configuration)
 - [Usage](#usage)
   - [Help](#help)
-  - [Subcommands](#subcommands)
+  - [Available Commands](#available-commands)
     - [Tagging](#tagging)
     - [Reannounce](#reannounce)
-    - [Orphaned](#orphaned)
+    - [Prune](#prune)
 
 ## Installation
 
@@ -29,104 +34,103 @@ qbtools is a feature rich CLI for the management of torrents in qBittorrent.
 Run a container with access to host network:
 
 ```bash
-docker run -it --rm --network host github.com/buroa/qbtools tagging --unregistered
+docker run -it --rm --network host ghcr.io/buroa/qbtools:latest tagging --unregistered
 ```
 
 ### Building
 
 ```bash
-# clone the repository
 git clone https://github.com/buroa/qbtools.git && cd qbtools
-# build the image
 docker build -t qbtools:latest --pull .
-# run a container with the resulting binary and access to host network
-docker run -it --rm --network host qbtools reannounce -p 12345
+docker run -it --rm --network host qbtools --help
 ```
 
 ## Configuration
 
-You have to specify your password every time with `-P` flag unless you enable `Web UI -> Bypass authentication for clients on localhost` in qBittorrent's settings, because there is no way for qbtools to retrieve it in plaintext.
+qbtools uses multiple configuration methods:
 
-You also can specify host, port and username manually without a configuration file with `-s`, `-p` and `-U` flags accordingly.
+### Connection Settings
 
-There is also a `config.yaml` file which can be overrideen to add your own indexers and their corresponding requirements.
+You can specify qBittorrent connection details using:
+
+**Environment variables:**
+- `QBITTORRENT_HOST`
+- `QBITTORRENT_USERNAME`
+- `QBITTORRENT_PASSWORD`
+
+### Tracker Configuration
+
+The `config.yaml` file contains tracker-specific settings including ratio requirements and seeding time limits. Each tracker entry includes:
+
+- `name`: Short name for the tracker
+- `ratio`: Minimum ratio requirement
+- `days`: Minimum seeding time in days
+- `urls`: List of tracker URLs/domains
+
+Example configuration:
+```yaml
+trackers:
+  - { name: ptp,  ratio: 0,    days: 0,    urls: ["passthepopcorn.me"] }
+  - { name: btn,  ratio: 1.01, days: 14.1, urls: ["broadcasthe.net"] }
+```
+
+### Global Options
+
+- `-c, --config`: Path to configuration file (default: `/config/config.yaml`)
+- `-l, --log-level`: Log level (debug, info, warn, error)
 
 ## Usage
 
 ### Help
 
-All commands have extensive help with all available options.
+All commands have extensive help with available options:
 
 ```bash
-$ qbtools export -h
-usage: qbtools.py reannounce [-h] [--process-seeding]
-                               [-c /app/config.yaml] [-p 12345] [-s 127.0.0.1] [-U username]
-                               [-P password]
-
-options:
-  -h, --help            show this help message and exit
-  --process-seeding     Will also process seeding torrents for reannouncements.
-  -c /app/config.yaml, --config /app/config.yaml
-  -p 12345, --port 12345
-                        port
-  -s 127.0.0.1, --server 127.0.0.1
-                        host
-  -U username, --username username
-  -P password, --password password
+qbtools --help
+qbtools tagging --help
+qbtools reannounce --help
+qbtools prune --help
 ```
 
-### Subcommands
+### Available Commands
 
 #### Tagging
 
-Create useful tags to group torrents by tracker domains, not working trackers, unregistered torrents and duplicates
+The tagging command creates useful tags to organize torrents by various criteria:
+
+- `--duplicates`: Tag duplicate torrents
+- `--unregistered`: Tag torrents with unregistered status  
+- `--not-working`: Tag torrents with non-working trackers
+- `--added-on`: Tag torrents based on when they were added
+- `--sites`: Tag torrents by tracker domain
 
 ```bash
-$ qbtools tagging --duplicates --unregistered --not-working --added-on --trackers
+qbtools tagging --duplicates --unregistered --not-working --added-on --sites
 ```
 
 #### Reannounce
 
-Automatic reannounce on problematic trackers
+Automatically reannounce torrents that have problematic trackers:
+
+- `--max-age`: Maximum age of torrents to reannounce in seconds (default: 3600)
+- `--max-retries`: Maximum number of reannounce attempts (default: 18)
+- `--interval`: Interval between reannouncements in seconds (default: 5)
+- `--process-seeding`: Also process seeding torrents
 
 ```bash
-$ qbtools reannounce
-07:40:40 PM --------------------------
-07:40:40 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is not working, active for 1s, reannouncing...
-07:41:20 PM --------------------------
-07:41:20 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] has no seeds, active for 78s, reannouncing...
-07:41:25 PM --------------------------
-07:41:25 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is active, progress: 0%
-07:41:30 PM --------------------------
-07:41:30 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is active, progress: 5.0%
-07:41:35 PM --------------------------
-07:41:35 PM [Movie.2020.2160p.WEB-DL.H264-GROUP] is active, progress: 11.1%
+qbtools reannounce --max-age 7200 --process-seeding
 ```
 
-#### Orphaned
+#### Prune
 
-Find files no longer associated with any torrent, but still present in download folders (default download folder and folders from all categories). This command will remove orphaned files unless you pass the `--dry-run` flag.
+Remove torrents based on tag criteria:
 
-This command is very opinionated on a certian directory structure so use with caution and make sure you run it with the `--dry-run` flag to make sure it won't delete anything unintentional.
-
-This is how I have my paths laid out where `/downloads/qbittorrent/complete` is the default save path in qBittorrent and each folder under it is a category. `Default Torrent Management Mode: Automatic`, `When Torrent Category changed: Relocate`, `When Default Save Path changed: Relocate affected torrents` and `When Category Save Path changed: Relocate affected torrents` is also set. Also make sure you use an incomplete directory that is outside the `/downloads/qbittorrent/complete` directory.
-
-```
-/downloads/qbittorrent
-└── complete
-    ├── cross-seed
-    ├── hit-and-runs
-    ├── lidarr
-    ├── manual
-    ├── myanonamouse
-    ├── overlord
-    ├── prowlarr
-    ├── radarr
-    ├── redacted
-    ├── rifftrax
-    └── sonarr
-```
+- `--include-tag`: Include torrents with these tags (can be used multiple times)
+- `--exclude-tag`: Exclude torrents with these tags (can be used multiple times)
+- `--dry-run`: Show what would be removed without actually removing
 
 ```bash
-$ qbtools orphaned --ignore-pattern "*_unpackerred" --ignore-pattern "*/manual/*"
+qbtools prune --include-tag "expired" --include-tag "added:30d" --exclude-tag "site:ptp" --dry-run
 ```
+
+The prune command uses the tracker configuration from `config.yaml` to determine which torrents meet seeding requirements and can be safely removed.
