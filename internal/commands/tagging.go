@@ -4,15 +4,17 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/autobrr/go-qbittorrent"
-	"github.com/buroa/qbtools/internal/config"
 	"github.com/buroa/qbtools/internal/utils"
+	"github.com/knadh/koanf/parsers/yaml"
+	"github.com/knadh/koanf/providers/file"
+	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -126,7 +128,7 @@ func filterByExclusions(torrents []qbittorrent.Torrent, exclusions []string, mat
 }
 
 // getTrackerConfig returns the tracker configuration for a torrent's primary tracker
-func getTrackerConfig(torrent qbittorrent.Torrent, trackerMap map[string]config.TrackerConfig) *config.TrackerConfig {
+func getTrackerConfig(torrent qbittorrent.Torrent, trackerMap map[string]TrackerConfig) *TrackerConfig {
 	tracker := torrent.Tracker
 	if tracker == "" && len(torrent.Trackers) > 0 {
 		tracker = torrent.Trackers[0].Url
@@ -212,13 +214,29 @@ func runTagging(cmd *cobra.Command, args []string) error {
 	log.Info().Msg("Starting torrent tagging process")
 
 	client := qbittorrent.NewClient(qbittorrent.Config{
-		Host:     viper.GetString("qbittorrent_host"),
-		Username: viper.GetString("qbittorrent_username"),
-		Password: viper.GetString("qbittorrent_password"),
+		Host:     os.Getenv("QBITTORRENT_HOST"),
+		Username: os.Getenv("QBITTORRENT_USERNAME"),
+		Password: os.Getenv("QBITTORRENT_PASSWORD"),
 	})
 
 	if err := client.Login(); err != nil {
 		return fmt.Errorf("failed to authenticate with qBittorrent: %w", err)
+	}
+
+	var k = koanf.New(".")
+
+	configFile, err := cmd.Flags().GetString("config")
+	if err != nil {
+		return fmt.Errorf("failed to get config flag: %w", err)
+	}
+
+	if err := k.Load(file.Provider(configFile), yaml.Parser()); err != nil {
+		return fmt.Errorf("failed to load configuration file %s: %w", configFile, err)
+	}
+
+	trackerMap, err := buildTrackerMap(k)
+	if err != nil {
+		return fmt.Errorf("failed to build tracker configuration map: %w", err)
 	}
 
 	opts, err := parseTaggingFlags(cmd)
@@ -239,21 +257,24 @@ func runTagging(cmd *cobra.Command, args []string) error {
 
 	log.Debug().Int("count", len(torrents)).Msg("Filtered torrents for processing")
 
-	trackerMap, err := buildTrackerMap()
-	if err != nil {
-		return fmt.Errorf("failed to build tracker configuration map: %w", err)
-	}
-
 	return processTorrents(client, cmd.Context(), torrents, trackerMap, opts)
 }
 
-func buildTrackerMap() (map[string]config.TrackerConfig, error) {
-	var trackers []config.TrackerConfig
-	if err := viper.UnmarshalKey("trackers", &trackers); err != nil {
+type TrackerConfig struct {
+	Name              string   `yaml:"name"`
+	URLs              []string `yaml:"urls"`
+	RequiredSeedRatio float64  `yaml:"required_seed_ratio"`
+	RequiredSeedDays  float64  `yaml:"required_seed_days"`
+}
+
+func buildTrackerMap(k *koanf.Koanf) (map[string]TrackerConfig, error) {
+	var trackers []TrackerConfig
+
+	if err := k.UnmarshalWithConf("trackers", &trackers, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal tracker configuration: %w", err)
 	}
 
-	trackerMap := make(map[string]config.TrackerConfig)
+	trackerMap := make(map[string]TrackerConfig)
 	for _, tracker := range trackers {
 		for _, url := range tracker.URLs {
 			trackerMap[url] = tracker
@@ -263,7 +284,7 @@ func buildTrackerMap() (map[string]config.TrackerConfig, error) {
 	return trackerMap, nil
 }
 
-func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents []qbittorrent.Torrent, trackerMap map[string]config.TrackerConfig, opts *taggingOptions) error {
+func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents []qbittorrent.Torrent, trackerMap map[string]TrackerConfig, opts *taggingOptions) error {
 	now := time.Now()
 	paths := make(map[string]bool)
 
@@ -300,8 +321,8 @@ func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents [
 
 		// Apply expiration tags
 		if opts.expired && trackerConfig != nil {
-			if (trackerConfig.Ratio != 0 && torrent.Ratio >= trackerConfig.Ratio) ||
-				(trackerConfig.Days != 0 && torrent.SeedingTime >= utils.SecondsFromDays(trackerConfig.Days)) {
+			if (trackerConfig.RequiredSeedRatio != 0 && torrent.Ratio >= trackerConfig.RequiredSeedRatio) ||
+				(trackerConfig.RequiredSeedDays != 0 && torrent.SeedingTime >= utils.SecondsFromDays(trackerConfig.RequiredSeedDays)) {
 				tagsToAdd = append(tagsToAdd, "expired")
 			}
 		}

@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/autobrr/go-qbittorrent"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
 type reannounceOptions struct {
@@ -60,9 +60,9 @@ func runReannounce(cmd *cobra.Command, args []string) error {
 	log.Info().Msg("Starting torrent reannouncement process")
 
 	client := qbittorrent.NewClient(qbittorrent.Config{
-		Host:     viper.GetString("qbittorrent_host"),
-		Username: viper.GetString("qbittorrent_username"),
-		Password: viper.GetString("qbittorrent_password"),
+		Host:     os.Getenv("QBITTORRENT_HOST"),
+		Username: os.Getenv("QBITTORRENT_USERNAME"),
+		Password: os.Getenv("QBITTORRENT_PASSWORD"),
 	})
 
 	if err := client.Login(); err != nil {

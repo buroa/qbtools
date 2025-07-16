@@ -63,15 +63,15 @@ You can specify qBittorrent connection details using:
 The `config.yaml` file contains tracker-specific settings including ratio requirements and seeding time limits. Each tracker entry includes:
 
 - `name`: Short name for the tracker
-- `ratio`: Minimum ratio requirement
-- `days`: Minimum seeding time in days
+- `required_seed_ratio`: Minimum ratio requirement
+- `required_seed_days`: Minimum seeding time in days
 - `urls`: List of tracker URLs/domains
 
 Example configuration:
 ```yaml
 trackers:
-  - { name: ptp,  ratio: 0,    days: 0,    urls: ["passthepopcorn.me"] }
-  - { name: btn,  ratio: 1.01, days: 14.1, urls: ["broadcasthe.net"] }
+  - { name: ptp,  required_seed_ratio: 0,    required_seed_days: 0,    urls: ["passthepopcorn.me"] }
+  - { name: btn,  required_seed_ratio: 1.01, required_seed_days: 14.1, urls: ["broadcasthe.net"] }
 ```
 
 ### Global Options

@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/buroa/qbtools/internal/commands"
-	"github.com/buroa/qbtools/internal/config"
 	"github.com/buroa/qbtools/internal/logger"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -16,8 +15,6 @@ func main() {
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
 			logLevel, _ := cmd.Flags().GetString("log-level")
 			logger.Initialize(logLevel)
-			configFile, _ := cmd.Flags().GetString("config")
-			config.Initialize(configFile)
 		},
 	}
 
