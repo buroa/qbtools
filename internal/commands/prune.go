@@ -11,6 +11,43 @@ import (
 	"github.com/spf13/viper"
 )
 
+// pruneOptions holds all the flags for the prune command
+type pruneOptions struct {
+	includeTags       []string
+	excludeTags       []string
+	includeCategories []string
+	excludeCategories []string
+	dryRun            bool
+	withData          bool
+}
+
+// parsePruneFlags extracts all command flags into a pruneOptions struct
+func parsePruneFlags(cmd *cobra.Command) (*pruneOptions, error) {
+	opts := &pruneOptions{}
+	var err error
+
+	if opts.includeTags, err = cmd.Flags().GetStringSlice("include-tag"); err != nil {
+		return nil, err
+	}
+	if opts.excludeTags, err = cmd.Flags().GetStringSlice("exclude-tag"); err != nil {
+		return nil, err
+	}
+	if opts.includeCategories, err = cmd.Flags().GetStringSlice("include-category"); err != nil {
+		return nil, err
+	}
+	if opts.excludeCategories, err = cmd.Flags().GetStringSlice("exclude-category"); err != nil {
+		return nil, err
+	}
+	if opts.dryRun, err = cmd.Flags().GetBool("dry-run"); err != nil {
+		return nil, err
+	}
+	if opts.withData, err = cmd.Flags().GetBool("with-data"); err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}
+
 // filterTorrentsByTags filters torrents based on tag requirements
 // If requireAll is true, torrent must have ALL tags (AND logic)
 // If requireAll is false, torrent must NOT have ANY tags (exclude logic)
@@ -109,13 +146,11 @@ func runPrune(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to login to qBittorrent: %w", err)
 	}
 
-	// Get command flags
-	includeTags, _ := cmd.Flags().GetStringSlice("include-tag")
-	excludeTags, _ := cmd.Flags().GetStringSlice("exclude-tag")
-	includeCategories, _ := cmd.Flags().GetStringSlice("include-category")
-	excludeCategories, _ := cmd.Flags().GetStringSlice("exclude-category")
-	dryRun, _ := cmd.Flags().GetBool("dry-run")
-	withData, _ := cmd.Flags().GetBool("with-data")
+	// Parse command flags
+	opts, err := parsePruneFlags(cmd)
+	if err != nil {
+		return fmt.Errorf("failed to parse flags: %w", err)
+	}
 
 	// Get categories
 	categoriesResp, err := client.GetCategories()
@@ -130,8 +165,8 @@ func runPrune(cmd *cobra.Command, args []string) error {
 	}
 
 	// Filter categories by include/exclude patterns
-	categories = filterCategoriesByPatterns(categories, includeCategories, true)
-	categories = filterCategoriesByPatterns(categories, excludeCategories, false)
+	categories = filterCategoriesByPatterns(categories, opts.includeCategories, true)
+	categories = filterCategoriesByPatterns(categories, opts.excludeCategories, false)
 
 	if len(categories) == 0 {
 		log.Info().Msg("No torrents can be pruned since no categories were included based on selectors")
@@ -160,12 +195,12 @@ func runPrune(cmd *cobra.Command, args []string) error {
 	}
 
 	// Filter by include and exclude tags
-	filteredTorrents = filterTorrentsByTags(filteredTorrents, includeTags, true)
-	filteredTorrents = filterTorrentsByTags(filteredTorrents, excludeTags, false)
+	filteredTorrents = filterTorrentsByTags(filteredTorrents, opts.includeTags, true)
+	filteredTorrents = filterTorrentsByTags(filteredTorrents, opts.excludeTags, false)
 
 	log.Info().
-		Str("include_tags", strings.Join(includeTags, " AND ")).
-		Str("exclude_tags", strings.Join(excludeTags, " OR ")).
+		Str("include_tags", strings.Join(opts.includeTags, " AND ")).
+		Str("exclude_tags", strings.Join(opts.excludeTags, " OR ")).
 		Msg("Pruning torrents with tags")
 
 	// Log torrents to be deleted and collect their hashes
@@ -175,8 +210,8 @@ func runPrune(cmd *cobra.Command, args []string) error {
 	}
 
 	// Delete all torrents in a single batch
-	if !dryRun && len(torrentHashes) > 0 {
-		err := client.DeleteTorrents(torrentHashes, withData)
+	if !opts.dryRun && len(torrentHashes) > 0 {
+		err := client.DeleteTorrents(torrentHashes, opts.withData)
 		if err != nil {
 			log.Error().Err(err).Msg("Failed to delete torrents")
 		}

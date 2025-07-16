@@ -13,6 +13,35 @@ import (
 	"github.com/spf13/viper"
 )
 
+// reannounceOptions holds all the flags for the reannounce command
+type reannounceOptions struct {
+	maxAge         int
+	maxRetries     int
+	interval       int
+	processSeeding bool
+}
+
+// parseReannounceFlags extracts all command flags into a reannounceOptions struct
+func parseReannounceFlags(cmd *cobra.Command) (*reannounceOptions, error) {
+	opts := &reannounceOptions{}
+	var err error
+
+	if opts.maxAge, err = cmd.Flags().GetInt("max-age"); err != nil {
+		return nil, err
+	}
+	if opts.maxRetries, err = cmd.Flags().GetInt("max-retries"); err != nil {
+		return nil, err
+	}
+	if opts.interval, err = cmd.Flags().GetInt("interval"); err != nil {
+		return nil, err
+	}
+	if opts.processSeeding, err = cmd.Flags().GetBool("process-seeding"); err != nil {
+		return nil, err
+	}
+
+	return opts, nil
+}
+
 // NewReannounceCommand creates the reannounce command
 func NewReannounceCommand() *cobra.Command {
 	cmd := &cobra.Command{
@@ -44,18 +73,18 @@ func runReannounce(cmd *cobra.Command, args []string) error {
 
 	ctx := cmd.Context()
 
-	// Get command flags
-	maxAge, _ := cmd.Flags().GetInt("max-age")
-	maxRetries, _ := cmd.Flags().GetInt("max-retries")
-	reannounceInterval, _ := cmd.Flags().GetInt("reannounce-interval")
-	processSeeding, _ := cmd.Flags().GetBool("process-seeding")
+	// Parse command flags
+	opts, err := parseReannounceFlags(cmd)
+	if err != nil {
+		return fmt.Errorf("failed to parse flags: %w", err)
+	}
 
 	log.Info().Msg("Starting reannounce process...")
 
 	// Main loop
 	for {
 		filter := qbittorrent.TorrentFilterStalledDownloading
-		if processSeeding {
+		if opts.processSeeding {
 			filter = qbittorrent.TorrentFilterStalled
 		}
 
@@ -73,11 +102,11 @@ func runReannounce(cmd *cobra.Command, args []string) error {
 
 		// Process torrents in parallel
 		for _, torrent := range torrents {
-			if shouldReannounce(torrent, maxAge) {
+			if shouldReannounce(torrent, opts.maxAge) {
 				wg.Add(1)
 				go func(t qbittorrent.Torrent) {
 					defer wg.Done()
-					if err := reannounceWithRetry(ctx, client, t, maxRetries, reannounceInterval); err != nil {
+					if err := reannounceWithRetry(ctx, client, t, opts.maxRetries, opts.interval); err != nil {
 						log.Error().Err(err).Str("torrent_name", t.Name).Str("torrent_hash", t.Hash).Msg("Failed to reannounce torrent")
 					} else {
 						log.Info().Str("torrent_name", t.Name).Str("torrent_hash", t.Hash).Msg("Reannounced torrent")

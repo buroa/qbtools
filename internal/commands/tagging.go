@@ -67,8 +67,8 @@ type taggingOptions struct {
 	unregistered      bool
 }
 
-// parseFlags extracts all command flags into a taggingOptions struct
-func parseFlags(cmd *cobra.Command) (*taggingOptions, error) {
+// parseTaggingFlags extracts all command flags into a taggingOptions struct
+func parseTaggingFlags(cmd *cobra.Command) (*taggingOptions, error) {
 	opts := &taggingOptions{}
 	var err error
 
@@ -253,7 +253,7 @@ func runTagging(cmd *cobra.Command, args []string) error {
 
 	ctx := cmd.Context()
 
-	opts, err := parseFlags(cmd)
+	opts, err := parseTaggingFlags(cmd)
 	if err != nil {
 		return fmt.Errorf("failed to parse flags: %w", err)
 	}
