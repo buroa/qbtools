@@ -8,7 +8,7 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags="-w -s" -trimpath -o qbtools .
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags "-s -w" -o qbtools .
 
 # Runtime stage
 FROM scratch
