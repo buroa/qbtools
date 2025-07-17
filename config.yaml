@@ -1,7 +1,108 @@
-# Example:
-# ---
-# trackers:
-#   - name: iptorrents
-#     urls: ["bgp.technology", "empirehost.me", "stackoverflow.tech"]
-#     required_seed_ratio: 1.05
-#     required_seed_days: 14.5
+expirations:
+  - name: ant
+    expr: >-
+      TrackerDomain == "anthelion.me"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: ar
+    expr: >-
+      TrackerDomain == "alpharatio.cc"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: blu
+    expr: >-
+      TrackerDomain in ["blutopia.cc", "blutopia.xyz"]
+      && Progress == 1.0
+      && SeedDays >= 14.1
+
+  - name: fl
+    expr: >-
+      TrackerDomain in ["filelist.io", "thefl.org"]
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)
+
+  - name: fnp
+    expr: >-
+      TrackerDomain == "fearnopeer.com"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: hds
+    expr: >-
+      TrackerDomain == "hd-space.pw"
+      && Progress == 1.0
+      && SeedDays >= 7.1
+
+  - name: hdt
+    expr: >-
+      TrackerDomain == "hdts-announce.ru"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)
+
+  - name: ipt
+    expr: >-
+      TrackerDomain in ["bgp.technology", "empirehost.me", "stackoverflow.tech"]
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: mlk
+    expr: >-
+      TrackerDomain == "milkie.cc"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: mtv
+    expr: >-
+      TrackerDomain == "morethantv.me"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: oe
+    expr: >-
+      TrackerDomain == "onlyencodes.cc"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: phd
+    expr: >-
+      TrackerDomain == "privatehd.to"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: rfx
+    expr: >-
+      TrackerDomain == "reelflix.xyz"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)
+
+  - name: sp
+    expr: >-
+      TrackerDomain == "seedpool.org"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 14.1)
+
+  - name: st
+    expr: >-
+      TrackerDomain == "scenetime.com"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)
+
+  - name: td
+    expr: >-
+      TrackerDomain in ["jumbohostpro.eu", "td-peers.com"]
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)
+
+  - name: tl
+    expr: >-
+      TrackerDomain in ["tleechreload.org", "torrentleech.org"]
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)
+
+  - name: uhd
+    expr: >-
+      TrackerDomain == "uhdbits.org"
+      && Progress == 1.0
+      && (Ratio >= 1.01 || SeedDays >= 7.1)

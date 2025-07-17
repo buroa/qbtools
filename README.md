@@ -7,6 +7,7 @@ qbtools is a feature rich CLI for the management of torrents in qBittorrent, wri
 ## Features
 
 - **Tagging**: Automatically tag torrents based on tracker domains, status, duplicates, and age
+- **CEL Expressions**: Use dynamic CEL (Common Expression Language) expressions for flexible torrent evaluation
 - **Reannounce**: Automatically reannounce torrents with problematic trackers
 - **Prune**: Remove torrents based on configurable tag criteria
 - **Configurable**: Support for multiple tracker configurations with custom ratio and seeding requirements
@@ -66,13 +67,48 @@ The `config.yaml` file contains tracker-specific settings including ratio requir
 - `required_seed_ratio`: Minimum ratio requirement
 - `required_seed_days`: Minimum seeding time in days
 - `urls`: List of tracker URLs/domains
+- `expired_expression`: CEL expression to determine if torrent is expired (optional)
+- `not_working_expression`: CEL expression to determine if tracker is not working (optional)
 
-Example configuration:
+#### Static Configuration Example:
 ```yaml
 trackers:
   - { name: ptp,  required_seed_ratio: 0,    required_seed_days: 0,    urls: ["passthepopcorn.me"] }
   - { name: btn,  required_seed_ratio: 1.01, required_seed_days: 14.1, urls: ["broadcasthe.net"] }
 ```
+
+#### CEL Expression Configuration Example:
+```yaml
+trackers:
+  - name: iptorrents
+    urls: ["bgp.technology", "empirehost.me", "stackoverflow.tech"]
+    required_seed_ratio: 1.05
+    required_seed_days: 14.5
+    expired_expression: |
+      (torrent.RequiredSeedRatio > 0 && torrent.Ratio >= torrent.RequiredSeedRatio) ||
+      (torrent.RequiredSeedDays > 0 && torrent.SeedDays >= torrent.RequiredSeedDays) ||
+      (torrent.SeedDays > 30 && torrent.Ratio >= 1.0)
+    not_working_expression: |
+      containsAny(torrent.TrackerMessages, [
+        "UNREGISTERED", "TORRENT NOT FOUND", "NOT REGISTERED", "DEAD", "BANNED"
+      ])
+```
+
+#### CEL Expression Functions:
+- `torrent.SeedDays`: Seeding time in days
+- `torrent.AgeDays`: Age since added in days
+- `torrent.ActivityDays`: Days since last activity
+- `containsAny(list1, list2)`: Check if any item in list1 contains any item in list2
+- `contains(string, substring)`: Check if string contains substring
+- `hasTag(tags, tag)`: Check if torrent has specific tag
+
+#### Available Torrent Context:
+- **Basic**: Hash, Name, Size, Progress, State, Category, Tags, SavePath, ContentPath
+- **Tracker**: Tracker, TrackerName, TrackerStatus, TrackerMessages
+- **Timing**: AddedOn, CompletedOn, LastActivity, SeedingTime
+- **Transfer**: Ratio, Downloaded, Uploaded
+- **Calculated**: SeedDays, AgeDays, ActivityDays
+- **Config**: RequiredSeedRatio, RequiredSeedDays
 
 ### Global Options
 
@@ -103,10 +139,23 @@ The tagging command creates useful tags to organize torrents by various criteria
 - `--not-working`: Tag torrents with non-working trackers
 - `--added-on`: Tag torrents based on when they were added
 - `--sites`: Tag torrents by tracker domain
+- `--cel-mode`: Use CEL expressions from config for dynamic evaluation
 
+**Standard mode (backward compatible):**
 ```bash
 qbtools tagging --duplicates --unregistered --not-working --added-on --sites
 ```
+
+**CEL mode (dynamic evaluation):**
+```bash
+qbtools tagging --cel-mode --expired --not-working --sites
+```
+
+CEL mode allows you to define complex rules in your configuration file using CEL expressions. This enables:
+- Custom expiration criteria beyond simple ratio/time thresholds
+- Dynamic tracker status evaluation based on error messages
+- Per-tracker customization of rules
+- Complex boolean logic combining multiple conditions
 
 #### Reannounce
 

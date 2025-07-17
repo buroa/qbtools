@@ -3,19 +3,19 @@ package commands
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/autobrr/go-qbittorrent"
+	celutil "github.com/buroa/qbtools/internal/cel"
 	"github.com/buroa/qbtools/internal/utils"
+	"github.com/google/cel-go/cel"
 	"github.com/knadh/koanf/parsers/yaml"
 	"github.com/knadh/koanf/providers/file"
 	"github.com/knadh/koanf/v2"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
-	"golang.org/x/net/publicsuffix"
 )
 
 const (
@@ -127,31 +127,6 @@ func filterByExclusions(torrents []qbittorrent.Torrent, exclusions []string, mat
 	return result
 }
 
-// getTrackerConfig returns the tracker configuration for a torrent's primary tracker
-func getTrackerConfig(torrent qbittorrent.Torrent, trackerMap map[string]TrackerConfig) *TrackerConfig {
-	tracker := torrent.Tracker
-	if tracker == "" && len(torrent.Trackers) > 0 {
-		tracker = torrent.Trackers[0].Url
-	}
-
-	parsedURL, err := url.Parse(tracker)
-	if err != nil {
-		return nil
-	}
-
-	tldPlusOne, err := publicsuffix.EffectiveTLDPlusOne(parsedURL.Hostname())
-	if err != nil {
-		return nil
-	}
-
-	domain := strings.ToLower(tldPlusOne)
-	if tc, exists := trackerMap[domain]; exists {
-		return &tc
-	}
-
-	return nil
-}
-
 func checkTrackerMessages(messages []string, matches []string) bool {
 	for _, match := range matches {
 		for _, msg := range messages {
@@ -234,9 +209,9 @@ func runTagging(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("failed to load configuration file %s: %w", configFile, err)
 	}
 
-	trackerMap, err := buildTrackerMap(k)
+	expirationRules, err := loadExpirationRules(k)
 	if err != nil {
-		return fmt.Errorf("failed to build tracker configuration map: %w", err)
+		return fmt.Errorf("failed to load expiration rules: %w", err)
 	}
 
 	opts, err := parseTaggingFlags(cmd)
@@ -257,40 +232,87 @@ func runTagging(cmd *cobra.Command, args []string) error {
 
 	log.Debug().Int("count", len(torrents)).Msg("Filtered torrents for processing")
 
-	return processTorrents(client, cmd.Context(), torrents, trackerMap, opts)
+	return processTorrents(client, cmd.Context(), torrents, expirationRules, opts)
 }
 
-type TrackerConfig struct {
-	Name              string   `yaml:"name"`
-	URLs              []string `yaml:"urls"`
-	RequiredSeedRatio float64  `yaml:"required_seed_ratio"`
-	RequiredSeedDays  float64  `yaml:"required_seed_days"`
+type ExpirationRule struct {
+	Name string `yaml:"name"`
+	Expr string `yaml:"expr"`
+
+	// Compiled CEL expression (not serialized)
+	ast *cel.Ast
 }
 
-func buildTrackerMap(k *koanf.Koanf) (map[string]TrackerConfig, error) {
-	var trackers []TrackerConfig
+// loadExpirationRules loads and compiles expiration rules from the configuration
+func loadExpirationRules(k *koanf.Koanf) ([]ExpirationRule, error) {
+	var rules []ExpirationRule
 
-	if err := k.UnmarshalWithConf("trackers", &trackers, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal tracker configuration: %w", err)
+	if err := k.UnmarshalWithConf("expirations", &rules, koanf.UnmarshalConf{Tag: "yaml"}); err != nil {
+		// If no expirations section exists, return empty slice (not an error)
+		if strings.Contains(err.Error(), "no key found") {
+			return []ExpirationRule{}, nil
+		}
+		return nil, fmt.Errorf("failed to unmarshal expiration rules: %w", err)
 	}
 
-	trackerMap := make(map[string]TrackerConfig)
-	for _, tracker := range trackers {
-		for _, url := range tracker.URLs {
-			trackerMap[url] = tracker
+	// Create CEL environment
+	celEnv, err := celutil.NewCELEnvironment()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create CEL environment: %w", err)
+	}
+
+	// Compile CEL expressions for each rule
+	for i := range rules {
+		rule := &rules[i]
+		if rule.Expr != "" {
+			ast, err := celEnv.CompileExpression(rule.Expr)
+			if err != nil {
+				return nil, fmt.Errorf("failed to compile expiration expression for rule %s: %w", rule.Name, err)
+			}
+			rule.ast = ast
 		}
 	}
 
-	return trackerMap, nil
+	return rules, nil
 }
 
-func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents []qbittorrent.Torrent, trackerMap map[string]TrackerConfig, opts *taggingOptions) error {
+// evaluateExpirationRules evaluates if a torrent is expired using the expiration rules
+func evaluateExpirationRules(celEnv *celutil.CELEnvironment, torrent qbittorrent.Torrent, rules []ExpirationRule) (bool, error) {
+	for _, rule := range rules {
+		context := celutil.CreateTorrentContext(torrent, rule.Name)
+
+		if rule.ast == nil {
+			continue
+		}
+
+		result, err := celEnv.EvaluateExpression(rule.ast, context)
+		if err != nil {
+			return false, fmt.Errorf("failed to evaluate expiration rule %s: %w", rule.Name, err)
+		}
+
+		if boolResult, ok := result.(bool); ok && boolResult {
+			return true, nil
+		}
+	}
+
+	return false, nil
+}
+
+func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents []qbittorrent.Torrent, expirationRules []ExpirationRule, opts *taggingOptions) error {
 	now := time.Now()
 	paths := make(map[string]bool)
 
+	// Create CEL environment if needed
+	var celEnv *celutil.CELEnvironment
+
+	var err error
+	celEnv, err = celutil.NewCELEnvironment()
+	if err != nil {
+		return fmt.Errorf("failed to create CEL environment: %w", err)
+	}
+
 	for _, torrent := range torrents {
 		var tagsToAdd []string
-		trackerConfig := getTrackerConfig(torrent, trackerMap)
 
 		// Apply date-based tags
 		if opts.addedOn && torrent.AddedOn > 0 {
@@ -301,17 +323,6 @@ func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents [
 			tagsToAdd = append(tagsToAdd, utils.CalculateDateTags("activity", torrent.LastActivity, now))
 		}
 
-		// Apply site tags
-		if opts.sites {
-			siteTag := "site:unmapped"
-			if trackerConfig != nil {
-				siteTag = fmt.Sprintf("site:%s", trackerConfig.Name)
-			} else if torrent.Tracker != "" {
-				log.Warn().Str("tracker", torrent.Tracker).Str("hash", torrent.Hash).Msg("No tracker configuration found for torrent")
-			}
-			tagsToAdd = append(tagsToAdd, siteTag)
-		}
-
 		// Apply tracker status tags
 		if opts.unregistered || opts.trackerDown || opts.notWorking {
 			if statusTags := getTrackerStatusTags(torrent, opts); len(statusTags) > 0 {
@@ -320,10 +331,13 @@ func processTorrents(client *qbittorrent.Client, ctx context.Context, torrents [
 		}
 
 		// Apply expiration tags
-		if opts.expired && trackerConfig != nil {
-			if (trackerConfig.RequiredSeedRatio != 0 && torrent.Ratio >= trackerConfig.RequiredSeedRatio) ||
-				(trackerConfig.RequiredSeedDays != 0 && torrent.SeedingTime >= utils.SecondsFromDays(trackerConfig.RequiredSeedDays)) {
-				tagsToAdd = append(tagsToAdd, "expired")
+		if opts.expired {
+			if len(expirationRules) > 0 {
+				if expired, err := evaluateExpirationRules(celEnv, torrent, expirationRules); err != nil {
+					log.Error().Err(err).Str("hash", torrent.Hash).Msg("Failed to evaluate expiration rules")
+				} else if expired {
+					tagsToAdd = append(tagsToAdd, "expired")
+				}
 			}
 		}
 

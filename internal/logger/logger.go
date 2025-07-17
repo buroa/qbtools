@@ -14,7 +14,7 @@ func Initialize(level string) {
 	consoleWriter := zerolog.ConsoleWriter{
 		Out:        os.Stdout,
 		TimeFormat: time.RFC3339,
-		FormatMessage: func(i interface{}) string {
+		FormatMessage: func(i any) string {
 			return i.(string)
 		},
 	}
