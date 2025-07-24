@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is not maintained anymore. Please consider moving to [tqm](https://github.com/autobrr/tqm) and if you need a reannouncer, use [qbrr](https://github.com/buroa/qbrr).
+
 ## Upstream
 
 This is an opinionated fork of the upstream project at https://gitlab.com/AlexKM/qbittools.
